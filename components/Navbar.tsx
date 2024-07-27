@@ -7,6 +7,7 @@ import { Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Logo } from '@/components/logo'
 import MobileNavLink from "@/components/MobileNavLink"
+import ModeToggle from "@/components/ModeToggle"
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -78,6 +79,7 @@ const NavBar = () => {
             <Button variant="ghost" className="text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0">
               Login
             </Button>
+            <ModeToggle/>
           </nav>
         </div>
       </div>

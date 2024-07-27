@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import LogoFooter from '@/components/logo'
+import LogoFooter  from "@/components/LogoFooter";
 
 export const Footer = () => {
   return (
