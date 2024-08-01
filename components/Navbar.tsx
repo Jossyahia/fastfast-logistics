@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { auth, signIn, signOut } from "auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
