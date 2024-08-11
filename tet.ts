@@ -1,6 +1,64 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bookings      Booking[]
+}
+
+model Booking {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  status        Status    @default(PENDING)
+  pickupAddress String
+  dropoffAddress String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  rider         Rider?    @relation(fields: [riderId], references: [id])
+  riderId       String?
+}
+
+model Rider {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bookings      Booking[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  RIDER
+}
+
+enum Status {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 "use client";
 import React, { useState } from "react";
-import { useSession } from "next-auth/react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -23,10 +81,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import Link from "next/link";
 
 const FastFastLogisticsBooking = () => {
-  const { data: session, status } = useSession();
   const [pickupDate, setPickupDate] = useState<Date>(new Date());
   const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
   const [isUrgent, setIsUrgent] = useState(false);
@@ -40,11 +96,6 @@ const FastFastLogisticsBooking = () => {
     deliveryTime: "",
     packageSize: "",
     packageDescription: "",
-    pickupPhoneNumber: "",
-    deliveryPhoneNumber: "",
-    paymentMethod: "",
-    route: "",
-    price: "",
   });
 
   const handleInputChange = (
@@ -63,31 +114,11 @@ const FastFastLogisticsBooking = () => {
     setIsLoading(true);
     setError("");
 
-    if (status !== "authenticated" || !session?.user?.id) {
-      setError(
-        <>
-          You must be logged in to create a booking.{" "}
-          <Link
-            href="/auth/signin"
-            style={{ color: "blue", textDecoration: "underline" }}
-          >
-            Log in here
-          </Link>
-          .
-        </>
-      );
-      setIsLoading(false);
-      return;
-    }
-
     const bookingData = {
       ...formData,
       pickupDate: pickupDate.toISOString(),
       deliveryDate: deliveryDate.toISOString(),
       isUrgent,
-      userId: session.user.id,
-      status: "PENDING",
-      price: parseFloat(formData.price),
     };
 
     try {
@@ -161,7 +192,7 @@ const FastFastLogisticsBooking = () => {
             <Input
               id="deliveryAddress"
               name="deliveryAddress"
-              placeholder="Enter Your Delivery Location"
+              placeholder="Enter Your delivery Location"
               required
               onChange={handleInputChange}
             />
@@ -254,107 +285,47 @@ const FastFastLogisticsBooking = () => {
               id="packageDescription"
               name="packageDescription"
               placeholder="Briefly describe your package contents"
-              required
               onChange={handleInputChange}
             />
           </div>
 
-          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="pickupPhoneNumber">Pickup Phone Number</Label>
-              <Input
-                id="pickupPhoneNumber"
-                name="pickupPhoneNumber"
-                placeholder="Enter the pickup contact number"
-                required
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryPhoneNumber">Delivery Phone Number</Label>
-              <Input
-                id="deliveryPhoneNumber"
-                name="deliveryPhoneNumber"
-                placeholder="Enter the delivery contact number"
-                required
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment Method</Label>
-            <Select
-              onValueChange={(value) =>
-                handleSelectChange("paymentMethod", value)
-              }
-            >
-              <SelectTrigger id="paymentMethod">
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="online">Online Payment</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="route">Route</Label>
-            <Select
-              onValueChange={(value) => handleSelectChange("route", value)}
-            >
-              <SelectTrigger id="route">
-                <SelectValue placeholder="Select route" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Standard Route</SelectItem>
-                <SelectItem value="express">Express Route</SelectItem>
-                <SelectItem value="priority">Priority Route</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="price">Price ($)</Label>
-            <Input
-              id="price"
-              name="price"
-              placeholder="Enter the price"
-              type="number"
-              required
-              onChange={handleInputChange}
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="urgent"
+              checked={isUrgent}
+              onCheckedChange={setIsUrgent}
             />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isUrgent" className="flex items-center space-x-2">
-              <Switch
-                id="isUrgent"
-                checked={isUrgent}
-                onCheckedChange={setIsUrgent}
-              />
-              <span>Is this an urgent delivery?</span>
+            <Label htmlFor="urgent">
+              Urgent Delivery (Additional fee applies)
             </Label>
           </div>
 
+          {isUrgent && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Urgent Delivery</AlertTitle>
+              <AlertDescription>
+                An additional fee of $20 will be applied for urgent deliveries.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {error && (
             <Alert variant="destructive">
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                Processing
               </>
             ) : (
-              "Book Now"
+              "Book Dispatch Rider"
             )}
           </Button>
         </form>

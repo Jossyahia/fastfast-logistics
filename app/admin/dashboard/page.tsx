@@ -1,21 +1,15 @@
-// src/app/dashboard/page.tsx
-"use client";
-import CreateTablesButton from '@/components/CreateTablesButton';
+mport { Button } from "@/components/ui/button"
 
-//import { ProtectedRoute } from "@/components/features/auth/ProtectedRoute";
-//import { useAuth } from "@/contexts/AuthContext";
-
-function DashboardPage() {
- // const { user } = useAuth();
-
+export default function AdminDashboard() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-6">Dashboard</h1>
-      <p>Welcome</p>
-      {/* Add more dashboard content here */}
-      <CreateTablesButton />
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+      <div className="grid grid-cols-2 gap-4">
+        <Button>Manage Users</Button>
+        <Button>Manage Orders</Button>
+        <Button>Manage Blog Posts</Button>
+        <Button>View Analytics</Button>
+      </div>
     </div>
-  );
+  )
 }
-
-export default DashboardPage;

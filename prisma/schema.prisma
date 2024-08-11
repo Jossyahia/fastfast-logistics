@@ -1,6 +1,5 @@
 // prisma/schema.prisma
 
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -18,8 +17,10 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
+  role          Role      @default(USER)
   accounts      Account[]
   sessions      Session[]
+  bookings      Booking[]
 }
 
 model Account {
@@ -57,4 +58,53 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Booking {
+  id                  Int       @id @default(autoincrement())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id])
+  pickupAddress       String
+  deliveryAddress     String
+  pickupDate          DateTime
+  deliveryDate        DateTime
+  pickupTime          String
+  deliveryTime        String
+  packageSize         String
+  packageDescription  String?
+  status              Status    @default(PENDING)
+  isUrgent            Boolean
+  createdAt           DateTime  @default(now()) @db.Timestamptz
+  updatedAt           DateTime  @updatedAt
+  rider               Rider?    @relation(fields: [riderId], references: [id])
+  riderId             String?
+  paymentMethod       String
+  route               String
+  price               Float
+  pickupPhoneNumber   String
+  deliveryPhoneNumber String
+}
+
+model Rider {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bookings      Booking[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  RIDER
+}
+
+enum Status {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

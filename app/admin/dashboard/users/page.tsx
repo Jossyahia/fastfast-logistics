@@ -1,19 +1,22 @@
-"use client";
+import prisma from "@/lib/prisma";
+import Link from "next/link";
 
-import { useSession, signIn, signOut } from "next-auth/react";
-const UserPage = () => {
-  const { data: session } = useSession();
-
-  if (!session) {
-    return <div>Loading...</div>;
-  }
+export default async function Home() {
+  const users = await prisma.user.findMany();
 
   return (
-    <div>
-      <h1>Welcome, {session.user.name}!</h1>
-      <p>Your email: {session.user.email}</p>
-    </div>
+    <main className="flex flex-col items-center gap-6 px-3 py-10">
+      <h1 className="text-center text-4xl font-bold">Next-Auth V5 Tutorial</h1>
+      <h2 className="text-center text-2xl font-semibold">Users</h2>
+      <ul className="list-inside list-disc">
+        {users.map((user) => (
+          <li key={user.id}>
+            <Link href={`/user/${user.id}`} className="hover:underline">
+              {user.name || `User ${user.id}`}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </main>
   );
-};
-
-export default UserPage;
+}

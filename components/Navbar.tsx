@@ -93,7 +93,7 @@ const NavBar = () => {
             {/* Add search functionality here if needed */}
           </div>
           <nav className="flex items-center">
-            <Link href="/login" className="mr-6 flex items-center space-x-2">
+            <Link href="/auth/signin" className="mr-6 flex items-center space-x-2">
               <Button
                 variant="ghost"
                 className="text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"

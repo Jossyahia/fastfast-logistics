@@ -1,4 +1,5 @@
 // lib/prisma.js
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
 let prisma;
