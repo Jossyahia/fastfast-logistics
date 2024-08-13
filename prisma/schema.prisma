@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -13,14 +11,17 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
   password      String?
   role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
   bookings      Booking[]
+  shipments     Shipment[]
 }
 
 model Account {
@@ -29,12 +30,12 @@ model Account {
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String?
-  access_token       String?
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String?
+  id_token           String?  @db.Text
   session_state      String?
   oauth_token_secret String?
   oauth_token        String?
@@ -42,6 +43,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -50,6 +52,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model VerificationToken {
@@ -61,7 +65,7 @@ model VerificationToken {
 }
 
 model Booking {
-  id                  Int       @id @default(autoincrement())
+  id                  String    @id @default(cuid())
   userId              String
   user                User      @relation(fields: [userId], references: [id])
   pickupAddress       String
@@ -70,7 +74,7 @@ model Booking {
   deliveryDate        DateTime
   pickupTime          String
   deliveryTime        String
-  packageSize         String
+  packageSize         PackageSize
   packageDescription  String?
   status              Status    @default(PENDING)
   isUrgent            Boolean
@@ -78,33 +82,74 @@ model Booking {
   updatedAt           DateTime  @updatedAt
   rider               Rider?    @relation(fields: [riderId], references: [id])
   riderId             String?
-  paymentMethod       String
+  paymentMethod       PaymentMethod
   route               String
   price               Float
   pickupPhoneNumber   String
   deliveryPhoneNumber String
+
+  @@index([userId])
+  @@index([riderId])
+  @@index([status])
 }
 
 model Rider {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  password      String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  bookings      Booking[]
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  bookings  Booking[]
+}
+
+model Shipment {
+  id                String         @id @default(cuid())
+  trackingNumber    String         @unique
+  status            ShipmentStatus
+  currentLocation   String?
+  estimatedDelivery DateTime?
+  userId            String
+  user              User           @relation(fields: [userId], references: [id])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
 }
 
 enum Role {
-  USER
   ADMIN
+  USER
   RIDER
 }
 
 enum Status {
   PENDING
   ACCEPTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
+  IN_TRANSIT
+  DELIVERED
+  DELAYED
+}
+
+enum ShipmentStatus {
+  PROCESSING
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+}
+
+enum PackageSize {
+  SMALL
+  MEDIUM
+  LARGE
+  EXTRA_LARGE
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
 }

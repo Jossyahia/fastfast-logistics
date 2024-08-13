@@ -1,9 +1,9 @@
-// app/api/auth/signup/route.js
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcryptjs from "bcryptjs"; // Changed from bcrypt to bcryptjs
+import bcryptjs from "bcryptjs";
+import { Role } from "@prisma/client";
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const { name, email, password } = await req.json();
 
   try {
@@ -25,13 +25,19 @@ export async function POST(req) {
         name,
         email,
         password: hashedPassword,
+        role: Role.USER, // Set default role to USER
       },
     });
 
     return NextResponse.json(
       {
         message: "User created successfully",
-        user: { id: user.id, name: user.name, email: user.email },
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       },
       { status: 201 }
     );
@@ -41,5 +47,7 @@ export async function POST(req) {
       { message: "Something went wrong" },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

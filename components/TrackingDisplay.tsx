@@ -1,9 +1,9 @@
-// src/components/features/tracking/TrackingDisplay.tsx
+"use client"
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-export function TrackingDisplay() {
+export default function TrackingDisplay() {
   const [trackingId, setTrackingId] = useState('')
   const [trackingInfo, setTrackingInfo] = useState<null | { status: string, location: string }>(null)
 
