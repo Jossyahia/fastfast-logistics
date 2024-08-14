@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-//import AuthProvider from "../components/AuthProvider";
 import { SessionProvider } from "next-auth/react";
+import NavBarServer from "@/components/NavBarServer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,7 +28,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
+            <NavBarServer />
             {children}
           </ThemeProvider>
           <Footer />

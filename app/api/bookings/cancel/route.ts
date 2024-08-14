@@ -1,42 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-
 function generateTrackingNumber() {
-  return "Fls-Sap" + Math.random().toString(36).substr(2, 9).toUpperCase();
+  return (
+    "fls-track" + Math.random().toString(36).substr(2, 9).toUpperCase()
+  );
 }
 
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    //console.log("Session:", session); // Log the entire session object
-
-    if (!session) {
-     // console.log("No session found");
-      return NextResponse.json(
-        { error: "Unauthorized - No session" },
-        { status: 401 }
-      );
-    }
-
-    if (!session.user) {
-    //console.log("No user in session");
-      return NextResponse.json(
-        { error: "Unauthorized - No user in session" },
-        { status: 401 }
-      );
-    }
-
-    if (!session.user.id) {
-      //console.log("No user ID in session");
-      return NextResponse.json(
-        { error: "Unauthorized - No user ID" },
-        { status: 401 }
-      );
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
-    //console.log("Request body:", body); // Log the request body
     const {
       pickupAddress,
       deliveryAddress,
@@ -84,30 +62,50 @@ export async function POST(request: Request) {
           pickupPhoneNumber,
           deliveryPhoneNumber,
           status: "PROCESSING",
-          shipment: {
-            create: {
-              trackingNumber: generateTrackingNumber(),
-              status: "PROCESSING",
-              currentLocation: pickupAddress,
-              estimatedDelivery: new Date(deliveryDate),
-              userId: session.user.id,
-            },
-          },
-        },
-        include: {
-          shipment: true,
         },
       });
 
-      console.log("Created booking:", booking); // Log the created booking
-      return booking;
+      const shipment = await prisma.shipment.create({
+        data: {
+          trackingNumber: generateTrackingNumber(),
+          status: "PROCESSING",
+          currentLocation: pickupAddress,
+          estimatedDelivery: new Date(deliveryDate),
+          userId: session.user.id,
+        },
+      });
+
+      return { booking, shipment };
     });
 
-    return NextResponse.json({ success: true, booking: result });
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error creating booking:", error);
     return NextResponse.json(
-      { error: "Failed to create booking", details: error.message },
+      { error: "Failed to create booking" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const session = await auth();
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      include: { rider: true },
+    });
+
+    return NextResponse.json(bookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch bookings" },
       { status: 500 }
     );
   }

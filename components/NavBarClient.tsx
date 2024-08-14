@@ -1,14 +1,14 @@
 "use client";
 
 import React from "react";
-import { auth, signIn, signOut } from "@/auth";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import MobileNavLink from "@/components/MobileNavLink";
 import ModeToggle from "@/components/ModeToggle";
+import { serverSignIn, serverSignOut } from "@/app/actions/auth";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -28,8 +28,8 @@ const NavLink = ({ href, children }) => {
   );
 };
 
-const NavBar = () => {
-  const { user } = auth();
+const NavBarClient = ({ user }) => {
+  const router = useRouter();
   const isAdmin = user?.role === "admin";
 
   const navItems = [
@@ -47,10 +47,11 @@ const NavBar = () => {
 
   const handleAuth = async () => {
     if (user) {
-      await signOut();
+      await serverSignOut();
     } else {
-      await signIn();
+      await serverSignIn();
     }
+    router.refresh();
   };
 
   return (
@@ -118,7 +119,7 @@ const NavBar = () => {
                   Logout
                 </>
               ) : (
-                "Login"
+                "Signin"
               )}
             </Button>
             {user && (
@@ -134,4 +135,4 @@ const NavBar = () => {
   );
 };
 
-export default NavBar;
+export default NavBarClient;
