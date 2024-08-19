@@ -8,40 +8,26 @@ module.exports = {
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
   ],
+  darkMode: "class", // This enables dark mode
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
-        gradientStart: "#ff80b5",
-        gradientEnd: "#9089fc",
-      },
-      backgroundImage: {
-        "custom-gradient": "linear-gradient(to tr, var(--tw-gradient-stops))",
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: { height: 0 },
-          to: { height: "var(--radix-accordion-content-height)" },
+        primary: {
+          900: "#1e3a8a",
+          800: "#1e40af",
+          700: "#1d4ed8",
+          600: "#2563eb",
+          300: "#93c5fd", // Light blue for dark mode text
         },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+        secondary: {
+          500: "#eab308",
+          600: "#ca8a04",
         },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        neutral: {
+          100: "#f3f4f6",
+          800: "#1f2937",
+          900: "#111827", // Very dark blue for dark mode background
+        },
       },
     },
   },

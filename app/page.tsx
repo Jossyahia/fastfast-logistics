@@ -12,19 +12,19 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-white">
-      <main className="container mx-auto px-4 py-16">
+    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
+      <main className="container mx-auto px-4 py-16 ">
         <section className="text-center mb-16">
-          <h2 className="text-5xl font-extrabold text-gray-900 mb-4">
+          <h2 className="text-5xl font-extrabold mb-4">
             Fastfast Logistics Services
           </h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl mb-8">
             Experience seamless shipping and tracking with FastFast Logistics
             Services
           </p>
-          <p className="text-x1 text-green-600 mb-8">
+          <p className="text-x1  mb-8">
             {" "}
-            Fast, Reliable Logistics Solutions
+            Fast, Cheap and Secure Logistics Solutions
           </p>
 
           <Link href="/booking" passHref>

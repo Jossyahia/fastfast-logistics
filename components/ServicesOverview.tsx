@@ -27,7 +27,7 @@ const services = [
 
 export default function ServicesOverview() {
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
       {services.map((service, index) => (
         <Card key={index}>
           <CardHeader>

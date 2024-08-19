@@ -4,12 +4,12 @@ import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
-interface ShipmentUpsertData {
+interface StatusUpdateData {
   trackingNumber: string;
-  status: string;
+  shipmentStatus: string;
+  bookingStatus: string;
   currentLocation?: string;
   estimatedDelivery?: string;
-  userEmail: string; // Assuming you use email to identify the user
 }
 
 export async function PUT(request: NextRequest) {
@@ -24,53 +24,60 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const data: ShipmentUpsertData = await request.json();
+    const data: StatusUpdateData = await request.json();
 
-    if (!data.trackingNumber || !data.status || !data.userEmail) {
+    if (!data.trackingNumber || !data.shipmentStatus || !data.bookingStatus) {
       return NextResponse.json(
-        { error: "Tracking number, status, and user email are required" },
+        {
+          error:
+            "Tracking number, shipment status, and booking status are required",
+        },
         { status: 400 }
       );
     }
 
-    const upsertedShipment = await prisma.shipment.upsert({
+    const shipment = await prisma.shipment.findUnique({
       where: { trackingNumber: data.trackingNumber },
-      update: {
-        status: data.status,
+      include: { booking: true },
+    });
+
+    if (!shipment) {
+      return NextResponse.json(
+        { error: "Shipment not found" },
+        { status: 404 }
+      );
+    }
+
+    const updatedShipment = await prisma.shipment.update({
+      where: { trackingNumber: data.trackingNumber },
+      data: {
+        status: data.shipmentStatus as ShipmentStatus,
         currentLocation: data.currentLocation,
         estimatedDelivery: data.estimatedDelivery
           ? new Date(data.estimatedDelivery)
           : undefined,
-      },
-      create: {
-        trackingNumber: data.trackingNumber,
-        status: data.status,
-        currentLocation: data.currentLocation,
-        estimatedDelivery: data.estimatedDelivery
-          ? new Date(data.estimatedDelivery)
-          : undefined,
-        user: {
-          connectOrCreate: {
-            where: { email: data.userEmail }, // Adjust this to your unique user identifier
-            create: { email: data.userEmail }, // Add other required user fields if needed
+        booking: {
+          update: {
+            status: data.bookingStatus as Status,
           },
         },
       },
+      include: { booking: true },
     });
 
     console.log(
-      "Shipment upserted successfully:",
-      upsertedShipment.trackingNumber
+      "Shipment and booking status updated successfully:",
+      updatedShipment.trackingNumber
     );
     return NextResponse.json({
-      message: "Shipment upserted successfully",
-      shipment: upsertedShipment,
+      message: "Shipment and booking status updated successfully",
+      shipment: updatedShipment,
     });
   } catch (error) {
-    console.error("Error upserting shipment:", error);
+    console.error("Error updating status:", error);
     if (error instanceof Error) {
       return NextResponse.json(
-        { error: `Error upserting shipment: ${error.message}` },
+        { error: `Error updating status: ${error.message}` },
         { status: 500 }
       );
     }

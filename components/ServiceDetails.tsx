@@ -40,7 +40,7 @@ const serviceDetails = [
 
 export default function ServiceDetails() {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
       {serviceDetails.map((service, index) => (
         <Accordion type="single" collapsible className="w-full" key={index}>
           <AccordionItem value={`item-${index}`}>
@@ -48,7 +48,7 @@ export default function ServiceDetails() {
               {service.title}
             </AccordionTrigger>
             <AccordionContent>
-              <p className="text-gray-600">{service.content}</p>
+              <p>{service.content}</p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-function generateTrackingNumber() {
-  return (
-    "fls-track" + Math.random().toString(36).substr(2, 9).toUpperCase()
-  );
+
+function isValidDate(date: any): boolean {
+  return date instanceof Date && !isNaN(date.getTime());
 }
 
 export async function POST(request: Request) {
@@ -15,97 +14,84 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
-      pickupAddress,
-      deliveryAddress,
-      pickupDate,
-      deliveryDate,
-      pickupTime,
-      deliveryTime,
-      packageSize,
-      packageDescription,
-      isUrgent,
-      paymentMethod,
-      pickupPhoneNumber,
-      deliveryPhoneNumber,
-    } = body;
+    const { bookingId } = body;
 
-    // Simple route calculation (replace with actual logic)
-    const route = `${pickupAddress} to ${deliveryAddress}`;
-
-    // Simple price calculation (replace with actual logic)
-    const basePrice = 800;
-    const urgentFee = isUrgent ? 500 : 0;
-    const sizeFee =
-      { SMALL: 200, MEDIUM: 500, LARGE: 1000, EXTRA_LARGE: 1500 }[
-        packageSize
-      ] || 0;
-    const price = basePrice + urgentFee + sizeFee;
-
-    // Create booking and shipment in a transaction
-    const result = await prisma.$transaction(async (prisma) => {
-      const booking = await prisma.booking.create({
-        data: {
-          userId: session.user.id,
-          pickupAddress,
-          deliveryAddress,
-          pickupDate: new Date(pickupDate),
-          deliveryDate: new Date(deliveryDate),
-          pickupTime,
-          deliveryTime,
-          packageSize,
-          packageDescription,
-          isUrgent,
-          paymentMethod,
-          route,
-          price,
-          pickupPhoneNumber,
-          deliveryPhoneNumber,
-          status: "PROCESSING",
-        },
-      });
-
-      const shipment = await prisma.shipment.create({
-        data: {
-          trackingNumber: generateTrackingNumber(),
-          status: "PROCESSING",
-          currentLocation: pickupAddress,
-          estimatedDelivery: new Date(deliveryDate),
-          userId: session.user.id,
-        },
-      });
-
-      return { booking, shipment };
-    });
-
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("Error creating booking:", error);
-    return NextResponse.json(
-      { error: "Failed to create booking" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!bookingId) {
+      return NextResponse.json(
+        { error: "Booking ID is required" },
+        { status: 400 }
+      );
     }
 
-    const bookings = await prisma.booking.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      include: { rider: true },
+    // Use a transaction to update both booking and shipment
+    const result = await prisma.$transaction(async (prisma) => {
+      // Fetch the booking to ensure it exists and belongs to the user
+      const booking = await prisma.booking.findUnique({
+        where: {
+          id: bookingId,
+          userId: session.user.id,
+        },
+        include: { shipment: true }, // Include the associated shipment
+      });
+
+      if (!booking) {
+        throw new Error("Booking not found or not authorized");
+      }
+
+      // Check if the booking is in a cancellable state
+      if (booking.status !== "PROCESSING" && booking.status !== "SHIPPED") {
+        throw new Error("Booking cannot be cancelled in its current state");
+      }
+
+      const now = new Date();
+      const pickupDate = isValidDate(booking.pickupDate)
+        ? booking.pickupDate
+        : now;
+      const deliveryDate = isValidDate(booking.deliveryDate)
+        ? booking.deliveryDate
+        : now;
+
+      // Update the booking
+      const updatedBooking = await prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "CANCELLED",
+          updatedAt: now,
+          pickupDate: pickupDate,
+          deliveryDate: deliveryDate,
+        },
+      });
+
+      // Update the associated shipment if it exists
+      let updatedShipment = null;
+      if (booking.shipment) {
+        updatedShipment = await prisma.shipment.update({
+          where: { id: booking.shipment.id },
+          data: {
+            status: "CANCELLED",
+            updatedAt: now,
+            estimatedDelivery: isValidDate(booking.shipment.estimatedDelivery)
+              ? booking.shipment.estimatedDelivery
+              : null,
+          },
+        });
+      }
+
+      return { updatedBooking, updatedShipment };
     });
 
-    return NextResponse.json(bookings);
+    return NextResponse.json({
+      message: "Booking and shipment cancelled successfully",
+      booking: result.updatedBooking,
+      shipment: result.updatedShipment,
+    });
   } catch (error) {
-    console.error("Error fetching bookings:", error);
+    console.error("Error cancelling booking:", error);
     return NextResponse.json(
-      { error: "Failed to fetch bookings" },
+      {
+        error:
+          error instanceof Error ? error.message : "Failed to cancel booking",
+      },
       { status: 500 }
     );
   }

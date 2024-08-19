@@ -32,21 +32,19 @@ export default async function BookingConfirmationPage({
   const { booking, shipment } = data;
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
+    <div className="max-w-2xl mx-auto mt-8 p-6 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 shadow-md rounded-lg">
+      <h1 className="text-3xl font-bold mb-6 text-center  bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
         Booking Confirmation
       </h1>
 
-      <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6">
+      <div className="bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 p-4 mb-6">
         Your booking has been successfully created!
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6  bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
         <div>
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            Booking Details
-          </h2>
-          <ul className="space-y-2">
+          <h2 className="text-2xl font-semibold mb-4">Booking Details</h2>
+          <ul className="space-y-2 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
             <li>
               <strong>Booking ID:</strong> {booking.id}
             </li>
@@ -93,7 +91,7 @@ export default async function BookingConfirmationPage({
         </div>
 
         <div>
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+          <h2 className="text-2xl font-semibold mb-4  bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
             Shipment Details
           </h2>
           {shipment ? (
@@ -123,9 +121,7 @@ export default async function BookingConfirmationPage({
 
       {booking.rider && (
         <div className="mt-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-            Rider Information
-          </h2>
+          <h2 className="text-2xl font-semibold mb-4">Rider Information</h2>
           <ul className="space-y-2">
             <li>
               <strong>Name:</strong> {booking.rider.name}

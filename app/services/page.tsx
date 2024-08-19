@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function ServicesPage() {
   return (
-    <div className="container mx-auto px-4 py-12 min-h-screen bg-gradient-to-b from-blue-100 to-white">
+    <div className="container mx-auto px-4 py-12 min-h-screen bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
       <h1 className="text-3xl lg:text-4xl font-bold mb-8 text-center">
         Our Services
       </h1>

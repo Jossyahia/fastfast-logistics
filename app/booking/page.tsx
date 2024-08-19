@@ -1,6 +1,33 @@
 "use client"
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  Calendar,
+  Clock,
+  Package,
+  CreditCard,
+  Phone,
+  Truck,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 const BookingPage = () => {
   const router = useRouter();
@@ -22,20 +49,11 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    }));
+  const handleChange = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -65,216 +83,196 @@ const BookingPage = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
-      <h1 className="text-2xl font-bold mb-4">Create a Booking</h1>
-
-      {/* Pickup Address */}
-      <div className="mb-4">
-        <label htmlFor="pickupAddress" className="block mb-1">
-          Pickup Address
-        </label>
-        <input
-          type="text"
-          id="pickupAddress"
-          name="pickupAddress"
-          value={formData.pickupAddress}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Delivery Address */}
-      <div className="mb-4">
-        <label htmlFor="deliveryAddress" className="block mb-1">
-          Delivery Address
-        </label>
-        <input
-          type="text"
-          id="deliveryAddress"
-          name="deliveryAddress"
-          value={formData.deliveryAddress}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Pickup Date */}
-      <div className="mb-4">
-        <label htmlFor="pickupDate" className="block mb-1">
-          Pickup Date
-        </label>
-        <input
-          type="date"
-          id="pickupDate"
-          name="pickupDate"
-          value={formData.pickupDate}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Delivery Date */}
-      <div className="mb-4">
-        <label htmlFor="deliveryDate" className="block mb-1">
-          Delivery Date
-        </label>
-        <input
-          type="date"
-          id="deliveryDate"
-          name="deliveryDate"
-          value={formData.deliveryDate}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Pickup Time */}
-      <div className="mb-4">
-        <label htmlFor="pickupTime" className="block mb-1">
-          Pickup Time
-        </label>
-        <input
-          type="time"
-          id="pickupTime"
-          name="pickupTime"
-          value={formData.pickupTime}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Delivery Time */}
-      <div className="mb-4">
-        <label htmlFor="deliveryTime" className="block mb-1">
-          Delivery Time
-        </label>
-        <input
-          type="time"
-          id="deliveryTime"
-          name="deliveryTime"
-          value={formData.deliveryTime}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Package Size */}
-      <div className="mb-4">
-        <label htmlFor="packageSize" className="block mb-1">
-          Package Size
-        </label>
-        <select
-          id="packageSize"
-          name="packageSize"
-          value={formData.packageSize}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
+    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
+      <CardHeader>
+        <h1 className="text-3xl font-bold">Create a Booking</h1>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="pickupAddress" className="flex items-center">
+                <Truck className="w-4 h-4 mr-2" /> Pickup Address
+              </Label>
+              <Input
+                id="pickupAddress"
+                value={formData.pickupAddress}
+                onChange={(e) => handleChange("pickupAddress", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryAddress" className="flex items-center">
+                <Truck className="w-4 h-4 mr-2" /> Delivery Address
+              </Label>
+              <Input
+                id="deliveryAddress"
+                value={formData.deliveryAddress}
+                onChange={(e) =>
+                  handleChange("deliveryAddress", e.target.value)
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pickupDate" className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" /> Pickup Date
+              </Label>
+              <Input
+                type="date"
+                id="pickupDate"
+                value={formData.pickupDate}
+                onChange={(e) => handleChange("pickupDate", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryDate" className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" /> Delivery Date
+              </Label>
+              <Input
+                type="date"
+                id="deliveryDate"
+                value={formData.deliveryDate}
+                onChange={(e) => handleChange("deliveryDate", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pickupTime" className="flex items-center">
+                <Clock className="w-4 h-4 mr-2" /> Pickup Time
+              </Label>
+              <Input
+                type="time"
+                id="pickupTime"
+                value={formData.pickupTime}
+                onChange={(e) => handleChange("pickupTime", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryTime" className="flex items-center">
+                <Clock className="w-4 h-4 mr-2" /> Delivery Time
+              </Label>
+              <Input
+                type="time"
+                id="deliveryTime"
+                value={formData.deliveryTime}
+                onChange={(e) => handleChange("deliveryTime", e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="packageSize" className="flex items-center">
+                <Package className="w-4 h-4 mr-2" /> Package Size
+              </Label>
+              <Select
+                value={formData.packageSize}
+                onValueChange={(value) => handleChange("packageSize", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select package size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SMALL">Small</SelectItem>
+                  <SelectItem value="MEDIUM">Medium</SelectItem>
+                  <SelectItem value="LARGE">Large</SelectItem>
+                  <SelectItem value="EXTRA_LARGE">Extra Large</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod" className="flex items-center">
+                <CreditCard className="w-4 h-4 mr-2" /> Payment Method
+              </Label>
+              <Select
+                value={formData.paymentMethod}
+                onValueChange={(value) => handleChange("paymentMethod", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                  <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
+                  <SelectItem value="CASH">Cash</SelectItem>
+                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="packageDescription" className="flex items-center">
+              <Package className="w-4 h-4 mr-2" /> Package Description
+            </Label>
+            <Textarea
+              id="packageDescription"
+              value={formData.packageDescription}
+              onChange={(e) =>
+                handleChange("packageDescription", e.target.value)
+              }
+              rows={3}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isUrgent"
+              checked={formData.isUrgent}
+              onCheckedChange={(checked) => handleChange("isUrgent", checked)}
+            />
+            <Label htmlFor="isUrgent">Urgent Delivery</Label>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="pickupPhoneNumber" className="flex items-center">
+                <Phone className="w-4 h-4 mr-2" /> Pickup Phone Number
+              </Label>
+              <Input
+                type="tel"
+                id="pickupPhoneNumber"
+                value={formData.pickupPhoneNumber}
+                onChange={(e) =>
+                  handleChange("pickupPhoneNumber", e.target.value)
+                }
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="deliveryPhoneNumber"
+                className="flex items-center"
+              >
+                <Phone className="w-4 h-4 mr-2" /> Delivery Phone Number
+              </Label>
+              <Input
+                type="tel"
+                id="deliveryPhoneNumber"
+                value={formData.deliveryPhoneNumber}
+                onChange={(e) =>
+                  handleChange("deliveryPhoneNumber", e.target.value)
+                }
+                required
+              />
+            </div>
+          </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
+      <CardFooter>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading}
+          onClick={handleSubmit}
         >
-          <option value="SMALL">Small</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LARGE">Large</option>
-          <option value="EXTRA_LARGE">Extra Large</option>
-        </select>
-      </div>
-
-      {/* Package Description */}
-      <div className="mb-4">
-        <label htmlFor="packageDescription" className="block mb-1">
-          Package Description
-        </label>
-        <textarea
-          id="packageDescription"
-          name="packageDescription"
-          value={formData.packageDescription}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded"
-          rows={3}
-        />
-      </div>
-
-      {/* Is Urgent */}
-      <div className="mb-4">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            name="isUrgent"
-            checked={formData.isUrgent}
-            onChange={handleChange}
-            className="mr-2"
-          />
-          Urgent Delivery
-        </label>
-      </div>
-
-      {/* Payment Method */}
-      <div className="mb-4">
-        <label htmlFor="paymentMethod" className="block mb-1">
-          Payment Method
-        </label>
-        <select
-          id="paymentMethod"
-          name="paymentMethod"
-          value={formData.paymentMethod}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        >
-          <option value="CREDIT_CARD">Credit Card</option>
-          <option value="DEBIT_CARD">Debit Card</option>
-          <option value="CASH">Cash</option>
-          <option value="BANK_TRANSFER">Bank Transfer</option>
-        </select>
-      </div>
-
-      {/* Pickup Phone Number */}
-      <div className="mb-4">
-        <label htmlFor="pickupPhoneNumber" className="block mb-1">
-          Pickup Phone Number
-        </label>
-        <input
-          type="tel"
-          id="pickupPhoneNumber"
-          name="pickupPhoneNumber"
-          value={formData.pickupPhoneNumber}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {/* Delivery Phone Number */}
-      <div className="mb-4">
-        <label htmlFor="deliveryPhoneNumber" className="block mb-1">
-          Delivery Phone Number
-        </label>
-        <input
-          type="tel"
-          id="deliveryPhoneNumber"
-          name="deliveryPhoneNumber"
-          value={formData.deliveryPhoneNumber}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-
-      <button
-        type="submit"
-        className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-blue-300"
-        disabled={loading}
-      >
-        {loading ? "Creating Booking..." : "Create Booking"}
-      </button>
-    </form>
+          {loading ? "Creating Booking..." : "Create Booking"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 

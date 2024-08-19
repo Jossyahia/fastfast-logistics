@@ -7,7 +7,7 @@ import {
 
 export default function ContactInfo() {
   return (
-    <div className="bg-gray-100 p-6 rounded-lg">
+    <div className="bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 p-6 rounded-lg">
       <h2 className="text-2xl font-semibold mb-4">Get in Touch</h2>
       <div className="space-y-4">
         <div className="flex items-center">

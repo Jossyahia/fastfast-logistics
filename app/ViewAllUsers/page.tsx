@@ -3,22 +3,21 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import CancelBookingButton from "@/components/CancelBookingButton";
 import FilterForm from "@/components/FilterForm";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-interface Booking {
+interface User {
   id: string;
-  pickupAddress: string;
-  deliveryAddress: string;
-  pickupDate: Date;
-  status: string;
+  name: string | null;
+  email: string;
+  role: string;
+  createdAt: Date;
 }
 
-interface ViewAllBookingsPageProps {
+interface ViewAllUsersPageProps {
   searchParams: {
     page?: string;
-    status?: string;
+    role?: string;
     startDate?: string;
     endDate?: string;
     sortBy?: string;
@@ -27,21 +26,18 @@ interface ViewAllBookingsPageProps {
   };
 }
 
-async function getBookings(
-  userId: string,
-  searchParams: ViewAllBookingsPageProps["searchParams"]
-) {
+async function getUsers(searchParams: ViewAllUsersPageProps["searchParams"]) {
   const page = parseInt(searchParams.page || "1");
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  let where: any = { userId };
+  let where: any = {};
 
-  if (searchParams.status) {
-    where.status = searchParams.status;
+  if (searchParams.role) {
+    where.role = searchParams.role;
   }
   if (searchParams.startDate && searchParams.endDate) {
-    where.pickupDate = {
+    where.createdAt = {
       gte: new Date(searchParams.startDate),
       lte: new Date(searchParams.endDate),
     };
@@ -49,10 +45,8 @@ async function getBookings(
 
   if (searchParams.search) {
     where.OR = [
-      { pickupAddress: { contains: searchParams.search, mode: "insensitive" } },
-      {
-        deliveryAddress: { contains: searchParams.search, mode: "insensitive" },
-      },
+      { name: { contains: searchParams.search, mode: "insensitive" } },
+      { email: { contains: searchParams.search, mode: "insensitive" } },
     ];
   }
 
@@ -60,57 +54,48 @@ async function getBookings(
     ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
     : { createdAt: "desc" };
 
-  const bookings = await prisma.booking.findMany({
+  const users = await prisma.user.findMany({
     where,
     orderBy,
     skip,
     take: limit,
-    include: { rider: true },
   });
 
-  const total = await prisma.booking.count({ where });
+  const total = await prisma.user.count({ where });
 
-  return { bookings, total };
+  return { users, total };
 }
 
-const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
+const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   searchParams,
 }) => {
   const session = await auth();
-  if (!session || !session.user) {
+  if (!session || !session.user || session.user.role !== "ADMIN") {
     redirect("/api/auth/signin");
   }
 
-  const { bookings, total } = await getBookings(session.user.id, searchParams);
+  const { users, total } = await getUsers(searchParams);
 
   const page = parseInt(searchParams.page || "1");
   const limit = 10;
   const totalPages = Math.ceil(total / limit);
 
   if (
-    bookings.length === 0 &&
+    users.length === 0 &&
     page === 1 &&
     !searchParams.search &&
-    !searchParams.status &&
+    !searchParams.role &&
     !searchParams.startDate &&
     !searchParams.endDate
   ) {
     return (
       <div className="max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
         <h1 className="text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
-          My Bookings
+          All Users
         </h1>
         <p className="text-center text-gray-600 dark:text-gray-300">
-          You haven't made any bookings yet.
+          There are no users in the system yet.
         </p>
-        <div className="mt-4 text-center">
-          <Link
-            href="/booking"
-            className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-          >
-            Create a New Booking
-          </Link>
-        </div>
       </div>
     );
   }
@@ -118,7 +103,7 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
   return (
     <div className="max-w-6xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
-        My Bookings
+        All Users
       </h1>
 
       <FilterForm searchParams={searchParams} />
@@ -130,29 +115,29 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
               <th className="px-4 py-2 text-left">ID</th>
               <th className="px-4 py-2 text-left">
                 <SortableHeader
-                  field="pickupAddress"
-                  label="Pickup"
+                  field="name"
+                  label="Name"
                   searchParams={searchParams}
                 />
               </th>
               <th className="px-4 py-2 text-left">
                 <SortableHeader
-                  field="deliveryAddress"
-                  label="Delivery"
+                  field="email"
+                  label="Email"
                   searchParams={searchParams}
                 />
               </th>
               <th className="px-4 py-2 text-left">
                 <SortableHeader
-                  field="pickupDate"
-                  label="Date"
+                  field="role"
+                  label="Role"
                   searchParams={searchParams}
                 />
               </th>
               <th className="px-4 py-2 text-left">
                 <SortableHeader
-                  field="status"
-                  label="Status"
+                  field="createdAt"
+                  label="Created At"
                   searchParams={searchParams}
                 />
               </th>
@@ -160,33 +145,36 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
             </tr>
           </thead>
           <tbody>
-            {bookings.map((booking: Booking) => (
-              <tr key={booking.id} className="border-b dark:border-gray-700">
+            {users.map((user: User) => (
+              <tr key={user.id} className="border-b dark:border-gray-700">
                 <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
-                  {booking.id.slice(0, 8)}...
+                  {user.id.slice(0, 8)}...
                 </td>
                 <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
-                  {booking.pickupAddress}
+                  {user.name || "N/A"}
                 </td>
                 <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
-                  {booking.deliveryAddress}
-                </td>
-                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
-                  {new Date(booking.pickupDate).toLocaleDateString()}
+                  {user.email}
                 </td>
                 <td className="px-4 py-2">
-                  <StatusBadge status={booking.status} />
+                  <RoleBadge role={user.role} />
+                </td>
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
+                  {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-2">
                   <Link
-                    href={`/booking/confirmation/${booking.id}`}
+                    href={`/users/${user.id}`}
                     className="text-blue-500 hover:text-blue-700 mr-2 transition-colors duration-200"
                   >
                     View
                   </Link>
-                  {booking.status === "PROCESSING" && (
-                    <CancelBookingButton bookingId={booking.id} />
-                  )}
+                  <Link
+                    href={`/users/edit/${user.id}`}
+                    className="text-green-500 hover:text-green-700 transition-colors duration-200"
+                  >
+                    Edit
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -201,15 +189,6 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
           searchParams={searchParams}
         />
       )}
-
-      <div className="mt-8 text-center">
-        <Link
-          href="/booking"
-          className="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-        >
-          Create a New Booking
-        </Link>
-      </div>
     </div>
   );
 };
@@ -217,7 +196,7 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
 const SortableHeader: FC<{
   field: string;
   label: string;
-  searchParams: ViewAllBookingsPageProps["searchParams"];
+  searchParams: ViewAllUsersPageProps["searchParams"];
 }> = ({ field, label, searchParams }) => {
   const isSorted = searchParams.sortBy === field;
   const nextOrder =
@@ -225,8 +204,8 @@ const SortableHeader: FC<{
 
   return (
     <Link
-      href={`/bookings?sortBy=${field}&sortOrder=${nextOrder}&status=${
-        searchParams.status || ""
+      href={`/users?sortBy=${field}&sortOrder=${nextOrder}&role=${
+        searchParams.role || ""
       }&startDate=${searchParams.startDate || ""}&endDate=${
         searchParams.endDate || ""
       }&search=${searchParams.search || ""}`}
@@ -242,19 +221,19 @@ const SortableHeader: FC<{
   );
 };
 
-const StatusBadge: FC<{ status: string }> = ({ status }) => {
+const RoleBadge: FC<{ role: string }> = ({ role }) => {
   const badgeColor =
     {
-      PROCESSING: "bg-yellow-100 text-yellow-800",
-      COMPLETED: "bg-green-100 text-green-800",
-      CANCELLED: "bg-red-100 text-red-800",
-    }[status] || "bg-gray-100 text-gray-800";
+      ADMIN: "bg-red-100 text-red-800",
+      USER: "bg-green-100 text-green-800",
+      RIDER: "bg-blue-100 text-blue-800",
+    }[role] || "bg-gray-100 text-gray-800";
 
   return (
     <span
       className={`px-2 py-1 rounded-full text-xs font-medium ${badgeColor}`}
     >
-      {status}
+      {role}
     </span>
   );
 };
@@ -262,7 +241,7 @@ const StatusBadge: FC<{ status: string }> = ({ status }) => {
 const Pagination: FC<{
   currentPage: number;
   totalPages: number;
-  searchParams: ViewAllBookingsPageProps["searchParams"];
+  searchParams: ViewAllUsersPageProps["searchParams"];
 }> = ({ currentPage, totalPages, searchParams }) => {
   const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
@@ -303,7 +282,7 @@ const PaginationLink: FC<{
   disabled?: boolean;
   active?: boolean;
   children: React.ReactNode;
-  searchParams: ViewAllBookingsPageProps["searchParams"];
+  searchParams: ViewAllUsersPageProps["searchParams"];
 }> = ({ page, disabled, active, children, searchParams }) => {
   const baseClasses =
     "relative inline-flex items-center px-4 py-2 text-sm font-medium";
@@ -323,13 +302,13 @@ const PaginationLink: FC<{
 
   return (
     <Link
-      href={`/bookings?page=${page}&status=${
-        searchParams.status || ""
-      }&startDate=${searchParams.startDate || ""}&endDate=${
-        searchParams.endDate || ""
-      }&sortBy=${searchParams.sortBy || ""}&sortOrder=${
-        searchParams.sortOrder || ""
-      }&search=${searchParams.search || ""}`}
+      href={`/users?page=${page}&role=${searchParams.role || ""}&startDate=${
+        searchParams.startDate || ""
+      }&endDate=${searchParams.endDate || ""}&sortBy=${
+        searchParams.sortBy || ""
+      }&sortOrder=${searchParams.sortOrder || ""}&search=${
+        searchParams.search || ""
+      }`}
       className={classes}
     >
       {children}
@@ -337,4 +316,4 @@ const PaginationLink: FC<{
   );
 };
 
-export default ViewAllBookingsPage;
+export default ViewAllUsersPage;

@@ -1,8 +1,8 @@
-"use client"
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+"use client";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -13,13 +13,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const schema = z.object({
   trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
-  status: z.string().min(1, { message: "Status is required" }),
+  shipmentStatus: z.string().min(1, { message: "Shipment status is required" }),
+  bookingStatus: z.string().min(1, { message: "Booking status is required" }),
   currentLocation: z.string().optional(),
   estimatedDelivery: z.string().optional(),
 });
@@ -33,25 +40,26 @@ export default function AdminUpdateStatusComponent() {
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      trackingNumber: '',
-      status: '',
-      currentLocation: '',
-      estimatedDelivery: '',
+      trackingNumber: "",
+      shipmentStatus: "",
+      bookingStatus: "",
+      currentLocation: "",
+      estimatedDelivery: "",
     },
   });
 
   const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch('/api/admin/update-status', {
-        method: 'PUT',
+      const response = await fetch("/api/admin/update-status", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update shipment status');
+        throw new Error("Failed to update status");
       }
 
       const result = await response.json();
@@ -59,7 +67,7 @@ export default function AdminUpdateStatusComponent() {
       setIsError(false);
       form.reset(); // Reset form after successful submission
     } catch (error) {
-      setUpdateResult('Error updating shipment status. Please try again.');
+      setUpdateResult("Error updating status. Please try again.");
       setIsError(true);
     }
   };
@@ -68,7 +76,9 @@ export default function AdminUpdateStatusComponent() {
     <div className="container mx-auto px-4 py-8">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">Update Shipment Status</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Update Shipment & Booking Status
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -88,21 +98,54 @@ export default function AdminUpdateStatusComponent() {
               />
               <FormField
                 control={form.control}
-                name="status"
+                name="shipmentStatus"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Shipment Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Select shipment status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="PROCESSING">Processing</SelectItem>
+                        <SelectItem value="SHIPPED">Shipped</SelectItem>
                         <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
                         <SelectItem value="DELIVERED">Delivered</SelectItem>
-                        <SelectItem value="DELAYED">Delayed</SelectItem>
+                        <SelectItem value="RETURNED">Returned</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bookingStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Booking Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select booking status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="PROCESSING">Processing</SelectItem>
+                        <SelectItem value="SHIPPED">Shipped</SelectItem>
+                        <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+                        <SelectItem value="DELIVERED">Delivered</SelectItem>
+                        <SelectItem value="RETURNED">Returned</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -141,7 +184,13 @@ export default function AdminUpdateStatusComponent() {
             </form>
           </Form>
           {updateResult && (
-            <Alert className={`mt-4 ${isError ? 'bg-red-100 border-red-400 text-red-700' : 'bg-green-100 border-green-400 text-green-700'}`}>
+            <Alert
+              className={`mt-4 ${
+                isError
+                  ? "bg-red-100 border-red-400 text-red-700"
+                  : "bg-green-100 border-green-400 text-green-700"
+              }`}
+            >
               <AlertDescription>{updateResult}</AlertDescription>
             </Alert>
           )}
