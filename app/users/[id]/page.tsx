@@ -4,11 +4,52 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
+// Define the User type if not already defined
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+  role: string; // Ensure role is included here
+  createdAt: string;
+  updatedAt: string;
+  bookings: Booking[];
+  shipments: Shipment[];
+}
+
+interface Booking {
+  id: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  pickupDate: string;
+}
+
+interface Shipment {
+  id: string;
+  trackingNumber: string;
+  status: string;
+  createdAt: string;
+}
+
 interface ViewUserPageProps {
   params: {
     id: string;
   };
 }
+
+// Extend or modify this interface based on your session handling
+interface SessionUser {
+  id: string;
+  name?: string;
+  email: string;
+  role: string; // Ensure role is included here
+}
+
+interface Session {
+  user: SessionUser;
+}
+
+// Define type for the authentication function return type
+type AuthReturnType = Session | null;
 
 async function getUser(id: string) {
   const user = await prisma.user.findUnique({
@@ -33,7 +74,9 @@ async function getUser(id: string) {
 }
 
 const ViewUserPage: FC<ViewUserPageProps> = async ({ params }) => {
-  const session = await auth();
+  const session = (await auth()) as AuthReturnType; // Use AuthReturnType
+
+  // Type guard to ensure session and user are properly defined
   if (!session || !session.user || session.user.role !== "ADMIN") {
     redirect("/api/auth/signin");
   }

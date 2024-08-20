@@ -3,11 +3,17 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { User } from "@prisma/client"; // Import the User type
 
 interface EditUserPageProps {
   params: {
     id: string;
   };
+}
+
+// Define the type for the session user including the role
+interface SessionUser extends User {
+  role: "ADMIN" | "USER" | "RIDER";
 }
 
 async function getUser(id: string) {
@@ -39,11 +45,15 @@ async function updateUser(id: string, formData: FormData) {
 
 const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
   const session = await auth();
-  if (!session || !session.user || session.user.role !== "ADMIN") {
+
+  // Type assertion to ensure session.user has role property
+  const user = session?.user as SessionUser;
+
+  if (!session || !user || user.role !== "ADMIN") {
     redirect("/api/auth/signin");
   }
 
-  const user = await getUser(params.id);
+  const userToEdit = await getUser(params.id);
 
   return (
     <div className="max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
@@ -51,7 +61,7 @@ const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
         Edit User
       </h1>
 
-      <form action={updateUser.bind(null, user.id)}>
+      <form action={updateUser.bind(null, userToEdit.id)}>
         <div className="mb-4">
           <label
             htmlFor="name"
@@ -63,7 +73,7 @@ const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
             type="text"
             id="name"
             name="name"
-            defaultValue={user.name || ""}
+            defaultValue={userToEdit.name || ""}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           />
         </div>
@@ -79,7 +89,7 @@ const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
             type="email"
             id="email"
             name="email"
-            defaultValue={user.email}
+            defaultValue={userToEdit.email}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           />
         </div>
@@ -94,7 +104,7 @@ const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
           <select
             id="role"
             name="role"
-            defaultValue={user.role}
+            defaultValue={userToEdit.role}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
           >
             <option value="USER">User</option>
@@ -105,7 +115,7 @@ const EditUserPage: FC<EditUserPageProps> = async ({ params }) => {
 
         <div className="mt-8 flex justify-between">
           <Link
-            href={`/users/${user.id}`}
+            href={`/users/${userToEdit.id}`}
             className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
           >
             Cancel

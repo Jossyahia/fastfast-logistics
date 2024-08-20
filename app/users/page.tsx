@@ -1,3 +1,5 @@
+// page.tsx
+
 import { FC } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -5,14 +7,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import FilterForm from "@/components/FilterForm";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-
-interface User {
-  id: string;
-  name: string | null;
-  email: string;
-  role: string;
-  createdAt: Date;
-}
+import { User, Session } from "@/types";
 
 interface ViewAllUsersPageProps {
   searchParams: {
@@ -52,7 +47,7 @@ async function getUsers(searchParams: ViewAllUsersPageProps["searchParams"]) {
 
   const orderBy = searchParams.sortBy
     ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
-    : { createdAt: "desc" };
+    : { createdAt: "desc" as const }; // Fixed type here
 
   const users = await prisma.user.findMany({
     where,
@@ -69,7 +64,7 @@ async function getUsers(searchParams: ViewAllUsersPageProps["searchParams"]) {
 const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   searchParams,
 }) => {
-  const session = await auth();
+  const session: Session | null = await auth(); // Ensure auth returns the correct type
   if (!session || !session.user || session.user.role !== "ADMIN") {
     redirect("/api/auth/signin");
   }
@@ -235,84 +230,6 @@ const RoleBadge: FC<{ role: string }> = ({ role }) => {
     >
       {role}
     </span>
-  );
-};
-
-const Pagination: FC<{
-  currentPage: number;
-  totalPages: number;
-  searchParams: ViewAllUsersPageProps["searchParams"];
-}> = ({ currentPage, totalPages, searchParams }) => {
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  return (
-    <div className="mt-4 flex justify-center">
-      <nav className="inline-flex rounded-md shadow-sm" aria-label="Pagination">
-        <PaginationLink
-          page={currentPage - 1}
-          disabled={currentPage === 1}
-          searchParams={searchParams}
-        >
-          <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-        </PaginationLink>
-        {pageNumbers.map((pageNum) => (
-          <PaginationLink
-            key={pageNum}
-            page={pageNum}
-            active={pageNum === currentPage}
-            searchParams={searchParams}
-          >
-            {pageNum}
-          </PaginationLink>
-        ))}
-        <PaginationLink
-          page={currentPage + 1}
-          disabled={currentPage === totalPages}
-          searchParams={searchParams}
-        >
-          <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-        </PaginationLink>
-      </nav>
-    </div>
-  );
-};
-
-const PaginationLink: FC<{
-  page: number;
-  disabled?: boolean;
-  active?: boolean;
-  children: React.ReactNode;
-  searchParams: ViewAllUsersPageProps["searchParams"];
-}> = ({ page, disabled, active, children, searchParams }) => {
-  const baseClasses =
-    "relative inline-flex items-center px-4 py-2 text-sm font-medium";
-  const activeClasses =
-    "z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
-  const inactiveClasses =
-    "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0";
-  const disabledClasses = "cursor-not-allowed opacity-50";
-
-  const classes = `${baseClasses} ${active ? activeClasses : inactiveClasses} ${
-    disabled ? disabledClasses : ""
-  }`;
-
-  if (disabled) {
-    return <span className={classes}>{children}</span>;
-  }
-
-  return (
-    <Link
-      href={`/users?page=${page}&role=${searchParams.role || ""}&startDate=${
-        searchParams.startDate || ""
-      }&endDate=${searchParams.endDate || ""}&sortBy=${
-        searchParams.sortBy || ""
-      }&sortOrder=${searchParams.sortOrder || ""}&search=${
-        searchParams.search || ""
-      }`}
-      className={classes}
-    >
-      {children}
-    </Link>
   );
 };
 

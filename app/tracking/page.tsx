@@ -1,9 +1,17 @@
-"use client"
+"use client";
 import { useState } from "react";
+
+// Define the shape of the shipment data
+interface Shipment {
+  trackingNumber: string;
+  status: string;
+  currentLocation?: string;
+  estimatedDelivery?: string;
+}
 
 const TrackingPage = () => {
   const [trackingNumber, setTrackingNumber] = useState("");
-  const [shipment, setShipment] = useState(null);
+  const [shipment, setShipment] = useState<Shipment | null>(null);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -14,7 +22,7 @@ const TrackingPage = () => {
     try {
       const response = await fetch(`/api/shipments/${trackingNumber}`);
       if (response.ok) {
-        const data = await response.json();
+        const data: Shipment = await response.json();
         setShipment(data);
       } else {
         throw new Error("Shipment not found");
