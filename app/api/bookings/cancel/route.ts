@@ -9,7 +9,9 @@ function isValidDate(date: any): boolean {
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
+
+    // Ensure session and session.user are both defined
+    if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,7 +31,7 @@ export async function POST(request: Request) {
       const booking = await prisma.booking.findUnique({
         where: {
           id: bookingId,
-          userId: session.user.id,
+          userId: session.user!.id, // TypeScript now knows session.user is not undefined
         },
         include: { shipment: true }, // Include the associated shipment
       });

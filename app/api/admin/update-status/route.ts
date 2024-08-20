@@ -1,24 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ShipmentStatus, Status } from "@prisma/client";
 import { auth } from "@/auth";
 
 const prisma = new PrismaClient();
 
 interface StatusUpdateData {
   trackingNumber: string;
-  shipmentStatus: string;
-  bookingStatus: string;
+  shipmentStatus: ShipmentStatus;
+  bookingStatus: Status;
   currentLocation?: string;
   estimatedDelivery?: string;
+}
+
+async function getUserRole(userId: string): Promise<string | null> {
+  const userRole = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  return userRole?.role ?? null;
 }
 
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
-console.log(session.user?.role);
 
-    if (!session || session.user?.role !== "ADMIN") {
-      console.log("Unauthorized access attempt:", session?.user);
+    if (!session?.user?.id) {
+      console.log("Unauthorized access attempt: No user session");
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in." },
+        { status: 401 }
+      );
+    }
+
+    const userRole = await getUserRole(session.user.id);
+
+    if (userRole !== "ADMIN") {
+      console.log("Unauthorized access attempt:", session.user);
       return NextResponse.json(
         { error: "Unauthorized. Admin access required." },
         { status: 403 }
@@ -52,14 +69,14 @@ console.log(session.user?.role);
     const updatedShipment = await prisma.shipment.update({
       where: { trackingNumber: data.trackingNumber },
       data: {
-        status: data.shipmentStatus as ShipmentStatus,
+        status: data.shipmentStatus,
         currentLocation: data.currentLocation,
         estimatedDelivery: data.estimatedDelivery
           ? new Date(data.estimatedDelivery)
           : undefined,
         booking: {
           update: {
-            status: data.bookingStatus as Status,
+            status: data.bookingStatus,
           },
         },
       },
