@@ -15,8 +15,9 @@ interface StatusUpdateData {
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
+console.log(session.user?.role);
 
-    if (!session || session.user.role !== "ADMIN") {
+    if (!session || session.user?.role !== "ADMIN") {
       console.log("Unauthorized access attempt:", session?.user);
       return NextResponse.json(
         { error: "Unauthorized. Admin access required." },

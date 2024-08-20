@@ -92,7 +92,7 @@ export default function SignInForm() {
           href="/auth/signup"
           className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
         >
-          Don't have an account? Sign up
+          No account yet? Sign up
         </Link>
         <Link
           href="/forgot-password"

@@ -56,7 +56,7 @@ async function getBookings(
     ];
   }
 
-  const orderBy = searchParams.sortBy
+  const orderBy: Record<string, "asc" | "desc"> = searchParams.sortBy
     ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
     : { createdAt: "desc" };
 
@@ -101,7 +101,7 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
           My Bookings
         </h1>
         <p className="text-center text-gray-600 dark:text-gray-300">
-          You haven't made any bookings yet.
+          You have not made any bookings yet.
         </p>
         <div className="mt-4 text-center">
           <Link
