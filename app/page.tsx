@@ -55,8 +55,8 @@ export default function LandingPage() {
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Stay informed with up-to-the-minute updates on your shipment's
-                  location.
+                  Stay informed with up-to-the-minute updates on your
+                  shipment&lsquo;, 's location.
                 </CardDescription>
               </CardContent>
             </Card>
