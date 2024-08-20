@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -29,9 +29,25 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 
-const BookingPage = () => {
+// Define types for form data
+interface FormData {
+  pickupAddress: string;
+  deliveryAddress: string;
+  pickupDate: string;
+  deliveryDate: string;
+  pickupTime: string;
+  deliveryTime: string;
+  packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
+  packageDescription: string;
+  isUrgent: boolean;
+  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
+  pickupPhoneNumber: string;
+  deliveryPhoneNumber: string;
+}
+
+const BookingPage: React.FC = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     pickupAddress: "",
     deliveryAddress: "",
     pickupDate: "",
@@ -49,11 +65,12 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleChange = (name, value) => {
+  // Explicitly type 'name' and 'value' parameters
+  const handleChange = (name: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -72,7 +89,7 @@ const BookingPage = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to create booking");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating booking:", error);
       setError(
         error.message || "An error occurred while creating the booking."

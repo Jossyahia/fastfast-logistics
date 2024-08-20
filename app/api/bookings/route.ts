@@ -9,34 +9,14 @@ function generateTrackingNumber() {
 export async function POST(request: Request) {
   try {
     const session = await auth();
-    //console.log("Session:", session); // Log the entire session object
 
-    if (!session) {
-     // console.log("No session found");
-      return NextResponse.json(
-        { error: "Unauthorized - No session" },
-        { status: 401 }
-      );
+    if (!session || !session.user || !session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!session.user) {
-    //console.log("No user in session");
-      return NextResponse.json(
-        { error: "Unauthorized - No user in session" },
-        { status: 401 }
-      );
-    }
-
-    if (!session.user.id) {
-      //console.log("No user ID in session");
-      return NextResponse.json(
-        { error: "Unauthorized - No user ID" },
-        { status: 401 }
-      );
-    }
+    const userId = session.user.id; // Store the user ID in a separate variable
 
     const body = await request.json();
-    //console.log("Request body:", body); // Log the request body
     const {
       pickupAddress,
       deliveryAddress,
@@ -58,17 +38,24 @@ export async function POST(request: Request) {
     // Simple price calculation (replace with actual logic)
     const basePrice = 800;
     const urgentFee = isUrgent ? 500 : 0;
-    const sizeFee =
-      { SMALL: 200, MEDIUM: 500, LARGE: 1000, EXTRA_LARGE: 1500 }[
-        packageSize
-      ] || 0;
+
+    // Define package size fees
+    const sizeFees: { [key: string]: number } = {
+      SMALL: 200,
+      MEDIUM: 500,
+      LARGE: 1000,
+      EXTRA_LARGE: 1500,
+    };
+
+    // Calculate size fee based on package size
+    const sizeFee = sizeFees[packageSize] || 0;
     const price = basePrice + urgentFee + sizeFee;
 
     // Create booking and shipment in a transaction
     const result = await prisma.$transaction(async (prisma) => {
       const booking = await prisma.booking.create({
         data: {
-          userId: session.user.id,
+          userId: userId, // Using the stored user ID
           pickupAddress,
           deliveryAddress,
           pickupDate: new Date(pickupDate),
@@ -90,7 +77,7 @@ export async function POST(request: Request) {
               status: "PROCESSING",
               currentLocation: pickupAddress,
               estimatedDelivery: new Date(deliveryDate),
-              userId: session.user.id,
+              userId: userId, // Using the stored user ID
             },
           },
         },
@@ -99,15 +86,19 @@ export async function POST(request: Request) {
         },
       });
 
-      console.log("Created booking:", booking); // Log the created booking
+      console.log("Created booking:", booking);
       return booking;
     });
 
     return NextResponse.json({ success: true, booking: result });
   } catch (error) {
     console.error("Error creating booking:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
     return NextResponse.json(
-      { error: "Failed to create booking", details: error.message },
+      { error: "Failed to create booking", details: errorMessage },
       { status: 500 }
     );
   }

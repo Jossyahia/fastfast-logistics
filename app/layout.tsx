@@ -2,7 +2,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import { SessionProvider } from "next-auth/react";
 import NavBarServer from "@/components/NavBarServer";
 

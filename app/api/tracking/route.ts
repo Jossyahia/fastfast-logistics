@@ -1,8 +1,9 @@
 // File: app/api/tracking/route.ts
 
 import { PrismaClient } from "@prisma/client";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/auth";
+
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
