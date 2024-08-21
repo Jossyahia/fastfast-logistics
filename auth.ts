@@ -47,7 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: user.role, // Ensure role is included here
         };
       },
     }),
@@ -59,23 +59,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = user.role; // Add role to the JWT token
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as Role;
+        session.user.role = token.role as Role; // Add role to the session
       }
       return session;
     },
-    
-    
   },
   pages: {
     signIn: "/auth/signin",
-
     signUp: "/auth/signup",
   },
   secret: process.env.NEXTAUTH_SECRET,
