@@ -5,19 +5,20 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import FilterForm from "@/components/FilterForm";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Prisma, Role } from "@prisma/client";
 
 interface User {
   id: string;
   name: string | null;
   email: string;
-  role: string;
+  role: Role;
   createdAt: Date;
 }
 
 interface ViewAllUsersPageProps {
   searchParams: {
     page?: string;
-    role?: string;
+    role?: Role;
     startDate?: string;
     endDate?: string;
     sortBy?: string;
@@ -31,7 +32,7 @@ async function getUsers(searchParams: ViewAllUsersPageProps["searchParams"]) {
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  let where: any = {};
+  let where: Prisma.UserWhereInput = {};
 
   if (searchParams.role) {
     where.role = searchParams.role;
@@ -50,7 +51,7 @@ async function getUsers(searchParams: ViewAllUsersPageProps["searchParams"]) {
     ];
   }
 
-  const orderBy = searchParams.sortBy
+  const orderBy: Prisma.UserOrderByWithRelationInput = searchParams.sortBy
     ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
     : { createdAt: "desc" };
 
@@ -70,7 +71,7 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   searchParams,
 }) => {
   const session = await auth();
-  if (!session || !session.user || session.user.role !== "ADMIN") {
+  if (!session || !session.user) {
     redirect("/api/auth/signin");
   }
 
@@ -221,7 +222,7 @@ const SortableHeader: FC<{
   );
 };
 
-const RoleBadge: FC<{ role: string }> = ({ role }) => {
+const RoleBadge: FC<{ role: Role }> = ({ role }) => {
   const badgeColor =
     {
       ADMIN: "bg-red-100 text-red-800",

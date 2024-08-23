@@ -2,14 +2,15 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import React from "react";
 
 export default function SignInForm() {
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.target);
+    const formData = new FormData(event.currentTarget);
     await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
       callbackUrl: "/",
     });
   };

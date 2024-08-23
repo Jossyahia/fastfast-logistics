@@ -32,7 +32,7 @@ const FastFastLogisticsBooking = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<React.ReactNode>(""); // Update the state type to React.ReactNode
   const [formData, setFormData] = useState({
     pickupAddress: "",
     deliveryAddress: "",
@@ -265,7 +265,7 @@ const FastFastLogisticsBooking = () => {
               <Input
                 id="pickupPhoneNumber"
                 name="pickupPhoneNumber"
-                placeholder="Enter the pickup contact number"
+                placeholder="Enter the sender's phone number"
                 required
                 onChange={handleInputChange}
               />
@@ -275,7 +275,7 @@ const FastFastLogisticsBooking = () => {
               <Input
                 id="deliveryPhoneNumber"
                 name="deliveryPhoneNumber"
-                placeholder="Enter the delivery contact number"
+                placeholder="Enter the receiver's phone number"
                 required
                 onChange={handleInputChange}
               />
@@ -293,50 +293,43 @@ const FastFastLogisticsBooking = () => {
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="cash">Cash</SelectItem>
-                <SelectItem value="card">Card</SelectItem>
-                <SelectItem value="online">Online Payment</SelectItem>
+                <SelectItem value="cash">Cash on Delivery</SelectItem>
+                <SelectItem value="card">Credit/Debit Card</SelectItem>
+                <SelectItem value="transfer">Bank Transfer</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="route">Route</Label>
-            <Select
-              onValueChange={(value) => handleSelectChange("route", value)}
-            >
-              <SelectTrigger id="route">
-                <SelectValue placeholder="Select route" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Standard Route</SelectItem>
-                <SelectItem value="express">Express Route</SelectItem>
-                <SelectItem value="priority">Priority Route</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="route">Preferred Route</Label>
+            <Input
+              id="route"
+              name="route"
+              placeholder="Enter preferred delivery route"
+              required
+              onChange={handleInputChange}
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">Price ($)</Label>
+            <Label htmlFor="price">Price</Label>
             <Input
               id="price"
               name="price"
-              placeholder="Enter the price"
+              placeholder="Enter calculated price"
               type="number"
               required
               onChange={handleInputChange}
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isUrgent" className="flex items-center space-x-2">
-              <Switch
-                id="isUrgent"
-                checked={isUrgent}
-                onCheckedChange={setIsUrgent}
-              />
-              <span>Is this an urgent delivery?</span>
-            </Label>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="isUrgent">Is this delivery urgent?</Label>
+            <Switch
+              id="isUrgent"
+              checked={isUrgent}
+              onCheckedChange={(checked) => setIsUrgent(checked)}
+            />
           </div>
 
           {error && (
@@ -347,14 +340,13 @@ const FastFastLogisticsBooking = () => {
             </Alert>
           )}
 
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
               </>
             ) : (
-              "Book Now"
+              "Submit Booking"
             )}
           </Button>
         </form>

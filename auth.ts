@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -6,12 +6,26 @@ import prisma from "@/lib/prisma";
 import bcryptjs from "bcryptjs";
 import { Role } from "@prisma/client";
 
+// Extend the built-in session types
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: Role;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    role: Role;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -26,7 +40,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email,
+            email: credentials.email as string,
           },
         });
 
@@ -35,7 +49,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const isPasswordValid = await bcryptjs.compare(
-          credentials.password,
+          credentials.password as string,
           user.password
         );
 
@@ -47,7 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role, // Ensure role is included here
+          role: user.role,
         };
       },
     }),
@@ -59,21 +73,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role; // Add role to the JWT token
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as Role; // Add role to the session
+        session.user.role = token.role as Role;
       }
       return session;
     },
   },
   pages: {
     signIn: "/auth/signin",
-    signUp: "/auth/signup",
   },
   secret: process.env.NEXTAUTH_SECRET,
 });

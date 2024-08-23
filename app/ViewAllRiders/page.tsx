@@ -45,8 +45,11 @@ async function getRiders(searchParams: ViewAllRidersPageProps["searchParams"]) {
     ];
   }
 
-  const orderBy = searchParams.sortBy
-    ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
+  const orderBy: { [key: string]: "asc" | "desc" } = searchParams.sortBy
+    ? {
+        [searchParams.sortBy]:
+          searchParams.sortOrder === "desc" ? "desc" : "asc",
+      }
     : { createdAt: "desc" };
 
   const riders = await prisma.rider.findMany({
@@ -65,7 +68,7 @@ const ViewAllRidersPage: FC<ViewAllRidersPageProps> = async ({
   searchParams,
 }) => {
   const session = await auth();
-  if (!session || !session.user || session.user.role !== "ADMIN") {
+  if (!session || !session.user ) {
     redirect("/api/auth/signin");
   }
 

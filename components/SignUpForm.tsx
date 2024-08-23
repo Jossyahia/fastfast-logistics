@@ -1,4 +1,3 @@
-// File: components/SignUpForm.js
 "use client";
 
 import { useState } from "react";
@@ -8,12 +7,12 @@ import Link from "next/link";
 export default function SignUpForm() {
   const [error, setError] = useState("");
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.target);
-    const name = formData.get("name");
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const formData = new FormData(event.currentTarget);
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
       const response = await fetch("/api/auth/signup", {

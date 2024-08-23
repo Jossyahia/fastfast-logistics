@@ -2,6 +2,7 @@
 // or within page.tsx, you can define it above the ViewAllUsersPage component
 
 import Link from "next/link";
+import { FC } from "react";
 
 interface PaginationProps {
   currentPage: number;

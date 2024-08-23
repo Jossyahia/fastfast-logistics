@@ -2,7 +2,7 @@
 import { auth } from "@/auth";
 import NavBarClient from "./NavBarClient";
 import { Role } from "@prisma/client";
-import { Image } from "next/image";
+import Image from "next/image";
 
 async function NavBarServer() {
   const session = await auth();

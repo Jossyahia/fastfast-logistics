@@ -56,8 +56,11 @@ async function getBookings(
     ];
   }
 
-  const orderBy: Record<string, "asc" | "desc"> = searchParams.sortBy
-    ? { [searchParams.sortBy]: searchParams.sortOrder || "asc" }
+  const orderBy: { [key: string]: "asc" | "desc" } = searchParams.sortBy
+    ? {
+        [searchParams.sortBy]:
+          searchParams.sortOrder === "desc" ? "desc" : "asc",
+      }
     : { createdAt: "desc" };
 
   const bookings = await prisma.booking.findMany({
@@ -79,6 +82,10 @@ const ViewAllBookingsPage: FC<ViewAllBookingsPageProps> = async ({
   const session = await auth();
   if (!session || !session.user) {
     redirect("/api/auth/signin");
+  }
+
+  if (typeof session.user.id !== "string") {
+    throw new Error("User ID is missing or invalid.");
   }
 
   const { bookings, total } = await getBookings(session.user.id, searchParams);
@@ -252,7 +259,10 @@ const StatusBadge: FC<{ status: string }> = ({ status }) => {
 
   return (
     <span
-      className={`px-2 py-1 rounded-full text-xs font-medium ${badgeColor}`}
+      className={`px-2 py-1 rounded-full text-sm ${badgeColor} dark:${badgeColor.replace(
+        /100/,
+        "800"
+      )}`}
     >
       {status}
     </span>
@@ -263,78 +273,40 @@ const Pagination: FC<{
   currentPage: number;
   totalPages: number;
   searchParams: ViewAllBookingsPageProps["searchParams"];
-}> = ({ currentPage, totalPages, searchParams }) => {
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-
-  return (
-    <div className="mt-4 flex justify-center">
-      <nav className="inline-flex rounded-md shadow-sm" aria-label="Pagination">
-        <PaginationLink
-          page={currentPage - 1}
-          disabled={currentPage === 1}
-          searchParams={searchParams}
-        >
-          <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-        </PaginationLink>
-        {pageNumbers.map((pageNum) => (
-          <PaginationLink
-            key={pageNum}
-            page={pageNum}
-            active={pageNum === currentPage}
-            searchParams={searchParams}
-          >
-            {pageNum}
-          </PaginationLink>
-        ))}
-        <PaginationLink
-          page={currentPage + 1}
-          disabled={currentPage === totalPages}
-          searchParams={searchParams}
-        >
-          <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-        </PaginationLink>
-      </nav>
-    </div>
-  );
-};
-
-const PaginationLink: FC<{
-  page: number;
-  disabled?: boolean;
-  active?: boolean;
-  children: React.ReactNode;
-  searchParams: ViewAllBookingsPageProps["searchParams"];
-}> = ({ page, disabled, active, children, searchParams }) => {
-  const baseClasses =
-    "relative inline-flex items-center px-4 py-2 text-sm font-medium";
-  const activeClasses =
-    "z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
-  const inactiveClasses =
-    "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0";
-  const disabledClasses = "cursor-not-allowed opacity-50";
-
-  const classes = `${baseClasses} ${active ? activeClasses : inactiveClasses} ${
-    disabled ? disabledClasses : ""
-  }`;
-
-  if (disabled) {
-    return <span className={classes}>{children}</span>;
-  }
-
-  return (
-    <Link
-      href={`/bookings?page=${page}&status=${
-        searchParams.status || ""
-      }&startDate=${searchParams.startDate || ""}&endDate=${
-        searchParams.endDate || ""
-      }&sortBy=${searchParams.sortBy || ""}&sortOrder=${
-        searchParams.sortOrder || ""
-      }&search=${searchParams.search || ""}`}
-      className={classes}
-    >
-      {children}
-    </Link>
-  );
-};
+}> = ({ currentPage, totalPages, searchParams }) => (
+  <div className="flex justify-center items-center mt-6">
+    {currentPage > 1 && (
+      <Link
+        href={`/bookings?page=${currentPage - 1}&status=${
+          searchParams.status || ""
+        }&startDate=${searchParams.startDate || ""}&endDate=${
+          searchParams.endDate || ""
+        }&sortBy=${searchParams.sortBy || ""}&sortOrder=${
+          searchParams.sortOrder || ""
+        }&search=${searchParams.search || ""}`}
+        className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-l hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
+      >
+        <ChevronLeftIcon className="w-4 h-4" />
+      </Link>
+    )}
+    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+      {currentPage} / {totalPages}
+    </span>
+    {currentPage < totalPages && (
+      <Link
+        href={`/bookings?page=${currentPage + 1}&status=${
+          searchParams.status || ""
+        }&startDate=${searchParams.startDate || ""}&endDate=${
+          searchParams.endDate || ""
+        }&sortBy=${searchParams.sortBy || ""}&sortOrder=${
+          searchParams.sortOrder || ""
+        }&search=${searchParams.search || ""}`}
+        className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-r hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
+      >
+        <ChevronRightIcon className="w-4 h-4" />
+      </Link>
+    )}
+  </div>
+);
 
 export default ViewAllBookingsPage;
