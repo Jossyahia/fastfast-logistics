@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import clsx from "clsx";
 
 const schema = z.object({
   trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
@@ -65,10 +67,29 @@ export default function AdminUpdateStatusComponent() {
       const result = await response.json();
       setUpdateResult(result.message);
       setIsError(false);
-      form.reset(); // Reset form after successful submission
+      form.reset();
     } catch (error) {
       setUpdateResult("Error updating status. Please try again.");
       setIsError(true);
+    }
+  };
+
+  const getBackgroundColorClass = (value: string) => {
+    switch (value) {
+      case "PROCESSING":
+        return "bg-yellow-500 text-black";
+      case "SHIPPED":
+        return "bg-blue-500 text-white";
+      case "IN_TRANSIT":
+        return "bg-orange-500 text-white";
+      case "DELIVERED":
+        return "bg-green-500 text-white";
+      case "RETURNED":
+        return "bg-purple-500 text-white";
+      case "CANCELLED":
+        return "bg-red-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
     }
   };
 
@@ -90,7 +111,11 @@ export default function AdminUpdateStatusComponent() {
                   <FormItem>
                     <FormLabel>Tracking Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter tracking number" {...field} />
+                      <Input
+                        placeholder="Enter tracking number"
+                        aria-label="Tracking Number"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -107,11 +132,17 @@ export default function AdminUpdateStatusComponent() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={clsx(getBackgroundColorClass(field.value))}
+                          aria-label="Shipment Status"
+                        >
                           <SelectValue placeholder="Select shipment status" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Shipment Status Options"
+                      >
                         <SelectItem value="PROCESSING">Processing</SelectItem>
                         <SelectItem value="SHIPPED">Shipped</SelectItem>
                         <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
@@ -135,11 +166,17 @@ export default function AdminUpdateStatusComponent() {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger
+                          className={clsx(getBackgroundColorClass(field.value))}
+                          aria-label="Booking Status"
+                        >
                           <SelectValue placeholder="Select booking status" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Booking Status Options"
+                      >
                         <SelectItem value="PROCESSING">Processing</SelectItem>
                         <SelectItem value="SHIPPED">Shipped</SelectItem>
                         <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
@@ -159,7 +196,11 @@ export default function AdminUpdateStatusComponent() {
                   <FormItem>
                     <FormLabel>Current Location</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter current location" {...field} />
+                      <Input
+                        placeholder="Enter current location"
+                        aria-label="Current Location"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,7 +213,11 @@ export default function AdminUpdateStatusComponent() {
                   <FormItem>
                     <FormLabel>Estimated Delivery</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input
+                        type="datetime-local"
+                        aria-label="Estimated Delivery"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
