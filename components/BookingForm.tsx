@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import clsx from "clsx";
 import Link from "next/link";
 
 const schema = z.object({
@@ -81,23 +80,6 @@ export default function BookingForm() {
     }
   };
 
-  const getBackgroundColorClass = (value: string) => {
-    switch (value) {
-      case "CASH":
-        return "bg-green-500 text-white";
-      case "CARD":
-        return "bg-blue-500 text-white";
-      case "LARGE":
-        return "bg-yellow-500 text-black";
-      case "MEDIUM":
-        return "bg-orange-500 text-white";
-      case "SMALL":
-        return "bg-red-500 text-white";
-      default:
-        return "bg-gray-500 text-white";
-    }
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="w-full max-w-md mx-auto">
@@ -138,7 +120,7 @@ export default function BookingForm() {
                     >
                       <FormControl>
                         <SelectTrigger
-                          className={clsx(getBackgroundColorClass(field.value))}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                           aria-label="Shipment Status"
                         >
                           <SelectValue placeholder="Select shipment status" />
@@ -148,12 +130,42 @@ export default function BookingForm() {
                         className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
                         aria-label="Shipment Status Options"
                       >
-                        <SelectItem value="PROCESSING">Processing</SelectItem>
-                        <SelectItem value="SHIPPED">Shipped</SelectItem>
-                        <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                        <SelectItem value="DELIVERED">Delivered</SelectItem>
-                        <SelectItem value="RETURNED">Returned</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        <SelectItem
+                          value="PROCESSING"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Processing
+                        </SelectItem>
+                        <SelectItem
+                          value="SHIPPED"
+                          className="bg-blue-500 text-white"
+                        >
+                          Shipped
+                        </SelectItem>
+                        <SelectItem
+                          value="IN_TRANSIT"
+                          className="bg-orange-500 text-white"
+                        >
+                          In Transit
+                        </SelectItem>
+                        <SelectItem
+                          value="DELIVERED"
+                          className="bg-green-500 text-white"
+                        >
+                          Delivered
+                        </SelectItem>
+                        <SelectItem
+                          value="RETURNED"
+                          className="bg-red-500 text-white"
+                        >
+                          Returned
+                        </SelectItem>
+                        <SelectItem
+                          value="CANCELLED"
+                          className="bg-gray-500 text-white"
+                        >
+                          Cancelled
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -172,7 +184,7 @@ export default function BookingForm() {
                     >
                       <FormControl>
                         <SelectTrigger
-                          className={clsx(getBackgroundColorClass(field.value))}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                           aria-label="Booking Status"
                         >
                           <SelectValue placeholder="Select booking status" />
@@ -182,12 +194,42 @@ export default function BookingForm() {
                         className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
                         aria-label="Booking Status Options"
                       >
-                        <SelectItem value="PROCESSING">Processing</SelectItem>
-                        <SelectItem value="SHIPPED">Shipped</SelectItem>
-                        <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                        <SelectItem value="DELIVERED">Delivered</SelectItem>
-                        <SelectItem value="RETURNED">Returned</SelectItem>
-                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        <SelectItem
+                          value="PROCESSING"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Processing
+                        </SelectItem>
+                        <SelectItem
+                          value="SHIPPED"
+                          className="bg-blue-500 text-white"
+                        >
+                          Shipped
+                        </SelectItem>
+                        <SelectItem
+                          value="IN_TRANSIT"
+                          className="bg-orange-500 text-white"
+                        >
+                          In Transit
+                        </SelectItem>
+                        <SelectItem
+                          value="DELIVERED"
+                          className="bg-green-500 text-white"
+                        >
+                          Delivered
+                        </SelectItem>
+                        <SelectItem
+                          value="RETURNED"
+                          className="bg-red-500 text-white"
+                        >
+                          Returned
+                        </SelectItem>
+                        <SelectItem
+                          value="CANCELLED"
+                          className="bg-gray-500 text-white"
+                        >
+                          Cancelled
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -206,7 +248,7 @@ export default function BookingForm() {
                     >
                       <FormControl>
                         <SelectTrigger
-                          className={clsx(getBackgroundColorClass(field.value))}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                           aria-label="Payment Method"
                         >
                           <SelectValue placeholder="Select payment method" />
@@ -216,8 +258,18 @@ export default function BookingForm() {
                         className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
                         aria-label="Payment Method Options"
                       >
-                        <SelectItem value="CASH">Cash</SelectItem>
-                        <SelectItem value="CARD">Card</SelectItem>
+                        <SelectItem
+                          value="CASH"
+                          className="bg-green-500 text-white"
+                        >
+                          Cash
+                        </SelectItem>
+                        <SelectItem
+                          value="CARD"
+                          className="bg-blue-500 text-white"
+                        >
+                          Card
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -236,7 +288,7 @@ export default function BookingForm() {
                     >
                       <FormControl>
                         <SelectTrigger
-                          className={clsx(getBackgroundColorClass(field.value))}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
                           aria-label="Package Size"
                         >
                           <SelectValue placeholder="Select package size" />
@@ -246,9 +298,24 @@ export default function BookingForm() {
                         className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
                         aria-label="Package Size Options"
                       >
-                        <SelectItem value="LARGE">Large</SelectItem>
-                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                        <SelectItem value="SMALL">Small</SelectItem>
+                        <SelectItem
+                          value="LARGE"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Large
+                        </SelectItem>
+                        <SelectItem
+                          value="MEDIUM"
+                          className="bg-orange-500 text-white"
+                        >
+                          Medium
+                        </SelectItem>
+                        <SelectItem
+                          value="SMALL"
+                          className="bg-red-500 text-white"
+                        >
+                          Small
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -274,16 +341,14 @@ export default function BookingForm() {
                 )}
               />
               <Button type="submit" className="w-full">
-                Submit Booking
+                Submit
               </Button>
             </form>
           </Form>
           {updateResult && (
             <Alert
               className={`mt-4 ${
-                isError
-                  ? "bg-red-100 border-red-400 text-red-700"
-                  : "bg-green-100 border-green-400 text-green-700"
+                isError ? "bg-red-500 text-white" : "bg-green-500 text-white"
               }`}
               role="alert"
             >
@@ -300,5 +365,3 @@ export default function BookingForm() {
     </div>
   );
 }
-
-export default FastFastLogisticsBooking;
