@@ -38,6 +38,7 @@ type FormData = z.infer<typeof schema>;
 export default function AdminUpdateStatusComponent() {
   const [updateResult, setUpdateResult] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
+  const [shipmentDetails, setShipmentDetails] = useState<any>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -68,8 +69,34 @@ export default function AdminUpdateStatusComponent() {
       setUpdateResult(result.message);
       setIsError(false);
       form.reset();
+      setShipmentDetails(null);
     } catch (error) {
       setUpdateResult("Error updating status. Please try again.");
+      setIsError(true);
+    }
+  };
+
+  const fetchShipmentDetails = async (trackingNumber: string) => {
+    try {
+      const response = await fetch(
+        `/api/admin/update-status?trackingNumber=${trackingNumber}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch shipment details");
+      }
+      const data = await response.json();
+      setShipmentDetails(data.shipment);
+      form.setValue("shipmentStatus", data.shipment.status);
+      form.setValue("bookingStatus", data.shipment.booking.status);
+      form.setValue("currentLocation", data.shipment.currentLocation || "");
+      form.setValue(
+        "estimatedDelivery",
+        data.shipment.estimatedDelivery
+          ? new Date(data.shipment.estimatedDelivery).toISOString().slice(0, 16)
+          : ""
+      );
+    } catch (error) {
+      setUpdateResult("Error fetching shipment details. Please try again.");
       setIsError(true);
     }
   };
@@ -115,6 +142,14 @@ export default function AdminUpdateStatusComponent() {
                         placeholder="Enter tracking number"
                         aria-label="Tracking Number"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          if (e.target.value) {
+                            fetchShipmentDetails(e.target.value);
+                          } else {
+                            setShipmentDetails(null);
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -238,6 +273,22 @@ export default function AdminUpdateStatusComponent() {
             >
               <AlertDescription>{updateResult}</AlertDescription>
             </Alert>
+          )}
+          {shipmentDetails && (
+            <div className="mt-4">
+              <h3 className="font-bold">Current Shipment Details:</h3>
+              <p>Status: {shipmentDetails.status}</p>
+              <p>Booking Status: {shipmentDetails.booking.status}</p>
+              <p>
+                Current Location: {shipmentDetails.currentLocation || "N/A"}
+              </p>
+              <p>
+                Estimated Delivery:{" "}
+                {shipmentDetails.estimatedDelivery
+                  ? new Date(shipmentDetails.estimatedDelivery).toLocaleString()
+                  : "N/A"}
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -12,6 +12,50 @@ interface StatusUpdateData {
   estimatedDelivery?: string;
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please log in." },
+        { status: 401 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const trackingNumber = url.searchParams.get("trackingNumber");
+
+    if (!trackingNumber) {
+      return NextResponse.json(
+        { error: "Tracking number is required" },
+        { status: 400 }
+      );
+    }
+
+    const shipment = await prisma.shipment.findUnique({
+      where: { trackingNumber },
+      include: { booking: true },
+    });
+
+    if (!shipment) {
+      return NextResponse.json(
+        { error: "Shipment not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ shipment });
+  } catch (error) {
+    console.error("Error fetching shipment:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred" },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
