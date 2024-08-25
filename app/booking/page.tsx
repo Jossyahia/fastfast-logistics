@@ -322,25 +322,6 @@ export default function BookingForm() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="isUrgent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Is Urgent?</FormLabel>
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        aria-label="Is Urgent"
-                        {...field}
-                        checked={field.value}
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <Button type="submit" className="w-full">
                 Submit
               </Button>

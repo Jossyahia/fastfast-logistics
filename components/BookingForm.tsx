@@ -1,18 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -21,347 +19,409 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
-const schema = z.object({
-  trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
-  shipmentStatus: z.string().min(1, { message: "Shipment status is required" }),
-  bookingStatus: z.string().min(1, { message: "Booking status is required" }),
-  currentLocation: z.string().optional(),
-  estimatedDelivery: z.string().optional(),
-  paymentMethod: z.string().min(1, { message: "Payment method is required" }),
-  packageSize: z.string().min(1, { message: "Package size is required" }),
-  isUrgent: z.boolean().optional(),
-});
-
-type FormData = z.infer<typeof schema>;
-
-export default function BookingForm() {
-  const [updateResult, setUpdateResult] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      trackingNumber: "",
-      shipmentStatus: "",
-      bookingStatus: "",
-      currentLocation: "",
-      estimatedDelivery: "",
-      paymentMethod: "",
-      packageSize: "",
-      isUrgent: false,
-    },
+const FastFastLogisticsBooking = () => {
+  const { data: session, status } = useSession();
+  const [pickupDate, setPickupDate] = useState<Date>(new Date());
+  const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingComplete, setBookingComplete] = useState(false);
+  const [error, setError] = useState<React.ReactNode>("");
+  const [formData, setFormData] = useState({
+    pickupAddress: "",
+    deliveryAddress: "",
+    pickupTime: "",
+    deliveryTime: "",
+    packageSize: "",
+    packageDescription: "",
+    pickupPhoneNumber: "",
+    deliveryPhoneNumber: "",
+    paymentMethod: "",
+    route: "",
+    price: "",
   });
 
-  const onSubmit = async (data: FormData) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    if (status !== "authenticated" || !session?.user?.id) {
+      setError(
+        <>
+          You must be logged in to create a booking.{" "}
+          <Link href="/auth/signin" className="text-blue-500 underline">
+            Log in here
+          </Link>
+          .
+        </>
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    const bookingData = {
+      ...formData,
+      pickupDate: pickupDate.toISOString(),
+      deliveryDate: deliveryDate.toISOString(),
+      isUrgent,
+      userId: session.user.id,
+      status: "PENDING",
+      price: parseFloat(formData.price),
+    };
+
     try {
-      const response = await fetch("/api/booking", {
+      const response = await fetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(bookingData),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to submit booking");
+        throw new Error("Failed to create booking");
       }
 
       const result = await response.json();
-      setUpdateResult(result.message);
-      setIsError(false);
-      form.reset();
+      console.log("Booking created:", result);
+      setBookingComplete(true);
     } catch (error) {
-      setUpdateResult("Error submitting booking. Please try again.");
-      setIsError(true);
+      console.error("Error creating booking:", error);
+      setError(
+        "An error occurred while creating the booking. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Booking Form
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="trackingNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tracking Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter tracking number"
-                        aria-label="Tracking Number"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="shipmentStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Shipment Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                          aria-label="Shipment Status"
-                        >
-                          <SelectValue placeholder="Select shipment status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent
-                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
-                        aria-label="Shipment Status Options"
-                      >
-                        <SelectItem
-                          value="PROCESSING"
-                          className="bg-yellow-500 text-black"
-                        >
-                          Processing
-                        </SelectItem>
-                        <SelectItem
-                          value="SHIPPED"
-                          className="bg-blue-500 text-white"
-                        >
-                          Shipped
-                        </SelectItem>
-                        <SelectItem
-                          value="IN_TRANSIT"
-                          className="bg-orange-500 text-white"
-                        >
-                          In Transit
-                        </SelectItem>
-                        <SelectItem
-                          value="DELIVERED"
-                          className="bg-green-500 text-white"
-                        >
-                          Delivered
-                        </SelectItem>
-                        <SelectItem
-                          value="RETURNED"
-                          className="bg-red-500 text-white"
-                        >
-                          Returned
-                        </SelectItem>
-                        <SelectItem
-                          value="CANCELLED"
-                          className="bg-gray-500 text-white"
-                        >
-                          Cancelled
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="bookingStatus"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Booking Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                          aria-label="Booking Status"
-                        >
-                          <SelectValue placeholder="Select booking status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent
-                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
-                        aria-label="Booking Status Options"
-                      >
-                        <SelectItem
-                          value="PROCESSING"
-                          className="bg-yellow-500 text-black"
-                        >
-                          Processing
-                        </SelectItem>
-                        <SelectItem
-                          value="SHIPPED"
-                          className="bg-blue-500 text-white"
-                        >
-                          Shipped
-                        </SelectItem>
-                        <SelectItem
-                          value="IN_TRANSIT"
-                          className="bg-orange-500 text-white"
-                        >
-                          In Transit
-                        </SelectItem>
-                        <SelectItem
-                          value="DELIVERED"
-                          className="bg-green-500 text-white"
-                        >
-                          Delivered
-                        </SelectItem>
-                        <SelectItem
-                          value="RETURNED"
-                          className="bg-red-500 text-white"
-                        >
-                          Returned
-                        </SelectItem>
-                        <SelectItem
-                          value="CANCELLED"
-                          className="bg-gray-500 text-white"
-                        >
-                          Cancelled
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                          aria-label="Payment Method"
-                        >
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent
-                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
-                        aria-label="Payment Method Options"
-                      >
-                        <SelectItem
-                          value="CASH"
-                          className="bg-green-500 text-white"
-                        >
-                          Cash
-                        </SelectItem>
-                        <SelectItem
-                          value="CARD"
-                          className="bg-blue-500 text-white"
-                        >
-                          Card
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="packageSize"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Package Size</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                          aria-label="Package Size"
-                        >
-                          <SelectValue placeholder="Select package size" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent
-                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
-                        aria-label="Package Size Options"
-                      >
-                        <SelectItem
-                          value="LARGE"
-                          className="bg-yellow-500 text-black"
-                        >
-                          Large
-                        </SelectItem>
-                        <SelectItem
-                          value="MEDIUM"
-                          className="bg-orange-500 text-white"
-                        >
-                          Medium
-                        </SelectItem>
-                        <SelectItem
-                          value="SMALL"
-                          className="bg-red-500 text-white"
-                        >
-                          Small
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isUrgent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Is Urgent?</FormLabel>
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        aria-label="Is Urgent"
-                        {...field}
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">
-                Submit
-              </Button>
-            </form>
-          </Form>
-          {updateResult && (
-            <Alert
-              className={`mt-4 ${
-                isError ? "bg-red-500 text-white" : "bg-green-500 text-white"
-              }`}
-              role="alert"
-            >
-              <AlertDescription>{updateResult}</AlertDescription>
-            </Alert>
-          )}
-          <div className="mt-4 text-center">
-            <Link href="/login">
-              <a className="text-blue-600 hover:text-blue-800">Login</a>
-            </Link>
-          </div>
+  if (bookingComplete) {
+    return (
+      <Card className="w-full sm:w-[500px] lg:w-[600px] mx-auto p-4 sm:p-6">
+        <CardContent className="text-center">
+          <AlertCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Booking Confirmed!</h2>
+          <p>
+            Your dispatch rider has been booked successfully. You will receive a
+            confirmation email shortly.
+          </p>
+          <Button className="mt-4" onClick={() => setBookingComplete(false)}>
+            Book Another Delivery
+          </Button>
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  return (
+    <Card className="w-full sm:w-[500px] lg:w-[600px] mx-auto p-4 sm:p-6">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold">
+          FastFast Logistics Services Booking
+        </CardTitle>
+        <CardDescription>
+          Book a dispatch rider for your delivery needs
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="pickupAddress">Pickup Address</Label>
+            <Input
+              id="pickupAddress"
+              name="pickupAddress"
+              placeholder="Enter Your Pickup Location"
+              required
+              onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="deliveryAddress">Delivery Address</Label>
+            <Input
+              id="deliveryAddress"
+              name="deliveryAddress"
+              placeholder="Enter Your Delivery Location"
+              required
+              onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+            />
+          </div>
+
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label>Select Pickup Date</Label>
+              <Calendar
+                mode="single"
+                selected={pickupDate}
+                onSelect={(date) => date && setPickupDate(date)}
+                disabled={(date) => date < new Date()}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Delivery Date</Label>
+              <Calendar
+                mode="single"
+                selected={deliveryDate}
+                onSelect={(date) => date && setDeliveryDate(date)}
+                disabled={(date) => date < pickupDate}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pickupTime">Pickup Time</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("pickupTime", value)
+                }
+              >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Afternoon (12PM - 4PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryTime">Delivery Time</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("deliveryTime", value)
+                }
+              >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Afternoon (12PM - 4PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="packageSize">Package Size</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("packageSize", value)
+                }
+              >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                  <SelectValue placeholder="Select package size" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="small"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Small (Up to 5kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="medium"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Medium (5kg - 15kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Large (15kg - 30kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="extra-large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Extra Large (30kg+)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="packageDescription">Package Description</Label>
+              <Textarea
+                id="packageDescription"
+                name="packageDescription"
+                placeholder="Describe the package"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pickupPhoneNumber">Pickup Phone Number</Label>
+              <Input
+                id="pickupPhoneNumber"
+                name="pickupPhoneNumber"
+                placeholder="Enter pickup phone number"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryPhoneNumber">Delivery Phone Number</Label>
+              <Input
+                id="deliveryPhoneNumber"
+                name="deliveryPhoneNumber"
+                placeholder="Enter delivery phone number"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("paymentMethod", value)
+                }
+              >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="credit-card"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Credit Card
+                  </SelectItem>
+                  <SelectItem
+                    value="paypal"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    PayPal
+                  </SelectItem>
+                  <SelectItem
+                    value="cash"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Cash
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="route">Route</Label>
+              <Input
+                id="route"
+                name="route"
+                placeholder="Enter route information"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="price">Price</Label>
+            <Input
+              id="price"
+              name="price"
+              placeholder="Enter estimated price"
+              required
+              onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Is this urgent?</Label>
+            <Switch
+              checked={isUrgent}
+              onCheckedChange={setIsUrgent}
+              className="bg-blue-500"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              "Submit Booking"
+            )}
+          </Button>
+
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default FastFastLogisticsBooking;
