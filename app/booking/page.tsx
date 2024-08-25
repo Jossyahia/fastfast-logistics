@@ -1,24 +1,19 @@
 "use client";
+
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  Calendar,
-  Clock,
-  Package,
-  CreditCard,
-  Phone,
-  Truck,
-} from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -26,271 +21,349 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
 
-// Define types for form data
-interface FormData {
-  pickupAddress: string;
-  deliveryAddress: string;
-  pickupDate: string;
-  deliveryDate: string;
-  pickupTime: string;
-  deliveryTime: string;
-  packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
-  packageDescription: string;
-  isUrgent: boolean;
-  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
-  pickupPhoneNumber: string;
-  deliveryPhoneNumber: string;
-}
+const schema = z.object({
+  trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
+  shipmentStatus: z.string().min(1, { message: "Shipment status is required" }),
+  bookingStatus: z.string().min(1, { message: "Booking status is required" }),
+  currentLocation: z.string().optional(),
+  estimatedDelivery: z.string().optional(),
+  paymentMethod: z.string().min(1, { message: "Payment method is required" }),
+  packageSize: z.string().min(1, { message: "Package size is required" }),
+  isUrgent: z.boolean().optional(),
+});
 
-const BookingPage: React.FC = () => {
-  const router = useRouter();
-  const [formData, setFormData] = useState<FormData>({
-    pickupAddress: "",
-    deliveryAddress: "",
-    pickupDate: "",
-    deliveryDate: "",
-    pickupTime: "",
-    deliveryTime: "",
-    packageSize: "SMALL",
-    packageDescription: "",
-    isUrgent: false,
-    paymentMethod: "CREDIT_CARD",
-    pickupPhoneNumber: "",
-    deliveryPhoneNumber: "",
+type FormData = z.infer<typeof schema>;
+
+export default function BookingForm() {
+  const [updateResult, setUpdateResult] = useState<string | null>(null);
+  const [isError, setIsError] = useState(false);
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      trackingNumber: "",
+      shipmentStatus: "",
+      bookingStatus: "",
+      currentLocation: "",
+      estimatedDelivery: "",
+      paymentMethod: "",
+      packageSize: "",
+      isUrgent: false,
+    },
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Explicitly type 'name' and 'value' parameters
-  const handleChange = (name: keyof FormData, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
+  const onSubmit = async (data: FormData) => {
     try {
-      const response = await fetch("/api/bookings", {
+      const response = await fetch("/api/booking", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/booking/confirmation/${data.booking.id}`);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create booking");
+      if (!response.ok) {
+        throw new Error("Failed to submit booking");
       }
-    } catch (error: any) {
-      console.error("Error creating booking:", error);
-      setError(
-        error.message || "An error occurred while creating the booking."
-      );
-    } finally {
-      setLoading(false);
+
+      const result = await response.json();
+      setUpdateResult(result.message);
+      setIsError(false);
+      form.reset();
+    } catch (error) {
+      setUpdateResult("Error submitting booking. Please try again.");
+      setIsError(true);
     }
   };
 
   return (
-    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
-      <CardHeader>
-        <h1 className="text-3xl font-bold">Create a Booking</h1>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="pickupAddress" className="flex items-center">
-                <Truck className="w-4 h-4 mr-2" /> Pickup Address
-              </Label>
-              <Input
-                id="pickupAddress"
-                value={formData.pickupAddress}
-                onChange={(e) => handleChange("pickupAddress", e.target.value)}
-                required
+    <div className="container mx-auto px-4 py-8">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">
+            Booking Form
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="trackingNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tracking Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter tracking number"
+                        aria-label="Tracking Number"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryAddress" className="flex items-center">
-                <Truck className="w-4 h-4 mr-2" /> Delivery Address
-              </Label>
-              <Input
-                id="deliveryAddress"
-                value={formData.deliveryAddress}
-                onChange={(e) =>
-                  handleChange("deliveryAddress", e.target.value)
-                }
-                required
+              <FormField
+                control={form.control}
+                name="shipmentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Shipment Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                          aria-label="Shipment Status"
+                        >
+                          <SelectValue placeholder="Select shipment status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Shipment Status Options"
+                      >
+                        <SelectItem
+                          value="PROCESSING"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Processing
+                        </SelectItem>
+                        <SelectItem
+                          value="SHIPPED"
+                          className="bg-blue-500 text-white"
+                        >
+                          Shipped
+                        </SelectItem>
+                        <SelectItem
+                          value="IN_TRANSIT"
+                          className="bg-orange-500 text-white"
+                        >
+                          In Transit
+                        </SelectItem>
+                        <SelectItem
+                          value="DELIVERED"
+                          className="bg-green-500 text-white"
+                        >
+                          Delivered
+                        </SelectItem>
+                        <SelectItem
+                          value="RETURNED"
+                          className="bg-red-500 text-white"
+                        >
+                          Returned
+                        </SelectItem>
+                        <SelectItem
+                          value="CANCELLED"
+                          className="bg-gray-500 text-white"
+                        >
+                          Cancelled
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pickupDate" className="flex items-center">
-                <Calendar className="w-4 h-4 mr-2" /> Pickup Date
-              </Label>
-              <Input
-                type="date"
-                id="pickupDate"
-                value={formData.pickupDate}
-                onChange={(e) => handleChange("pickupDate", e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="bookingStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Booking Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                          aria-label="Booking Status"
+                        >
+                          <SelectValue placeholder="Select booking status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Booking Status Options"
+                      >
+                        <SelectItem
+                          value="PROCESSING"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Processing
+                        </SelectItem>
+                        <SelectItem
+                          value="SHIPPED"
+                          className="bg-blue-500 text-white"
+                        >
+                          Shipped
+                        </SelectItem>
+                        <SelectItem
+                          value="IN_TRANSIT"
+                          className="bg-orange-500 text-white"
+                        >
+                          In Transit
+                        </SelectItem>
+                        <SelectItem
+                          value="DELIVERED"
+                          className="bg-green-500 text-white"
+                        >
+                          Delivered
+                        </SelectItem>
+                        <SelectItem
+                          value="RETURNED"
+                          className="bg-red-500 text-white"
+                        >
+                          Returned
+                        </SelectItem>
+                        <SelectItem
+                          value="CANCELLED"
+                          className="bg-gray-500 text-white"
+                        >
+                          Cancelled
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryDate" className="flex items-center">
-                <Calendar className="w-4 h-4 mr-2" /> Delivery Date
-              </Label>
-              <Input
-                type="date"
-                id="deliveryDate"
-                value={formData.deliveryDate}
-                onChange={(e) => handleChange("deliveryDate", e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                          aria-label="Payment Method"
+                        >
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Payment Method Options"
+                      >
+                        <SelectItem
+                          value="CASH"
+                          className="bg-green-500 text-white"
+                        >
+                          Cash
+                        </SelectItem>
+                        <SelectItem
+                          value="CARD"
+                          className="bg-blue-500 text-white"
+                        >
+                          Card
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pickupTime" className="flex items-center">
-                <Clock className="w-4 h-4 mr-2" /> Pickup Time
-              </Label>
-              <Input
-                type="time"
-                id="pickupTime"
-                value={formData.pickupTime}
-                onChange={(e) => handleChange("pickupTime", e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="packageSize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Package Size</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                          aria-label="Package Size"
+                        >
+                          <SelectValue placeholder="Select package size" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Package Size Options"
+                      >
+                        <SelectItem
+                          value="LARGE"
+                          className="bg-yellow-500 text-black"
+                        >
+                          Large
+                        </SelectItem>
+                        <SelectItem
+                          value="MEDIUM"
+                          className="bg-orange-500 text-white"
+                        >
+                          Medium
+                        </SelectItem>
+                        <SelectItem
+                          value="SMALL"
+                          className="bg-red-500 text-white"
+                        >
+                          Small
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryTime" className="flex items-center">
-                <Clock className="w-4 h-4 mr-2" /> Delivery Time
-              </Label>
-              <Input
-                type="time"
-                id="deliveryTime"
-                value={formData.deliveryTime}
-                onChange={(e) => handleChange("deliveryTime", e.target.value)}
-                required
+              <FormField
+                control={form.control}
+                name="isUrgent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Is Urgent?</FormLabel>
+                    <FormControl>
+                      <input
+                        type="checkbox"
+                        aria-label="Is Urgent"
+                        {...field}
+                        checked={field.value}
+                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="packageSize" className="flex items-center">
-                <Package className="w-4 h-4 mr-2" /> Package Size
-              </Label>
-              <Select
-                value={formData.packageSize}
-                onValueChange={(value) => handleChange("packageSize", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select package size" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SMALL">Small</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="LARGE">Large</SelectItem>
-                  <SelectItem value="EXTRA_LARGE">Extra Large</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="paymentMethod" className="flex items-center">
-                <CreditCard className="w-4 h-4 mr-2" /> Payment Method
-              </Label>
-              <Select
-                value={formData.paymentMethod}
-                onValueChange={(value) => handleChange("paymentMethod", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                  <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
-                  <SelectItem value="CASH">Cash</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="packageDescription" className="flex items-center">
-              <Package className="w-4 h-4 mr-2" /> Package Description
-            </Label>
-            <Textarea
-              id="packageDescription"
-              value={formData.packageDescription}
-              onChange={(e) =>
-                handleChange("packageDescription", e.target.value)
-              }
-              rows={3}
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isUrgent"
-              checked={formData.isUrgent}
-              onCheckedChange={(checked) => handleChange("isUrgent", checked)}
-            />
-            <Label htmlFor="isUrgent">Urgent Delivery</Label>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="pickupPhoneNumber" className="flex items-center">
-                <Phone className="w-4 h-4 mr-2" /> Pickup Phone Number
-              </Label>
-              <Input
-                type="tel"
-                id="pickupPhoneNumber"
-                value={formData.pickupPhoneNumber}
-                onChange={(e) =>
-                  handleChange("pickupPhoneNumber", e.target.value)
-                }
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label
-                htmlFor="deliveryPhoneNumber"
-                className="flex items-center"
-              >
-                <Phone className="w-4 h-4 mr-2" /> Delivery Phone Number
-              </Label>
-              <Input
-                type="tel"
-                id="deliveryPhoneNumber"
-                value={formData.deliveryPhoneNumber}
-                onChange={(e) =>
-                  handleChange("deliveryPhoneNumber", e.target.value)
-                }
-                required
-              />
-            </div>
-          </div>
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <Button type="submit" className="w-full">
+                Submit
+              </Button>
+            </form>
+          </Form>
+          {updateResult && (
+            <Alert
+              variant={isError ? "destructive" : "default"}
+              className="mt-4"
+            >
+              <AlertDescription>
+                {updateResult}
+                {isError && (
+                  <Link href="/login" className="text-blue-600 underline">
+                    {" "}
+                    Login again
+                  </Link>
+                )}
+              </AlertDescription>
             </Alert>
           )}
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-          onClick={handleSubmit}
-        >
-          {loading ? "Creating Booking..." : "Create Booking"}
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
-};
-
-export default BookingPage;
+}
