@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Calendar } from "@/components/ui/calendar";
@@ -32,7 +33,7 @@ const FastFastLogisticsBooking = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
-  const [error, setError] = useState<React.ReactNode>(""); // Update the state type to React.ReactNode
+  const [error, setError] = useState<React.ReactNode>("");
   const [formData, setFormData] = useState({
     pickupAddress: "",
     deliveryAddress: "",
@@ -67,10 +68,7 @@ const FastFastLogisticsBooking = () => {
       setError(
         <>
           You must be logged in to create a booking.{" "}
-          <Link
-            href="/auth/signin"
-            style={{ color: "blue", textDecoration: "underline" }}
-          >
+          <Link href="/auth/signin" className="text-blue-500 underline">
             Log in here
           </Link>
           .
@@ -154,6 +152,7 @@ const FastFastLogisticsBooking = () => {
               placeholder="Enter Your Pickup Location"
               required
               onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
           </div>
           <div className="space-y-2">
@@ -164,6 +163,7 @@ const FastFastLogisticsBooking = () => {
               placeholder="Enter Your Delivery Location"
               required
               onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
           </div>
 
@@ -195,16 +195,30 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("pickupTime", value)
                 }
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger id="pickupTime">
+                <SelectTrigger>
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                  <SelectItem value="afternoon">
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
                     Afternoon (12PM - 4PM)
                   </SelectItem>
-                  <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -214,49 +228,87 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("deliveryTime", value)
                 }
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger id="deliveryTime">
+                <SelectTrigger>
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                  <SelectItem value="afternoon">
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
                     Afternoon (12PM - 4PM)
                   </SelectItem>
-                  <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="packageSize">Package Size</Label>
-            <Select
-              onValueChange={(value) =>
-                handleSelectChange("packageSize", value)
-              }
-            >
-              <SelectTrigger id="packageSize">
-                <SelectValue placeholder="Select size" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="small">Small (Up to 5kg)</SelectItem>
-                <SelectItem value="medium">Medium (5-15kg)</SelectItem>
-                <SelectItem value="large">Large (15-30kg)</SelectItem>
-                <SelectItem value="extralarge">Extra Large (30kg+)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="packageSize">Package Size</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("packageSize", value)
+                }
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="small"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Small (Up to 5kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="medium"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Medium (5kg - 15kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Large (15kg - 30kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="extra-large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Extra Large (30kg+)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="packageDescription">Package Description</Label>
-            <Textarea
-              id="packageDescription"
-              name="packageDescription"
-              placeholder="Briefly describe your package contents"
-              required
-              onChange={handleInputChange}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="packageDescription">Package Description</Label>
+              <Textarea
+                id="packageDescription"
+                name="packageDescription"
+                placeholder="Describe the package"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
           </div>
 
           <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -265,9 +317,10 @@ const FastFastLogisticsBooking = () => {
               <Input
                 id="pickupPhoneNumber"
                 name="pickupPhoneNumber"
-                placeholder="Enter the sender's phone number"
+                placeholder="Enter pickup phone number"
                 required
                 onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
             </div>
             <div className="space-y-2">
@@ -275,40 +328,59 @@ const FastFastLogisticsBooking = () => {
               <Input
                 id="deliveryPhoneNumber"
                 name="deliveryPhoneNumber"
-                placeholder="Enter the receiver's phone number"
+                placeholder="Enter delivery phone number"
                 required
                 onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="paymentMethod">Payment Method</Label>
-            <Select
-              onValueChange={(value) =>
-                handleSelectChange("paymentMethod", value)
-              }
-            >
-              <SelectTrigger id="paymentMethod">
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Cash on Delivery</SelectItem>
-                <SelectItem value="card">Credit/Debit Card</SelectItem>
-                <SelectItem value="transfer">Bank Transfer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="route">Preferred Route</Label>
-            <Input
-              id="route"
-              name="route"
-              placeholder="Enter preferred delivery route"
-              required
-              onChange={handleInputChange}
-            />
+          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod">Payment Method</Label>
+              <Select
+                onValueChange={(value) =>
+                  handleSelectChange("paymentMethod", value)
+                }
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                  <SelectItem
+                    value="credit-card"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Credit Card
+                  </SelectItem>
+                  <SelectItem
+                    value="paypal"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    PayPal
+                  </SelectItem>
+                  <SelectItem
+                    value="cash"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Cash
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="route">Route</Label>
+              <Input
+                id="route"
+                name="route"
+                placeholder="Enter route information"
+                required
+                onChange={handleInputChange}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -316,39 +388,40 @@ const FastFastLogisticsBooking = () => {
             <Input
               id="price"
               name="price"
-              placeholder="Enter calculated price"
-              type="number"
+              placeholder="Enter estimated price"
               required
               onChange={handleInputChange}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="isUrgent">Is this delivery urgent?</Label>
+          <div className="space-y-2">
+            <Label>Is this urgent?</Label>
             <Switch
-              id="isUrgent"
               checked={isUrgent}
-              onCheckedChange={(checked) => setIsUrgent(checked)}
+              onCheckedChange={setIsUrgent}
+              className="bg-blue-500"
             />
           </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-5 w-5" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            disabled={isLoading}
+          >
             {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...
-              </>
+              <Loader2 className="animate-spin" />
             ) : (
               "Submit Booking"
             )}
           </Button>
+
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
         </form>
       </CardContent>
     </Card>
