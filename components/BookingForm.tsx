@@ -195,9 +195,8 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("pickupTime", value)
                 }
-                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
@@ -228,9 +227,8 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("deliveryTime", value)
                 }
-                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
@@ -264,10 +262,9 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("packageSize", value)
                 }
-                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select size" />
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+                  <SelectValue placeholder="Select package size" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
                   <SelectItem
@@ -343,9 +340,8 @@ const FastFastLogisticsBooking = () => {
                 onValueChange={(value) =>
                   handleSelectChange("paymentMethod", value)
                 }
-                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
