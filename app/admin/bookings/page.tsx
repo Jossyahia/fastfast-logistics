@@ -21,6 +21,8 @@ export default async function BookingsPage() {
             <th className="py-2 px-4 border-b">Status</th>
             <th className="py-2 px-4 border-b">Pickup Location</th>
             <th className="py-2 px-4 border-b">Delivery Location</th>
+            <th className="py-2 px-4 border-b">Pickup Phone Number</th>
+            <th className="py-2 px-4 border-b">Delivery Phone Number</th>
             <th className="py-2 px-4 border-b">Pickup Date</th>
             <th className="py-2 px-4 border-b">Delivery Date</th>
           </tr>
@@ -32,6 +34,12 @@ export default async function BookingsPage() {
               <td className="py-2 px-4 border-b">{booking.status}</td>
               <td className="py-2 px-4 border-b">{booking.pickupAddress}</td>
               <td className="py-2 px-4 border-b">{booking.deliveryAddress}</td>
+              <td className="py-2 px-4 border-b">
+                {booking.pickupPhoneNumber}
+              </td>
+              <td className="py-2 px-4 border-b">
+                {booking.deliveryPhoneNumber}
+              </td>
               <td className="py-2 px-4 border-b">
                 {booking.pickupDate.toLocaleDateString()}
               </td>
