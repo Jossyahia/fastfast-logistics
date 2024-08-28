@@ -1,63 +1,68 @@
-"use client";
-
+"use client"
 import React, { useState } from "react";
 import Link from "next/link";
+import {
+  Menu,
+  X,
+  Users,
+  Calendar,
+  Bike,
+  Package,
+  RefreshCw,
+} from "lucide-react";
 
 const AdminLayoutClient = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const navItems = [
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/bookings", label: "Bookings", icon: Calendar },
+    { href: "/admin/riders", label: "Riders", icon: Bike },
+    { href: "/admin/shipments", label: "Shipments", icon: Package },
+    { href: "/admin/update-status", label: "Update Status", icon: RefreshCw },
+  ];
+
   return (
-    <div className="flex h-screen bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       {/* Sidebar */}
-      <div
+      <aside
         className={`${
-          sidebarOpen ? "w-64" : "w-16"
-        } bg-white dark:bg-neutral-800 shadow-md flex flex-col transition-all duration-200`}
+          sidebarOpen ? "w-64" : "w-20"
+        } bg-white dark:bg-gray-800 shadow-lg flex flex-col transition-all duration-200 ease-in-out`}
       >
-        <div className="p-4">
+        <div className="p-4 flex justify-between items-center">
           <button
-            className="text-xl font-bold dark:text-white focus:outline-none"
+            className="text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            {sidebarOpen ? "✕" : "☰"}
+            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
+          {sidebarOpen && (
+            <span className="text-lg font-semibold text-gray-800 dark:text-white">
+              Admin
+            </span>
+          )}
         </div>
-        <nav className={`mt-4 ${sidebarOpen ? "block" : "hidden"} sm:block`}>
-          <Link
-            href="/admin/users"
-            className="block py-2 px-4 hover:bg-gray-200 dark:hover:bg-neutral-700 dark:text-white"
-          >
-            Users
-          </Link>
-          <Link
-            href="/admin/bookings"
-            className="block py-2 px-4 hover:bg-gray-200 dark:hover:bg-neutral-700 dark:text-white"
-          >
-            Bookings
-          </Link>
-          <Link
-            href="/admin/riders"
-            className="block py-2 px-4 hover:bg-gray-200 dark:hover:bg-neutral-700 dark:text-white"
-          >
-            Riders
-          </Link>
-          <Link
-            href="/admin/shipments"
-            className="block py-2 px-4 hover:bg-gray-200 dark:hover:bg-neutral-700 dark:text-white"
-          >
-            Shipments
-          </Link>
-          <Link
-            href="/admin/update-status"
-            className="block py-2 px-4 hover:bg-gray-200 dark:hover:bg-neutral-700 dark:text-white"
-          >
-            Update Status
-          </Link>
+        <nav className="mt-8 flex flex-col flex-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center py-3 px-4 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-150 ease-in-out ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              }`}
+            >
+              <item.icon size={20} />
+              {sidebarOpen && <span className="ml-4">{item.label}</span>}
+            </Link>
+          ))}
         </nav>
-      </div>
+      </aside>
 
       {/* Main content */}
-      <div className="flex-1 overflow-auto p-4 sm:p-8">{children}</div>
+      <main className="flex-1 overflow-auto">
+        <div className="container mx-auto px-4 py-8">{children}</div>
+      </main>
     </div>
   );
 };

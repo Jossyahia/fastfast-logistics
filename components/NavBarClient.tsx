@@ -77,10 +77,10 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
 
   const adminNavItems: NavItem[] = useMemo(
     () => [
-      { href: "/admin", label: "Admin Dashboard", icon: Settings },
-      { href: "/ViewAllUsers", label: "View All Users", icon: Users },
-      { href: "/ViewAllBookings", label: "View All Bookings", icon: BookOpen },
-      { href: "/update-status", label: "Update Status", icon: RefreshCw },
+      { href: "/admin/dashboard", label: "Admin Dashboard", icon: Settings },
+      { href: "/admin/ViewAllUsers", label: "View All Users", icon: Users },
+      { href: "/admin/ViewAllBookings", label: "View All Bookings", icon: BookOpen },
+      { href: "/admin/update-status", label: "Update Status", icon: RefreshCw },
     ],
     []
   );
