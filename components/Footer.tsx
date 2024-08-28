@@ -6,7 +6,7 @@ export const Footer = () => {
         <div className="flex justify-center bg-secondary dark:bg-secondary/50 py-4 w-full rounded-xl">
           <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-6 px-6">
             <span className="text-sm">
-              © {new Date().getFullYear()} FastAFST Logistics Services. All
+              © {new Date().getFullYear()} Fastfast Logistics Services. All
               rights reserved.{" "}
             </span>
           </div>
