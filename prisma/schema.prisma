@@ -15,7 +15,8 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          Role      @default(USER)
+   role  Role   @default(USER)
+  rider Rider?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
@@ -80,7 +81,7 @@ model Booking {
   isUrgent            Boolean
   createdAt           DateTime  @default(now()) @db.Timestamptz
   updatedAt           DateTime  @updatedAt
-  rider               Rider?    @relation(fields: [riderId], references: [id])
+  rider  Rider? @relation(fields: [riderId], references: [id])
   riderId             String?
   paymentMethod       PaymentMethod
   route               String
@@ -88,6 +89,8 @@ model Booking {
   pickupPhoneNumber   String
   deliveryPhoneNumber String
   shipment            Shipment?
+  notificationSent Boolean  @default(false)  
+  riderResponse    Response @default(PENDING)
 
   @@index([userId])
   @@index([riderId])
@@ -98,6 +101,8 @@ model Rider {
   id        String    @id @default(cuid())
   name      String
   email     String    @unique
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -157,4 +162,10 @@ enum PaymentMethod {
   DEBIT_CARD
   CASH
   BANK_TRANSFER
+}
+
+enum Response {
+  ACCEPTED
+  REJECTED
+  PENDING
 }
