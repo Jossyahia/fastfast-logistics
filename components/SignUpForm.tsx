@@ -3,22 +3,32 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { Role } from "@prisma/client";
 
 export default function SignUpForm() {
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | string[]>("");
+  const [role, setRole] = useState<Role>(Role.USER);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError("");
     const formData = new FormData(event.currentTarget);
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
+    const signupData = {
+      name,
+      email,
+      password,
+      role,
+    };
+
     try {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify(signupData),
       });
 
       if (response.ok) {
@@ -26,7 +36,11 @@ export default function SignUpForm() {
         await signIn("credentials", { email, password, callbackUrl: "/" });
       } else {
         const data = await response.json();
-        setError(data.message || "An error occurred during signup");
+        if (data.errors) {
+          setError(data.errors);
+        } else {
+          setError(data.message || "An error occurred during signup");
+        }
       }
     } catch (error) {
       setError("An error occurred during signup");
@@ -38,7 +52,19 @@ export default function SignUpForm() {
       <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100">
         Create an Account
       </h2>
-      {error && <p className="text-red-500 text-center">{error}</p>}
+      {error && (
+        <div className="text-red-500 text-center">
+          {Array.isArray(error) ? (
+            <ul>
+              {error.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          ) : (
+            error
+          )}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <label className="block">
@@ -77,6 +103,33 @@ export default function SignUpForm() {
               placeholder="••••••••"
             />
           </label>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              I want to:
+            </span>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio"
+                name="role"
+                value={Role.USER}
+                checked={role === Role.USER}
+                onChange={() => setRole(Role.USER)}
+              />
+              <span className="ml-2">Book deliveries</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                className="form-radio"
+                name="role"
+                value={Role.RIDER}
+                checked={role === Role.RIDER}
+                onChange={() => setRole(Role.RIDER)}
+              />
+              <span className="ml-2">Become a rider</span>
+            </label>
+          </div>
         </div>
         <button
           type="submit"
@@ -97,3 +150,4 @@ export default function SignUpForm() {
     </div>
   );
 }
+ 
