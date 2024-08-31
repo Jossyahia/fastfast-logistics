@@ -1,26 +1,17 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 import bcryptjs from "bcryptjs";
 import { Role } from "@prisma/client";
 
-// Extend the built-in session types
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      role: Role;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
-    role: Role;
-  }
-}
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -46,9 +37,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email as string,
-          },
+          where: { email: credentials.email },
         });
 
         if (!user || !user.password) {
@@ -56,7 +45,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const isPasswordValid = await bcryptjs.compare(
-          credentials.password as string,
+          credentials.password,
           user.password
         );
 
@@ -73,21 +62,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-  },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
+      }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
+      // Add error handling and debugging
+      console.log("Session Callback - Token:", token);
+      console.log("Session Callback - Session:", session);
+
+      if (session.user && token) {
         session.user.id = token.id as string;
-        session.user.role = token.role as Role;
+        session.user.role = (token.role as Role) || "USER"; // Provide a default role if undefined
+      }
+      if (token) {
+        session.accessToken = token.accessToken as string | undefined;
+        session.refreshToken = token.refreshToken as string | undefined;
       }
       return session;
     },
@@ -95,5 +93,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/auth/signin",
   },
+  events: {
+    async createUser({ user }) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "USER" },
+      });
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development", // Enable debug messages in development
 });
+
+// Type augmentations
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: Role;
+    } & DefaultSession["user"];
+    accessToken?: string;
+    refreshToken?: string;
+  }
+
+  interface User {
+    role: Role;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: Role;
+    accessToken?: string;
+    refreshToken?: string;
+  }
+}
