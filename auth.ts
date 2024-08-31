@@ -75,13 +75,9 @@ export const {
       return token;
     },
     async session({ session, token }) {
-      // Add error handling and debugging
-      console.log("Session Callback - Token:", token);
-      console.log("Session Callback - Session:", session);
-
       if (session.user && token) {
         session.user.id = token.id as string;
-        session.user.role = (token.role as Role) || "USER"; // Provide a default role if undefined
+        session.user.role = (token.role as Role) || "USER";
       }
       if (token) {
         session.accessToken = token.accessToken as string | undefined;
@@ -102,7 +98,6 @@ export const {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development", // Enable debug messages in development
 });
 
 // Type augmentations
