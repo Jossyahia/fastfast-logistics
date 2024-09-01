@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession, JWT } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -37,7 +37,7 @@ export const {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string }, // Explicit casting here
+          where: { email: credentials.email as string },
         });
 
         if (!user || !user.password) {
@@ -45,7 +45,7 @@ export const {
         }
 
         const isPasswordValid = await bcryptjs.compare(
-          credentials.password,
+          credentials.password as string,
           user.password
         );
 
@@ -114,9 +114,7 @@ declare module "next-auth" {
   interface User {
     role: Role;
   }
-}
 
-declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: Role;
