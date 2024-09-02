@@ -26,37 +26,25 @@ export async function POST(req: Request) {
 
     const { email, password } = result.data;
 
-    // First, check in the User model
-    let user = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Check in the User model
+    let user = await prisma.user.findUnique({ where: { email } });
 
+    // If not found, check in the Rider model
     if (!user) {
-      // If not found, check the Rider model
-      const rider = await prisma.rider.findUnique({
-        where: { email },
-      });
-
-      if (!rider) {
-        return NextResponse.json(
-          { message: "Invalid credentials" },
-          { status: 401 }
-        );
-      }
-
-      user = await prisma.user.findUnique({
-        where: { id: rider.userId },
-      });
-
-      if (!user) {
-        return NextResponse.json(
-          { message: "Invalid credentials" },
-          { status: 401 }
-        );
+      const rider = await prisma.rider.findUnique({ where: { email } });
+      if (rider) {
+        user = await prisma.user.findUnique({ where: { id: rider.userId } });
       }
     }
 
-    const isPasswordValid = await bcryptjs.compare(password, user.password!);
+    if (!user || !user.password) {
+      return NextResponse.json(
+        { message: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -86,12 +74,10 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Error during login:", error);
     return NextResponse.json(
-      { message: "Something went wrong" },
+      { message: "Internal server error" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

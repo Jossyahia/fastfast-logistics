@@ -8,11 +8,9 @@ const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters long"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters long"),
-  role: z
-    .enum([Role.RIDER, Role.USER])
-    .refine((val) => Object.values(Role).includes(val), {
-      message: "Invalid role",
-    }),
+  role: z.nativeEnum(Role, {
+    invalid_type_error: "Invalid role",
+  }),
 });
 
 export async function POST(req: Request) {

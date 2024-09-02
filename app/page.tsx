@@ -13,32 +13,36 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
-      <main className="container mx-auto px-4 py-16 ">
+      <main className="container mx-auto px-4 py-16 md:py-24">
         <section className="text-center mb-16">
-          <h2 className="text-5xl font-extrabold mb-4">
-            Fastfast Logistics Services
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
+            FastFast Logistics Services
           </h2>
-          <p className="text-xl mb-8">
+          <p className="text-lg md:text-xl mb-8">
             Experience seamless shipping and tracking with FastFast Logistics
             Services
           </p>
-          <p className="text-x1  mb-8">
-            {" "}
-            Fast, Cheap and Secure Logistics Solutions
+          <p className="text-lg md:text-xl mb-8">
+            Fast, Cheap, and Secure Logistics Solutions
           </p>
 
           <Link href="/booking" passHref>
-            <Button size="lg" className="text-lg px-8 py-4">
+            <Button
+              size="lg"
+              className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-200"
+            >
               Get Started
             </Button>
           </Link>
         </section>
 
-        <section className="grid md:grid-cols-3 gap-8">
+        <section className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
           <Link href="/booking" passHref>
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300">
+            <Card className="cursor-pointer bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-200">
               <CardHeader>
-                <CardTitle>Quick Booking</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">
+                  Quick Booking
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
@@ -49,22 +53,26 @@ export default function LandingPage() {
             </Card>
           </Link>
           <Link href="/tracking" passHref>
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300">
+            <Card className="cursor-pointer bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-200">
               <CardHeader>
-                <CardTitle>Real-time Tracking</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">
+                  Real-time Tracking
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
-                  Stay informed with up-to-the-minute updates on your
-                  shipment&lsquo;, 's location.
+                  Stay informed with up-to-the-minute updates on your shipment’s
+                  location.
                 </CardDescription>
               </CardContent>
             </Card>
           </Link>
           <Link href="/delivery" passHref>
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300">
+            <Card className="cursor-pointer bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-transform duration-200">
               <CardHeader>
-                <CardTitle>Secure Delivery</CardTitle>
+                <CardTitle className="text-xl md:text-2xl">
+                  Secure Delivery
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription>
