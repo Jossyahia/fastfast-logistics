@@ -1,8 +1,102 @@
-prisma://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiNmZmMjg0OTUtOGRkNC00ODZkLThlZWYtNjlhZDlmMjY0NjZmIiwidGVuYW50X2lkIjoiYmZkNGZhMTZiYWI0OWE3ZTc3OTIwMDRkM2ZjOGQ2NGI4MjZiZGFiMmYyYzE5NDRlMzE1MWFhYjhjZTBhN2RlOSIsImludGVybmFsX3NlY3JldCI6IjZkODkxYWI0LTEwYTktNDFmMy04NTZiLTg4YjYwZWM4NTE5NCJ9.goVk6YZmm-OCDWndDgAjTPVCnLnHafBY77KsupzqOHw
+import NextAuth, { DefaultSession } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import InstagramProvider from "next-auth/providers/instagram";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import prisma from "@/lib/prisma";
+import bcryptjs from "bcryptjs";
+import { Role } from "@prisma/client";
 
+// Extend the built-in session types
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: Role;
+    } & DefaultSession["user"];
+  }
 
+  interface User {
+    role: Role;
+  }
+}
 
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
+    }),
+    InstagramProvider({
+      clientId: process.env.INSTAGRAM_CLIENT_ID!,
+      clientSecret: process.env.INSTAGRAM_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Please enter an email and password");
+        }
 
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email as string },
+        });
 
-I will upload my logistics application prisma schema Use this Prisma scheme to build a nextjs 14 app router rider component with ability for a Rider to get notified of available booking(using Ably.com for push notification) and can accept or reject the booking. Create a dashboard for the rider to view available bookings the dashboard should list all the bookings that are currently unassigned. Note: Use tailwind CSS for styling, use auth.js for authentication, am using nextjs 14 app directory 
+        if (!user || !user.password) {
+          throw new Error("No user found with this email");
+        }
 
+        const isPasswordValid = await bcryptjs.compare(
+          credentials.password as string,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          throw new Error("Invalid password");
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        };
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as Role;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/auth/signin",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+});
