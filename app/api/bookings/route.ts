@@ -11,10 +11,13 @@ export async function POST(request: Request) {
     const session = await auth();
 
     if (!session || !session.user || !session.user.id) {
-      return NextResponse.json({ error: "You are not authorized please login " }, { status: 401 });
+      return NextResponse.json(
+        { error: "You are not authorized. Please login." },
+        { status: 401 }
+      );
     }
 
-    const userId = session.user.id; // Store the user ID in a separate variable
+    const userId = session.user.id;
 
     const body = await request.json();
     const {
@@ -32,14 +35,11 @@ export async function POST(request: Request) {
       deliveryPhoneNumber,
     } = body;
 
-    // Simple route calculation (replace with actual logic)
     const route = `${pickupAddress} to ${deliveryAddress}`;
 
-    // Simple price calculation (replace with actual logic)
     const basePrice = 800;
     const urgentFee = isUrgent ? 500 : 0;
 
-    // Define package size fees
     const sizeFees: { [key: string]: number } = {
       SMALL: 200,
       MEDIUM: 500,
@@ -47,15 +47,13 @@ export async function POST(request: Request) {
       EXTRA_LARGE: 1500,
     };
 
-    // Calculate size fee based on package size
     const sizeFee = sizeFees[packageSize] || 0;
     const price = basePrice + urgentFee + sizeFee;
 
-    // Create booking and shipment in a transaction
     const result = await prisma.$transaction(async (prisma) => {
       const booking = await prisma.booking.create({
         data: {
-          userId: userId, // Using the stored user ID
+          userId,
           pickupAddress,
           deliveryAddress,
           pickupDate: new Date(pickupDate),
@@ -77,7 +75,7 @@ export async function POST(request: Request) {
               status: "PROCESSING",
               currentLocation: pickupAddress,
               estimatedDelivery: new Date(deliveryDate),
-              userId: userId, // Using the stored user ID
+              userId,
             },
           },
         },

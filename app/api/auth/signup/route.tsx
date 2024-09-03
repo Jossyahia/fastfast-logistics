@@ -1,6 +1,7 @@
+// app/api/signup/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { Role } from "@prisma/client";
 import { z } from "zod";
 
@@ -41,11 +42,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const hashedPassword = await bcryptjs.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     let user;
     if (role === Role.RIDER) {
-      // Use a transaction to create both User and Rider
       user = await prisma.$transaction(async (prisma) => {
         const newUser = await prisma.user.create({
           data: {
@@ -68,7 +68,6 @@ export async function POST(req: Request) {
         return newUser;
       });
     } else {
-      // For regular users, just create a User record
       user = await prisma.user.create({
         data: {
           name,

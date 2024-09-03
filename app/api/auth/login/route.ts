@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     const { email, password } = result.data;
 
-    // Check in the User model
+    // Check in the User model first
     let user = await prisma.user.findUnique({ where: { email } });
 
     // If not found, check in the Rider model

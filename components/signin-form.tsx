@@ -23,12 +23,15 @@ export default function SignInForm() {
     if (res?.error) {
       setError("Invalid email or password");
     } else if (res?.ok) {
-      router.push("/rider/dashboard"); // Redirect to homepage on successful login
+      router.push("/rider/dashboard"); 
+      router.refresh();// Redirect to homepage on successful login
     }
   };
 
   const handleGoogleSignIn = async () => {
-    signIn("google");
+    signIn("google", { redirectTo: "/ViewAllBookings" });
+    router.refresh();
+
   };
 
   return (

@@ -26,7 +26,8 @@ export default function SignUpForm() {
 
       if (response.ok) {
         const data = await response.json();
-        router.push("/");
+        router.push("/ViewAllBookings");
+        router.refresh();
       } else {
         const data = await response.json();
         setError(data.message || "An error occurred during signup");
