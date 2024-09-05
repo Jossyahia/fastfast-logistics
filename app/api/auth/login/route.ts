@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { z } from "zod";
 
+// Validation schema for login
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
     const result = loginSchema.safeParse(body);
 
     if (!result.success) {
+      // Collect and return validation errors
       const errors = result.error.errors.map(
         (error) => `${error.path}: ${error.message}`
       );
@@ -26,10 +28,10 @@ export async function POST(req: Request) {
 
     const { email, password } = result.data;
 
-    // Check in the User model first
+    // Attempt to find the user by email
     let user = await prisma.user.findUnique({ where: { email } });
 
-    // If not found, check in the Rider model
+    // If not found in User, check in the Rider model
     if (!user) {
       const rider = await prisma.rider.findUnique({ where: { email } });
       if (rider) {
@@ -37,6 +39,7 @@ export async function POST(req: Request) {
       }
     }
 
+    // If no user is found or the user lacks a password, return an error
     if (!user || !user.password) {
       return NextResponse.json(
         { message: "Invalid credentials" },
@@ -44,6 +47,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Compare the provided password with the stored hash
     const isPasswordValid = await bcryptjs.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -53,13 +57,14 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create a JWT token
+    // Generate a JWT token
     const token = sign(
       { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET!,
       { expiresIn: "1d" }
     );
 
+    // Respond with the user data and JWT token
     return NextResponse.json(
       {
         message: "Login successful",

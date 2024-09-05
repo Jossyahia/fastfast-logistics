@@ -3,9 +3,15 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Calendar, MapPin, Phone, Truck, User } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
+
 
 export default async function BookingsPage() {
   const session = await auth();
+   if (!session || session.user.role !== "ADMIN") {
+     redirect("/restricted");
+   }
   const bookings = await prisma.booking.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,

@@ -1,10 +1,15 @@
 // app/admin/riders/page.tsx
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+
 
 
 export default async function RidersPage() {
   const session = await auth();
+   if (!session || session.user.role !== "ADMIN") {
+     redirect("/restricted");
+   }
   const riders = await prisma.rider.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,

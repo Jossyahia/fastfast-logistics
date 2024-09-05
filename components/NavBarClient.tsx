@@ -23,6 +23,8 @@ import { Logo } from "@/components/logo";
 import ModeToggle from "@/components/ModeToggle";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Role } from "@prisma/client";
+import { revalidate } from "./../app/admin/dashboard/page";
 
 interface NavItem {
   href: string;
@@ -33,7 +35,7 @@ interface NavItem {
 interface NavBarClientProps {
   user: {
     name: string;
-    role: string;
+    role: Role;
     image?: string;
   } | null;
 }
@@ -62,6 +64,7 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
   const router = useRouter();
   const isAdmin = user?.role === "ADMIN";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const regularNavItems: NavItem[] = useMemo(
     () => [
@@ -79,28 +82,47 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
     () => [
       { href: "/admin/dashboard", label: "Admin Dashboard", icon: Settings },
       { href: "/admin/ViewAllUsers", label: "View All Users", icon: Users },
-      { href: "/admin/ViewAllBookings", label: "View All Bookings", icon: BookOpen },
+      {
+        href: "/admin/ViewAllBookings",
+        label: "View All Bookings",
+        icon: BookOpen,
+      },
       { href: "/admin/update-status", label: "Update Status", icon: RefreshCw },
     ],
     []
   );
 
   const navItems = useMemo(
-    () => (isAdmin ? [...adminNavItems] : regularNavItems),
+    () => (isAdmin ? adminNavItems : regularNavItems),
     [isAdmin, adminNavItems, regularNavItems]
   );
 
-  const handleAuth = useCallback(async () => {
-    if (user) {
-      await serverSignOut();
-    } else {
-      await serverSignIn();
-    }
-    router.refresh();
-  }, [user, router]);
+ const handleAuth = useCallback(async () => {
+   setIsLoading(true);
+   try {
+     if (user) {
+       await serverSignOut();
+       router.push("/"); 
+       router.refresh();// Redirect to home page after logout
+     } else {
+       await serverSignIn();
+       router.push("/profile"); 
+       router.refresh();// Redirect to profile page after login
+     }
+   } catch (error) {
+     console.error("Authentication error:", error);
+     // You can add user-friendly error handling here
+   } finally {
+     setIsLoading(false);
+   }
+ }, [user, router]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
   }, []);
 
   return (
@@ -123,6 +145,8 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
           variant="ghost"
           className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
           onClick={toggleMobileMenu}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls="mobile-menu"
         >
           {isMobileMenuOpen ? (
             <X className="h-5 w-5" />
@@ -141,8 +165,11 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
               variant="ghost"
               onClick={handleAuth}
               className="flex items-center space-x-2 text-sm hover:bg-accent hover:text-accent-foreground"
+              disabled={isLoading}
             >
-              {user ? (
+              {isLoading ? (
+                <span>Loading...</span>
+              ) : user ? (
                 <>
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>
@@ -178,14 +205,14 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden" id="mobile-menu">
           <div className="space-y-1 px-2 pb-3 pt-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className="block rounded-md px-3 py-2 text-base font-medium text-gray-30 hover:bg-gray-200 hover:text-gray-900"
-                onClick={toggleMobileMenu}
+                onClick={closeMobileMenu}
               >
                 {item.label}
               </Link>

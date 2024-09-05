@@ -1,37 +1,52 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation"; // Updated import
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter(); // Using useRouter from next/navigation
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-    if (res?.error) {
-      setError("Invalid email or password");
-    } else if (res?.ok) {
-      router.push("/rider/dashboard"); 
-      router.refresh();// Redirect to homepage on successful login
+      if (res?.error) {
+        setError(res.error || "Invalid email or password");
+      } else if (res?.ok) {
+        router.push("/profile");
+        router.refresh();
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    signIn("google", { redirectTo: "/ViewAllBookings" });
-    router.refresh();
-
+    setLoading(true);
+    try {
+      await signIn("google", { redirectTo: "/profile" });
+      router.refresh();
+    } catch (error) {
+      setError("Failed to sign in with Google. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,7 +55,11 @@ export default function SignInForm() {
         Sign In
       </h1>
       <form onSubmit={handleSubmit} className="mt-6">
-        {error && <div className="mb-4 text-red-500">{error}</div>}
+        {error && (
+          <div className="mb-4 text-red-500" role="alert" aria-live="polite">
+            {error}
+          </div>
+        )}
         <div className="space-y-4">
           <label className="block">
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -54,6 +73,7 @@ export default function SignInForm() {
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100"
               placeholder="you@example.com"
+              disabled={loading}
             />
           </label>
           <label className="block">
@@ -68,14 +88,26 @@ export default function SignInForm() {
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-gray-100"
               placeholder="••••••••"
+              disabled={loading}
             />
           </label>
         </div>
         <button
           type="submit"
-          className="w-full py-2 px-4 mt-6 bg-indigo-600 dark:bg-indigo-500 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="w-full py-2 px-4 mt-6 bg-indigo-600 dark:bg-indigo-500 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+          disabled={loading}
         >
-          Log In
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <span
+                className="inline-block w-4 h-4 border-t-2 border-r-2 border-white rounded-full animate-spin mr-2"
+                style={{ borderTopColor: "transparent" }}
+              ></span>
+              Logging in...
+            </span>
+          ) : (
+            "Log In"
+          )}
         </button>
       </form>
 
@@ -87,9 +119,20 @@ export default function SignInForm() {
 
       <button
         onClick={handleGoogleSignIn}
-        className="w-full py-2 px-4 bg-red-600 dark:bg-red-500 text-white font-semibold rounded-md shadow-md hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mt-4"
+        className="w-full py-2 px-4 bg-red-600 dark:bg-red-500 text-white font-semibold rounded-md shadow-md hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 mt-4 disabled:bg-gray-400"
+        disabled={loading}
       >
-        Sign in with Google
+        {loading ? (
+          <span className="flex items-center justify-center">
+            <span
+              className="inline-block w-4 h-4 border-t-2 border-r-2 border-white rounded-full animate-spin mr-2"
+              style={{ borderTopColor: "transparent" }}
+            ></span>
+            Signing in...
+          </span>
+        ) : (
+          "Sign in with Google"
+        )}
       </button>
 
       <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">

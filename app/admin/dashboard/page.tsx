@@ -3,7 +3,7 @@ import React from "react";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { Status } from "@prisma/client";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 interface DashboardStats {
   totalUsers: number;
@@ -16,9 +16,8 @@ export const revalidate = 60; // Revalidate every 60 seconds
 const DashboardPage = async () => {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") {
-    return notFound(); // Restrict access to admin users only
+    redirect("/restricted");
   }
-
   try {
     // Optimize database queries using Promise.all to fetch data concurrently
     const [totalUsers, totalBookings, bookingsByStatus] = await Promise.all([

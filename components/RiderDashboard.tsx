@@ -8,8 +8,7 @@ const RiderDashboard = async () => {
   const session = await auth();
 
   if (!session || session.user.role !== "RIDER") {
-    console.log(session);
-    redirect("/api/auth/signin");
+    redirect("/restricted");
   }
 
   const riderId = session.user.id;

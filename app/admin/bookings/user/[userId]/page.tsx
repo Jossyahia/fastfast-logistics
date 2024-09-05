@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Calendar, MapPin, Phone, Truck, User, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
 
 interface UserBookingsPageProps {
   params: {
@@ -14,6 +16,9 @@ export default async function UserBookingsPage({
   params,
 }: UserBookingsPageProps) {
   const session = await auth();
+   if (!session || session.user.role !== "ADMIN") {
+     redirect("/restricted");
+   }
   const userId = params.userId;
 
   const user = await prisma.user.findUnique({

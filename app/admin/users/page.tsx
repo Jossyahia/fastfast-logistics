@@ -2,9 +2,14 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { User } from "lucide-react";
+import { redirect } from "next/navigation";
+
 
 export default async function UsersPage() {
   const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    redirect("/restricted");
+  }
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,

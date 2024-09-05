@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/Footer";
 import { SessionProvider } from "next-auth/react";
 import NavBarServer from "@/components/NavBarServer";
+import LoadingWrapper from "@/components/LoadingWrapper";
+import { LoadingProvider } from "@/components/LoadingContext"; // Import the LoadingProvider
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,7 +14,7 @@ export const metadata = {
   description: "Your reliable logistics partner",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -27,8 +29,10 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <NavBarServer />
-            {children}
+            <LoadingProvider>
+              <NavBarServer />
+              <LoadingWrapper>{children}</LoadingWrapper>
+            </LoadingProvider>
           </ThemeProvider>
           <Footer />
         </SessionProvider>

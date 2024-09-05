@@ -2,9 +2,13 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Package, User, MapPin, Calendar, Truck } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export default async function ShipmentsPage() {
   const session = await auth();
+   if (!session || session.user.role !== "ADMIN") {
+     redirect("/restricted");
+   }
   const shipments = await prisma.shipment.findMany({
     orderBy: { createdAt: "desc" },
     take: 10,

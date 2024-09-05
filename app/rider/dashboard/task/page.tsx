@@ -9,8 +9,7 @@ export default async function RiderDashboard() {
   const session = await auth();
 
   if (!session || session.user.role !== "RIDER") {
-    console.log(session);
-    redirect("/api/auth/signin");
+   redirect("/restricted");
   }
 
   let availableBookings: Booking[] = [];

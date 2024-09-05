@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,6 +24,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+
 
 const schema = z.object({
   trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
@@ -64,6 +67,10 @@ export default function AdminUpdateStatusComponent() {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
+      const session = await auth();
+      if (!session || session.user.role !== "ADMIN") {
+        redirect("/restricted");
+      }
       const response = await fetch("/api/admin/update-status", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -88,6 +95,10 @@ export default function AdminUpdateStatusComponent() {
   const fetchShipmentDetails = async (trackingNumber: string) => {
     setIsLoading(true);
     try {
+       const session = await auth();
+       if (!session || session.user.role !== "ADMIN") {
+         redirect("/restricted");
+       }
       const response = await fetch(
         `/api/admin/update-status?trackingNumber=${trackingNumber}`
       );
