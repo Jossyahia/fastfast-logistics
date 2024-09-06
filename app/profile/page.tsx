@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -62,19 +62,32 @@ interface Rider {
   id: string;
   name: string;
   email: string;
+  phoneNumber: string | null;
+  address: string | null;
+  guarantorName: string | null;
+  guarantorPhoneNumber: string | null;
+  guarantorAddress: string | null;
+  relationshipWithGuarantor: string | null;
+  maritalStatus: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | null;
+}
+
+interface AdminStats {
+  totalUsers: number;
+  totalRiders: number;
+  totalBookings: number;
+  totalShipments: number;
 }
 
 export default function UserProfile() {
   const { data: session, status } = useSession();
-  const [name, setName] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
-      router.refresh();
     } else if (status === "authenticated") {
       fetchUserData();
     }
@@ -86,13 +99,53 @@ export default function UserProfile() {
       if (res.ok) {
         const data: UserData = await res.json();
         setUserData(data);
-        setName(data.name || "");
+        if (data.role === "ADMIN") {
+          fetchAdminStats();
+        }
       } else {
-        setError("Failed to fetch user data");
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch user data");
       }
     } catch (error) {
       setError("Error fetching user data");
     }
+  };
+
+  const fetchAdminStats = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const stats: AdminStats = await res.json();
+        setAdminStats(stats);
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch admin stats");
+      }
+    } catch (error) {
+      setError("Error fetching admin stats");
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setUserData((prevData) => {
+      if (!prevData) return null;
+      if (name.startsWith("rider.")) {
+        const riderField = name.split(".")[1] as keyof Rider;
+        return {
+          ...prevData,
+          rider: prevData.rider
+            ? {
+                ...prevData.rider,
+                [riderField]: value,
+              }
+            : null,
+        };
+      }
+      return { ...prevData, [name]: value };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -103,12 +156,29 @@ export default function UserProfile() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({
+          name: userData?.name,
+          rider: userData?.rider
+            ? {
+                phoneNumber: userData.rider.phoneNumber,
+                address: userData.rider.address,
+                maritalStatus: userData.rider.maritalStatus,
+                guarantorName: userData.rider.guarantorName,
+                guarantorPhoneNumber: userData.rider.guarantorPhoneNumber,
+                guarantorAddress: userData.rider.guarantorAddress,
+                relationshipWithGuarantor:
+                  userData.rider.relationshipWithGuarantor,
+              }
+            : null,
+        }),
       });
       if (res.ok) {
-        fetchUserData();
+        setError(null);
+        alert("Profile updated successfully");
+        fetchUserData(); // Refresh the data after update
       } else {
-        setError("Failed to update user data");
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to update user data");
       }
     } catch (error) {
       setError("Error updating user data");
@@ -142,27 +212,6 @@ export default function UserProfile() {
           <span className="block sm:inline"> {error}</span>
         </div>
       )}
-
-      <form onSubmit={handleSubmit} className="mb-8">
-        <div className="mb-4">
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Name:
-          </label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Update Name
-        </button>
-      </form>
 
       {userData && (
         <div className="space-y-6">
@@ -241,7 +290,6 @@ export default function UserProfile() {
                   <p>No bookings found.</p>
                 )}
               </section>
-
               <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
                 <h2 className="text-2xl font-semibold mb-4">
                   Shipments ({userData.shipments.length})
@@ -289,65 +337,66 @@ export default function UserProfile() {
           {userData.role === "RIDER" && userData.rider && (
             <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
               <h2 className="text-2xl font-semibold mb-4">Rider Details</h2>
-              <p>
-                <span className="font-medium">Rider ID:</span>{" "}
-                {userData.rider.id}
-              </p>
-              <p>
-                <span className="font-medium">Rider Email:</span>{" "}
-                {userData.rider.email}
-              </p>
-              <h3 className="text-xl font-semibold mt-4 mb-2">
-                Assigned Bookings
-              </h3>
-              {userData.bookings.length > 0 ? (
-                <ul className="space-y-4">
-                  {userData.bookings.map((booking) => (
-                    <li key={booking.id} className="border-b pb-2">
-                      <p>
-                        <span className="font-medium">Booking ID:</span>{" "}
-                        {booking.id}
-                      </p>
-                      <p>
-                        <span className="font-medium">Status:</span>{" "}
-                        {booking.status}
-                      </p>
-                      <p>
-                        <span className="font-medium">Pickup:</span>{" "}
-                        {booking.pickupAddress}
-                      </p>
-                      <p>
-                        <span className="font-medium">Delivery:</span>{" "}
-                        {booking.deliveryAddress}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No assigned bookings.</p>
-              )}
+              <div className="grid grid-cols-2 gap-4">
+                <p>
+                  <span className="font-medium">Phone Number:</span>{" "}
+                  {userData.rider.phoneNumber || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Address:</span>{" "}
+                  {userData.rider.address || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Marital Status:</span>{" "}
+                  {userData.rider.maritalStatus || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Name:</span>{" "}
+                  {userData.rider.guarantorName || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Phone:</span>{" "}
+                  {userData.rider.guarantorPhoneNumber || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Address:</span>{" "}
+                  {userData.rider.guarantorAddress || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">
+                    Relationship with Guarantor:
+                  </span>{" "}
+                  {userData.rider.relationshipWithGuarantor || "Not provided"}
+                </p>
+              </div>
             </section>
           )}
 
-          {userData.role === "ADMIN" && (
+          {userData && userData.role === "ADMIN" && (
             <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
               <h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2>
-              <p>
-                <span className="font-medium">Total Users:</span>{" "}
-                {/* Add logic to fetch total users */}
-              </p>
-              <p>
-                <span className="font-medium">Total Riders:</span>{" "}
-                {/* Add logic to fetch total riders */}
-              </p>
-              <p>
-                <span className="font-medium">Total Bookings:</span>{" "}
-                {/* Add logic to fetch total bookings */}
-              </p>
-              <p>
-                <span className="font-medium">Total Shipments:</span>{" "}
-                {/* Add logic to fetch total shipments */}
-              </p>
+              {adminStats ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <p>
+                    <span className="font-medium">Total Users:</span>{" "}
+                    {adminStats.totalUsers}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Riders:</span>{" "}
+                    {adminStats.totalRiders}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Bookings:</span>{" "}
+                    {adminStats.totalBookings}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Shipments:</span>{" "}
+                    {adminStats.totalShipments}
+                  </p>
+                </div>
+              ) : (
+                <p>Loading admin stats...</p>
+              )}
             </section>
           )}
         </div>

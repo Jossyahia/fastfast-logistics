@@ -30,7 +30,6 @@ export default async function BookingConfirmationPage({
   }
 
   const { booking, shipment } = data;
-
   return (
     <div className="max-w-2xl mx-auto mt-8 p-6 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 shadow-md rounded-lg">
       <h1 className="text-3xl font-bold mb-6 text-center  bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
@@ -124,10 +123,13 @@ export default async function BookingConfirmationPage({
           <h2 className="text-2xl font-semibold mb-4">Rider Information</h2>
           <ul className="space-y-2">
             <li>
-              <strong>Name:</strong> {booking.rider.name}
+              <strong>Name:</strong> {booking.rider?.name}
             </li>
             <li>
-              <strong>Email:</strong> {booking.rider.email}
+              <strong>Email:</strong> {booking.rider?.email}
+            </li>
+            <li>
+              <strong>Phone:</strong> {booking.rider?.phoneNumber}
             </li>
           </ul>
         </div>

@@ -97,15 +97,22 @@ model Booking {
 }
 
 model Rider {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  userId    String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  bookings  Booking[]
-  user      User      @relation(fields: [userId], references: [id])
+  id                   String    @id @default(cuid())
+  name                 String
+  email                String    @unique
+  userId               String    @unique
+  password             String
+  phoneNumber          String?
+  address              String?
+  guarantorName        String?
+  guarantorPhoneNumber String?
+  guarantorAddress     String?
+  relationshipWithGuarantor String?
+  maritalStatus        MaritalStatus?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  bookings             Booking[]
+  user                 User      @relation(fields: [userId], references: [id])
 }
 
 model Shipment {
@@ -167,4 +174,11 @@ enum Response {
   ACCEPTED
   REJECTED
   PENDING
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
 }

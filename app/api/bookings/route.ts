@@ -50,43 +50,48 @@ export async function POST(request: Request) {
     const sizeFee = sizeFees[packageSize] || 0;
     const price = basePrice + urgentFee + sizeFee;
 
-    const result = await prisma.$transaction(async (prisma) => {
-      const booking = await prisma.booking.create({
-        data: {
-          userId,
-          pickupAddress,
-          deliveryAddress,
-          pickupDate: new Date(pickupDate),
-          deliveryDate: new Date(deliveryDate),
-          pickupTime,
-          deliveryTime,
-          packageSize,
-          packageDescription,
-          isUrgent,
-          paymentMethod,
-          route,
-          price,
-          pickupPhoneNumber,
-          deliveryPhoneNumber,
-          status: "PROCESSING",
-          shipment: {
-            create: {
-              trackingNumber: generateTrackingNumber(),
-              status: "PROCESSING",
-              currentLocation: pickupAddress,
-              estimatedDelivery: new Date(deliveryDate),
-              userId,
-            },
-          },
-        },
-        include: {
-          shipment: true,
-        },
-      });
+   const result = await prisma.$transaction(async (prisma) => {
+     try {
+       const booking = await prisma.booking.create({
+         data: {
+           userId,
+           pickupAddress,
+           deliveryAddress,
+           pickupDate: new Date(pickupDate),
+           deliveryDate: new Date(deliveryDate),
+           pickupTime,
+           deliveryTime,
+           packageSize,
+           packageDescription,
+           isUrgent,
+           paymentMethod,
+           route,
+           price,
+           pickupPhoneNumber,
+           deliveryPhoneNumber,
+           status: "PROCESSING",
+           shipment: {
+             create: {
+               trackingNumber: generateTrackingNumber(),
+               status: "PROCESSING",
+               currentLocation: pickupAddress,
+               estimatedDelivery: new Date(deliveryDate),
+               userId,
+             },
+           },
+         },
+         include: {
+           shipment: true,
+         },
+       });
 
-      console.log("Created booking:", booking);
-      return booking;
-    });
+       console.log("Created booking:", booking);
+       return booking;
+     } catch (err) {
+       console.error("Transaction error: ", err);
+       throw new Error("Error in booking transaction"); // Rollback the transaction
+     }
+   });
 
     return NextResponse.json({ success: true, booking: result });
   } catch (error) {
