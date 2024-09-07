@@ -106,7 +106,6 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
        router.refresh();// Redirect to home page after logout
      } else {
        await serverSignIn();
-       router.push("/profile"); 
        router.refresh();// Redirect to profile page after login
      }
    } catch (error) {

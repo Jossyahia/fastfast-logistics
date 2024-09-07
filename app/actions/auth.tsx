@@ -10,7 +10,7 @@ export async function serverSignIn() {
 
 export async function serverSignOut() {
   await signOut({
-    redirect: false,
+    redirect: true,
   });
   // No need to redirect here, as we're handling it in the component
 }
