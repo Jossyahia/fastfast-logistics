@@ -1,12 +1,14 @@
 "use client";
+
 import React, { useMemo, useCallback, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import ModeToggle from "@/components/ModeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Role } from "@prisma/client";
+
 import {
-  Menu,
-  X,
-  LogOut,
   Home,
   Package,
   Calendar,
@@ -17,14 +19,21 @@ import {
   BookOpen,
   RefreshCw,
   Settings,
+  Menu,
+  X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import ModeToggle from "@/components/ModeToggle";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Role } from "@prisma/client";
-import { revalidate } from "./../app/admin/dashboard/page";
+
+type UserRole = "USER" | "RIDER" | "ADMIN";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  role: UserRole;
+}
 
 interface NavItem {
   href: string;
@@ -33,88 +42,69 @@ interface NavItem {
 }
 
 interface NavBarClientProps {
-  user: {
-    name: string;
-    role: Role;
-    image?: string;
-  } | null;
+  user: User | null;
 }
-
-const NavLink: React.FC<{ href: string; children: React.ReactNode }> =
-  React.memo(({ href, children }) => {
-    const pathname = usePathname();
-    const isActive = pathname === href || pathname.startsWith(`${href}/`);
-
-    return (
-      <Link
-        href={href}
-        className={`text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md ${
-          isActive
-            ? "text-primary bg-accent"
-            : "text-muted-foreground hover:bg-accent/50"
-        }`}
-        aria-current={isActive ? "page" : undefined}
-      >
-        {children}
-      </Link>
-    );
-  });
 
 const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
   const router = useRouter();
-  const isAdmin = user?.role === "ADMIN";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const regularNavItems: NavItem[] = useMemo(
-    () => [
-      { href: "/", label: "Home", icon: Home },
-      { href: "/services", label: "Services", icon: Package },
-      { href: "/booking", label: "Booking", icon: Calendar },
-      { href: "/tracking", label: "Tracking", icon: MapPin },
-      { href: "/contact-us", label: "Contact", icon: Mail },
-      { href: "/about", label: "About", icon: Info },
-    ],
-    []
+  const isAdmin = user?.role === "ADMIN";
+
+  const navItems: NavItem[] = useMemo(
+    () =>
+      isAdmin
+        ? [
+            {
+              href: "/admin/dashboard",
+              label: "Admin Dashboard",
+              icon: Settings,
+            },
+            {
+              href: "/admin/ViewAllUsers",
+              label: "View All Users",
+              icon: Users,
+            },
+            {
+              href: "/admin/ViewAllBookings",
+              label: "View All Bookings",
+              icon: BookOpen,
+            },
+            {
+              href: "/admin/update-status",
+              label: "Update Status",
+              icon: RefreshCw,
+            },
+          ]
+        : [
+            { href: "/", label: "Home", icon: Home },
+            { href: "/services", label: "Services", icon: Package },
+            { href: "/booking", label: "Booking", icon: Calendar },
+            { href: "/tracking", label: "Tracking", icon: MapPin },
+            { href: "/contact-us", label: "Contact", icon: Mail },
+            { href: "/about", label: "About", icon: Info },
+          ],
+    [isAdmin]
   );
 
-  const adminNavItems: NavItem[] = useMemo(
-    () => [
-      { href: "/admin/dashboard", label: "Admin Dashboard", icon: Settings },
-      { href: "/admin/ViewAllUsers", label: "View All Users", icon: Users },
-      {
-        href: "/admin/ViewAllBookings",
-        label: "View All Bookings",
-        icon: BookOpen,
-      },
-      { href: "/admin/update-status", label: "Update Status", icon: RefreshCw },
-    ],
-    []
-  );
-
-  const navItems = useMemo(
-    () => (isAdmin ? adminNavItems : regularNavItems),
-    [isAdmin, adminNavItems, regularNavItems]
-  );
-
- const handleAuth = useCallback(async () => {
-   setIsLoading(true);
-   try {
-     if (user) {
-       await serverSignOut();
-       router.push("/"); 
-       router.refresh();// Redirect to home page after logout
-     } else {
-       await serverSignIn();
-       router.refresh();// Redirect to profile page after login
-     }
-   } catch (error) {
-     console.error("Authentication error:", error);
-     // You can add user-friendly error handling here
-   } finally {
-     setIsLoading(false);
-   }
- }, [user, router]);
+  const handleAuth = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (user) {
+        await serverSignOut();
+        router.push("/");
+      } else {
+        await serverSignIn();
+      }
+      router.refresh();
+    } catch (error) {
+      console.error("Authentication error:", error);
+      // Add user-friendly error handling here, e.g., toast notification
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, router]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -124,98 +114,124 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
     setIsMobileMenuOpen(false);
   }, []);
 
+  const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "";
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Logo />
+        <nav className="flex items-center justify-between h-20 w-full">
+          <Link href="/" className="flex-shrink-0">
+            <Logo className="text-5xl font-signature" />
           </Link>
-          <nav className="flex items-center space-x-1 text-sm font-medium">
-            {navItems.map((item) => (
-              <NavLink key={item.href} href={item.href}>
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-        </div>
 
-        <Button
-          variant="ghost"
-          className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
-          onClick={toggleMobileMenu}
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-menu"
-        >
-          {isMobileMenuOpen ? (
-            <X className="h-5 w-5" />
-          ) : (
-            <Menu className="h-5 w-5" />
-          )}
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
-
-        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
-          <div className="w-full flex-1 md:w-auto md:flex-none">
-            {/* Add search functionality here if needed */}
+          <div className="hidden md:block">
+            <ul className="ml-10 flex items-baseline space-x-4">
+              {navItems.map(({ href, label, icon: Icon }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center transition duration-150 ease-in-out"
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
-          <nav className="flex items-center space-x-4">
+
+          <div className="hidden md:flex items-center space-x-4">
+            {user && (
+              <Avatar>
+                {user.image ? (
+                  <AvatarImage src={user.image} alt={user.name} />
+                ) : (
+                  <AvatarFallback>{userInitials}</AvatarFallback>
+                )}
+              </Avatar>
+            )}
+            <Button
+              onClick={handleAuth}
+              disabled={isLoading}
+              variant={user ? "destructive" : "default"}
+            >
+              {isLoading ? "Loading..." : user ? "Logout" : "Login"}
+            </Button>
+            <ModeToggle />
+          </div>
+
+          <div className="md:hidden">
             <Button
               variant="ghost"
-              onClick={handleAuth}
-              className="flex items-center space-x-2 text-sm hover:bg-accent hover:text-accent-foreground"
-              disabled={isLoading}
+              size="icon"
+              onClick={toggleMobileMenu}
+              aria-expanded={isMobileMenuOpen}
             >
-              {isLoading ? (
-                <span>Loading...</span>
-              ) : user ? (
-                <>
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </>
+              <span className="sr-only">Open main menu</span>
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" aria-hidden="true" />
               ) : (
-                <span>Sign in</span>
+                <Menu className="h-6 w-6" aria-hidden="true" />
               )}
             </Button>
-            {user && (
-              <div className="flex items-center space-x-2">
-                <Avatar>
-                  {user.image ? (
-                    <div className="rounded-full h-20 w-20">
-                      <Image
-                        src={user.image}
-                        alt={user.name}
-                        width={72}
-                        height={72}
-                        className="rounded-full"
-                      />
-                    </div>
-                  ) : (
-                    <AvatarFallback>
-                      {user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-              </div>
-            )}
-            <ModeToggle />
-          </nav>
-        </div>
+          </div>
+        </nav>
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden" id="mobile-menu">
-          <div className="space-y-1 px-2 pb-3 pt-2">
-            {navItems.map((item) => (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {navItems.map(({ href, label, icon: Icon }) => (
               <Link
-                key={item.href}
-                href={item.href}
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-30 hover:bg-gray-200 hover:text-gray-900"
+                key={href}
+                href={href}
+                className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center transition duration-150 ease-in-out"
                 onClick={closeMobileMenu}
               >
-                {item.label}
+                <Icon className="mr-2 h-5 w-5" />
+                {label}
               </Link>
             ))}
+          </div>
+          <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
+            {user && (
+              <div className="flex items-center px-5">
+                <Avatar>
+                  {user.image ? (
+                    <AvatarImage src={user.image} alt={user.name} />
+                  ) : (
+                    <AvatarFallback>{userInitials}</AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="ml-3">
+                  <div className="text-base font-medium text-gray-800 dark:text-white">
+                    {user.name}
+                  </div>
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    {user.email}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className="mt-3 px-2 space-y-1">
+              <Button
+                className="w-full justify-start"
+                onClick={handleAuth}
+                disabled={isLoading}
+                variant={user ? "destructive" : "default"}
+              >
+                {user
+                  ? isLoading
+                    ? "Loading..."
+                    : "Logout"
+                  : isLoading
+                  ? "Loading..."
+                  : "Login"}
+              </Button>
+              <div className="px-3 py-2">
+                <ModeToggle />
+              </div>
+            </div>
           </div>
         </div>
       )}

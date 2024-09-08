@@ -48,6 +48,8 @@ interface FormErrors {
   [key: string]: string;
 }
 
+const STORAGE_KEY = 'bookingFormData';
+
 const BookingPage: React.FC = () => {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
@@ -70,6 +72,12 @@ const BookingPage: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
+    // Load saved form data from sessionStorage when component mounts
+    const savedFormData = sessionStorage.getItem(STORAGE_KEY);
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+
     const pickupDateInput = document.getElementById(
       "pickupDate"
     ) as HTMLInputElement;
@@ -109,6 +117,9 @@ const BookingPage: React.FC = () => {
           updatedData.deliveryDate = "";
         }
       }
+
+      // Save updated form data to sessionStorage
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
 
       return updatedData;
     });
@@ -189,6 +200,8 @@ const BookingPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setSuccess(true);
+        // Clear the saved form data from sessionStorage on successful submission
+        sessionStorage.removeItem(STORAGE_KEY);
         setTimeout(() => {
           router.push(`/booking/confirmation/${data.booking.id}`);
         }, 1000);

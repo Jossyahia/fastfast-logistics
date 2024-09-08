@@ -84,8 +84,6 @@ export async function POST(request: Request) {
            shipment: true,
          },
        });
-
-       console.log("Created booking:", booking);
        return booking;
      } catch (err) {
        console.error("Transaction error: ", err);
