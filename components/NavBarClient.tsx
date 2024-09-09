@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useMemo, useCallback, useState } from "react";
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ModeToggle from "@/components/ModeToggle";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Role } from "@prisma/client";
-
 import {
   Home,
   Package,
@@ -19,21 +23,16 @@ import {
   BookOpen,
   RefreshCw,
   Settings,
-  Menu,
   X,
+  Bell,
+  Menu,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
+import { useSession } from "next-auth/react";
+import { Role } from "@prisma/client";
 
 type UserRole = "USER" | "RIDER" | "ADMIN";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image?: string | null;
-  role: UserRole;
-}
 
 interface NavItem {
   href: string;
@@ -41,16 +40,22 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-interface NavBarClientProps {
-  user: User | null;
+interface UserData {
+  name: string;
+  role: UserRole;
+  image?: string;
 }
 
-const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
+const NavBarClient: React.FC = () => {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = userData?.role === "ADMIN";
 
   const navItems: NavItem[] = useMemo(
     () =>
@@ -88,85 +93,86 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
     [isAdmin]
   );
 
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await fetch("/api/user");
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+      const data = await response.json();
+      setUserData(data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session) {
+      fetchUserData();
+    } else {
+      setUserData(null);
+    }
+  }, [session, fetchUserData]);
+
   const handleAuth = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (user) {
+      if (userData) {
         await serverSignOut();
+        setUserData(null);
         router.push("/");
+        router.refresh();
       } else {
         await serverSignIn();
+        router.refresh();
       }
-      router.refresh();
     } catch (error) {
       console.error("Authentication error:", error);
-      // Add user-friendly error handling here, e.g., toast notification
     } finally {
       setIsLoading(false);
     }
-  }, [user, router]);
+  }, [userData, router]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
-  const closeMobileMenu = useCallback(() => {
-    setIsMobileMenuOpen(false);
+  const toggleProfileMenu = useCallback(() => {
+    setIsProfileMenuOpen((prev) => !prev);
   }, []);
 
-  const userInitials = user?.name ? user.name.charAt(0).toUpperCase() : "";
+  const closeProfileMenu = useCallback(() => {
+    setIsProfileMenuOpen(false);
+  }, []);
+
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        closeProfileMenu();
+      }
+    },
+    [closeProfileMenu]
+  );
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [handleClickOutside]);
+
+  const displayName = userData?.name || "";
+  const image = userData?.image || "";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <nav className="flex items-center justify-between h-20 w-full">
-          <Link href="/" className="flex-shrink-0">
-            <Logo className="text-5xl font-signature" />
-          </Link>
-
-          <div className="hidden md:block">
-            <ul className="ml-10 flex items-baseline space-x-4">
-              {navItems.map(({ href, label, icon: Icon }) => (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center transition duration-150 ease-in-out"
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="hidden md:flex items-center space-x-4">
-            {user && (
-              <Avatar>
-                {user.image ? (
-                  <AvatarImage src={user.image} alt={user.name} />
-                ) : (
-                  <AvatarFallback>{userInitials}</AvatarFallback>
-                )}
-              </Avatar>
-            )}
-            <Button
-              onClick={handleAuth}
-              disabled={isLoading}
-              variant={user ? "destructive" : "default"}
-            >
-              {isLoading ? "Loading..." : user ? "Logout" : "Login"}
-            </Button>
-            <ModeToggle />
-          </div>
-
-          <div className="md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleMobileMenu}
-              aria-expanded={isMobileMenuOpen}
-            >
+    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b">
+      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+        <div className="relative flex h-16 items-center justify-between">
+          <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
+            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
               <span className="sr-only">Open main menu</span>
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" aria-hidden="true" />
@@ -175,67 +181,113 @@ const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
               )}
             </Button>
           </div>
-        </nav>
+          <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+            <Link href="/" className="flex-shrink-0">
+              <Logo className="text-5xl font-signature" />
+            </Link>
+            <div className="hidden sm:ml-6 sm:block">
+              <div className="flex space-x-4">
+                {navItems.map(({ href, label, icon: Icon }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center transition duration-150 ease-in-out"
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+            <Button variant="ghost" size="icon" className="relative">
+              <span className="sr-only">View notifications</span>
+              <Bell className="h-6 w-6" aria-hidden="true" />
+            </Button>
+
+            {userData && (
+              <div className="relative ml-3" ref={dropdownRef}>
+                <Button variant="ghost" size="icon" onClick={toggleProfileMenu}>
+                  <span className="sr-only">Open user menu</span>
+                  {image ? (
+                    <Image
+                      src={image}
+                      alt={displayName}
+                      width={32}
+                      height={32}
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-base font-medium text-gray-700 dark:text-gray-300">
+                      {displayName.charAt(0)}
+                    </div>
+                  )}
+                </Button>
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={closeProfileMenu}
+                    >
+                      Your Profile
+                    </Link>
+                    <Link
+                      href="/profile/edit"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={closeProfileMenu}
+                    >
+                      Settings
+                    </Link>
+                    <button
+                      onClick={() => {
+                        closeProfileMenu();
+                        handleAuth();
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!userData && (
+              <Button
+                onClick={handleAuth}
+                disabled={isLoading}
+                variant="default"
+                className="ml-3"
+              >
+                {isLoading ? "Loading..." : "Login"}
+              </Button>
+            )}
+
+            <ModeToggle className="ml-3" />
+          </div>
+        </div>
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="sm:hidden">
+          <div className="space-y-1 px-2 pb-3 pt-2">
             {navItems.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center transition duration-150 ease-in-out"
-                onClick={closeMobileMenu}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Icon className="mr-2 h-5 w-5" />
                 {label}
               </Link>
             ))}
           </div>
-          <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-            {user && (
-              <div className="flex items-center px-5">
-                <Avatar>
-                  {user.image ? (
-                    <AvatarImage src={user.image} alt={user.name} />
-                  ) : (
-                    <AvatarFallback>{userInitials}</AvatarFallback>
-                  )}
-                </Avatar>
-                <div className="ml-3">
-                  <div className="text-base font-medium text-gray-800 dark:text-white">
-                    {user.name}
-                  </div>
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {user.email}
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="mt-3 px-2 space-y-1">
-              <Button
-                className="w-full justify-start"
-                onClick={handleAuth}
-                disabled={isLoading}
-                variant={user ? "destructive" : "default"}
-              >
-                {user
-                  ? isLoading
-                    ? "Loading..."
-                    : "Logout"
-                  : isLoading
-                  ? "Loading..."
-                  : "Login"}
-              </Button>
-              <div className="px-3 py-2">
-                <ModeToggle />
-              </div>
-            </div>
-          </div>
         </div>
       )}
-    </header>
+    </nav>
   );
 };
 

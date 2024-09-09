@@ -3,9 +3,9 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/Footer";
 import { SessionProvider } from "next-auth/react";
-import NavBarServer from "@/components/NavBarServer";
 import LoadingWrapper from "@/components/LoadingWrapper";
 import { LoadingProvider } from "@/components/LoadingContext"; // Import the LoadingProvider
+import NavBarClient from "@/components/NavBarClient";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,7 +30,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <LoadingProvider>
-              <NavBarServer />
+              <NavBarClient/>
               <LoadingWrapper>{children}</LoadingWrapper>
             </LoadingProvider>
           </ThemeProvider>
