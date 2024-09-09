@@ -1,114 +1,406 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import React, { useState } from "react";
-import { Logo } from "@/components/logo";
-import ModeToggle from "@/components/ModeToggle";
-import { Button } from "@/components/ui/button";
-import { serverSignIn, serverSignOut } from "@/app/actions/auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Role } from "@prisma/client";
-import {
-  Menu,
-  X,
-  LogOut,
-  Home,
-  Package,
-  Calendar,
-  MapPin,
-  Mail,
-  Info,
-  Users,
-  BookOpen,
-  RefreshCw,
-  Settings,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-import { FaBars, FaTimes } from "react-icons/fa";
+interface UserData {
+  id: string;
+  name: string | null;
+  email: string;
+  emailVerified: string | null;
+  image: string | null;
+  role: "ADMIN" | "USER" | "RIDER";
+  createdAt: string;
+  updatedAt: string;
+  bookings: Booking[];
+  shipments: Shipment[];
+  rider: Rider | null;
+}
 
-const Navbar = () => {
-  const [nav, setNav] = useState(false);
+interface Booking {
+  id: string;
+  pickupAddress: string;
+  deliveryAddress: string;
+  pickupDate: string;
+  deliveryDate: string;
+  pickupTime: string;
+  deliveryTime: string;
+  packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
+  packageDescription: string | null;
+  status:
+    | "PROCESSING"
+    | "SHIPPED"
+    | "IN_TRANSIT"
+    | "DELIVERED"
+    | "RETURNED"
+    | "CANCELLED";
+  isUrgent: boolean;
+  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
+  route: string;
+  price: number;
+  pickupPhoneNumber: string;
+  deliveryPhoneNumber: string;
+  notificationSent: boolean;
+  riderResponse: "ACCEPTED" | "REJECTED" | "PENDING";
+}
 
-  const links = [
-    {
-      id: 1,
-      link: "home",
-    },
-    {
-      id: 2,
-      link: "services",
-    },
-    {
-      id: 3,
-      link: "booking",
-    },
-    {
-      id: 4,
-      link: "tracking",
-    },
-    {
-      id: 4,
-      link: "about",
-    },
-    {
-      id: 5,
-      link: "contact",
-    },
-    {
-      id: 5,
-      link: "login",
-    },
-  ];
+interface Shipment {
+  id: string;
+  trackingNumber: string;
+  status:
+    | "PROCESSING"
+    | "SHIPPED"
+    | "IN_TRANSIT"
+    | "DELIVERED"
+    | "RETURNED"
+    | "CANCELLED";
+  currentLocation: string | null;
+  estimatedDelivery: string | null;
+}
+
+interface Rider {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string | null;
+  address: string | null;
+  guarantorName: string | null;
+  guarantorPhoneNumber: string | null;
+  guarantorAddress: string | null;
+  relationshipWithGuarantor: string | null;
+  maritalStatus: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | null;
+}
+
+interface AdminStats {
+  totalUsers: number;
+  totalRiders: number;
+  totalBookings: number;
+  totalShipments: number;
+}
+
+export default function UserProfile() {
+  const { data: session, status } = useSession();
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    } else if (status === "authenticated") {
+      fetchUserData();
+    }
+  }, [status, router]);
+
+  const fetchUserData = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data: UserData = await res.json();
+        setUserData(data);
+        if (data.role === "ADMIN") {
+          fetchAdminStats();
+        }
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch user data");
+      }
+    } catch (error) {
+      setError("Error fetching user data");
+    }
+  };
+
+  const fetchAdminStats = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const stats: AdminStats = await res.json();
+        setAdminStats(stats);
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch admin stats");
+      }
+    } catch (error) {
+      setError("Error fetching admin stats");
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setUserData((prevData) => {
+      if (!prevData) return null;
+      if (name.startsWith("rider.")) {
+        const riderField = name.split(".")[1] as keyof Rider;
+        return {
+          ...prevData,
+          rider: prevData.rider
+            ? {
+                ...prevData.rider,
+                [riderField]: value,
+              }
+            : null,
+        };
+      }
+      return { ...prevData, [name]: value };
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/user", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: userData?.name,
+          rider: userData?.rider
+            ? {
+                phoneNumber: userData.rider.phoneNumber,
+                address: userData.rider.address,
+                maritalStatus: userData.rider.maritalStatus,
+                guarantorName: userData.rider.guarantorName,
+                guarantorPhoneNumber: userData.rider.guarantorPhoneNumber,
+                guarantorAddress: userData.rider.guarantorAddress,
+                relationshipWithGuarantor:
+                  userData.rider.relationshipWithGuarantor,
+              }
+            : null,
+        }),
+      });
+      if (res.ok) {
+        setError(null);
+        alert("Profile updated successfully");
+        fetchUserData(); // Refresh the data after update
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to update user data");
+      }
+    } catch (error) {
+      setError("Error updating user data");
+    }
+  };
+
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return null;
+  }
 
   return (
-    <div className="flex justify-between items-center w-full h-20 px-4 text-white bg-black fixed nav">
-      <div>
-        <h1 className="text-5xl font-signature ml-2">
-          <a
-            className="link-underline link-underline-black"
-            href=""
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Logo />
-          </a>
-        </h1>
-      </div>
+    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+      <h1 className="text-3xl font-bold mb-6">
+        {userData?.name || session?.user?.name}'s Profile
+      </h1>
 
-      <ul className="hidden md:flex">
-        {links.map(({ id, link }) => (
-          <li
-            key={id}
-            className="nav-links px-4 cursor-pointer capitalize font-medium text-gray-500 hover:scale-105 hover:text-white duration-200 link-underline"
-          >
-            <Link href={link}>{link}</Link>
-          </li>
-        ))}
-      </ul>
+      {error && (
+        <div
+          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+          role="alert"
+        >
+          <strong className="font-bold">Error!</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      )}
 
-      <div
-        onClick={() => setNav(!nav)}
-        className="cursor-pointer pr-4 z-10 text-gray-500 md:hidden"
-      >
-        {nav ? <FaTimes size={30} /> : <FaBars size={30} />}
-      </div>
+      {userData && (
+        <div className="space-y-6">
+          <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+            <h2 className="text-2xl font-semibold mb-4">User Details</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <p>
+                <span className="font-medium">Email:</span> {userData.email}
+              </p>
+              <p>
+                <span className="font-medium">Role:</span> {userData.role}
+              </p>
+              <p>
+                <span className="font-medium">Joined:</span>{" "}
+                {new Date(userData.createdAt).toLocaleDateString()}
+              </p>
+              <p>
+                <span className="font-medium">Last Updated:</span>{" "}
+                {new Date(userData.updatedAt).toLocaleDateString()}
+              </p>
+              {userData.emailVerified && (
+                <p>
+                  <span className="font-medium">Email Verified:</span>{" "}
+                  {new Date(userData.emailVerified).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          </section>
 
-      {nav && (
-        <ul className="flex flex-col justify-center items-center absolute top-0 right-0 w-full h-screen bg-gradient-to-b from-black to-gray-800 text-gray-500">
-          {links.map(({ id, link }) => (
-            <li
-              key={id}
-              className="px-4 cursor-pointer capitalize py-6 text-4xl"
-            >
-              <Link onClick={() => setNav(!nav)} href={link}>
-                {link}
-              </Link>
-            </li>
-          ))}
-        </ul>
+          {userData.role === "USER" && (
+            <>
+              <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+                <h2 className="text-2xl font-semibold mb-4">
+                  Bookings ({userData.bookings.length})
+                </h2>
+                {userData.bookings.length > 0 ? (
+                  <ul className="space-y-4">
+                    {userData.bookings.map((booking) => (
+                      <li key={booking.id} className="border-b pb-2">
+                        <p>
+                          <span className="font-medium">Pickup:</span>{" "}
+                          {booking.pickupAddress}
+                        </p>
+                        <p>
+                          <span className="font-medium">Delivery:</span>{" "}
+                          {booking.deliveryAddress}
+                        </p>
+                        <p>
+                          <span className="font-medium">Status:</span>{" "}
+                          {booking.status}
+                        </p>
+                        <p>
+                          <span className="font-medium">Package Size:</span>{" "}
+                          {booking.packageSize}
+                        </p>
+                        <p>
+                          <span className="font-medium">Price:</span> $
+                          {booking.price.toFixed(2)}
+                        </p>
+                        <p>
+                          <span className="font-medium">Urgent:</span>{" "}
+                          {booking.isUrgent ? "Yes" : "No"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Payment Method:</span>{" "}
+                          {booking.paymentMethod}
+                        </p>
+                        <p>
+                          <span className="font-medium">Rider Response:</span>{" "}
+                          {booking.riderResponse}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No bookings found.</p>
+                )}
+              </section>
+              <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+                <h2 className="text-2xl font-semibold mb-4">
+                  Shipments ({userData.shipments.length})
+                </h2>
+                {userData.shipments.length > 0 ? (
+                  <ul className="space-y-4">
+                    {userData.shipments.map((shipment) => (
+                      <li key={shipment.id} className="border-b pb-2">
+                        <p>
+                          <span className="font-medium">Tracking Number:</span>{" "}
+                          {shipment.trackingNumber}
+                        </p>
+                        <p>
+                          <span className="font-medium">Status:</span>{" "}
+                          {shipment.status}
+                        </p>
+                        {shipment.currentLocation && (
+                          <p>
+                            <span className="font-medium">
+                              Current Location:
+                            </span>{" "}
+                            {shipment.currentLocation}
+                          </p>
+                        )}
+                        {shipment.estimatedDelivery && (
+                          <p>
+                            <span className="font-medium">
+                              Estimated Delivery:
+                            </span>{" "}
+                            {new Date(
+                              shipment.estimatedDelivery
+                            ).toLocaleDateString()}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No shipments found.</p>
+                )}
+              </section>
+            </>
+          )}
+
+          {userData.role === "RIDER" && userData.rider && (
+            <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+              <h2 className="text-2xl font-semibold mb-4">Rider Details</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <p>
+                  <span className="font-medium">Phone Number:</span>{" "}
+                  {userData.rider.phoneNumber || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Address:</span>{" "}
+                  {userData.rider.address || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Marital Status:</span>{" "}
+                  {userData.rider.maritalStatus || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Name:</span>{" "}
+                  {userData.rider.guarantorName || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Phone:</span>{" "}
+                  {userData.rider.guarantorPhoneNumber || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">Guarantor Address:</span>{" "}
+                  {userData.rider.guarantorAddress || "Not provided"}
+                </p>
+                <p>
+                  <span className="font-medium">
+                    Relationship with Guarantor:
+                  </span>{" "}
+                  {userData.rider.relationshipWithGuarantor || "Not provided"}
+                </p>
+              </div>
+            </section>
+          )}
+
+          {userData && userData.role === "ADMIN" && (
+            <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
+              <h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2>
+              {adminStats ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <p>
+                    <span className="font-medium">Total Users:</span>{" "}
+                    {adminStats.totalUsers}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Riders:</span>{" "}
+                    {adminStats.totalRiders}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Bookings:</span>{" "}
+                    {adminStats.totalBookings}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Shipments:</span>{" "}
+                    {adminStats.totalShipments}
+                  </p>
+                </div>
+              ) : (
+                <p>Loading admin stats...</p>
+              )}
+            </section>
+          )}
+        </div>
       )}
     </div>
   );
-};
-
-export default Navbar;
+}

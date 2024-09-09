@@ -1,8 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
+// ... (keep all the existing interfaces)
 interface UserData {
   id: string;
   name: string | null;
@@ -83,6 +85,8 @@ export default function UserProfile() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -93,61 +97,55 @@ export default function UserProfile() {
     }
   }, [status, router]);
 
-  const fetchUserData = async () => {
-    try {
-      const res = await fetch("/api/user");
-      if (res.ok) {
-        const data: UserData = await res.json();
-        setUserData(data);
-        if (data.role === "ADMIN") {
-          fetchAdminStats();
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // ... (keep all the existing functions: fetchUserData, fetchAdminStats, handleInputChange, handleSubmit)
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch("/api/user");
+        if (res.ok) {
+          const data: UserData = await res.json();
+          setUserData(data);
+          if (data.role === "ADMIN") {
+            fetchAdminStats();
+          }
+        } else {
+          const errorData = await res.json();
+          setError(errorData.message || "Failed to fetch user data");
         }
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Failed to fetch user data");
+      } catch (error) {
+        setError("Error fetching user data");
       }
-    } catch (error) {
-      setError("Error fetching user data");
-    }
-  };
+    };
 
-  const fetchAdminStats = async () => {
-    try {
-      const res = await fetch("/api/admin/stats");
-      if (res.ok) {
-        const stats: AdminStats = await res.json();
-        setAdminStats(stats);
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Failed to fetch admin stats");
+    const fetchAdminStats = async () => {
+      try {
+        const res = await fetch("/api/admin/stats");
+        if (res.ok) {
+          const stats: AdminStats = await res.json();
+          setAdminStats(stats);
+        } else {
+          const errorData = await res.json();
+          setError(errorData.message || "Failed to fetch admin stats");
+        }
+      } catch (error) {
+        setError("Error fetching admin stats");
       }
-    } catch (error) {
-      setError("Error fetching admin stats");
-    }
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setUserData((prevData) => {
-      if (!prevData) return null;
-      if (name.startsWith("rider.")) {
-        const riderField = name.split(".")[1] as keyof Rider;
-        return {
-          ...prevData,
-          rider: prevData.rider
-            ? {
-                ...prevData.rider,
-                [riderField]: value,
-              }
-            : null,
-        };
-      }
-      return { ...prevData, [name]: value };
-    });
-  };
-
+    };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -185,6 +183,10 @@ export default function UserProfile() {
     }
   };
 
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   if (status === "loading") {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -199,9 +201,67 @@ export default function UserProfile() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-      <h1 className="text-3xl font-bold mb-6">
-        {userData?.name || session?.user?.name}'s Profile
-      </h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">
+          {userData?.name || session?.user?.name}'s Profile
+        </h1>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={toggleDropdown}
+            className="flex items-center space-x-2 focus:outline-none"
+          >
+            {userData?.image || session?.user?.image ? (
+              <Image
+                src={
+                  userData?.image ||
+                  session?.user?.image ||
+                  "/default-avatar.png"
+                }
+                alt="User Avatar"
+                width={40}
+                height={40}
+                className="rounded-full"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 font-semibold">
+                  {(userData?.name ||
+                    session?.user?.name ||
+                    "U")[0].toUpperCase()}
+                </span>
+              </div>
+            )}
+            <span className="hidden md:inline">
+              {userData?.name || session?.user?.name}
+            </span>
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
+              <a
+                href="#profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsDropdownOpen(false)}
+              >
+                Profile
+              </a>
+              <a
+                href="#settings"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsDropdownOpen(false)}
+              >
+                Settings
+              </a>
+              <a
+                href="/api/auth/signout"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => setIsDropdownOpen(false)}
+              >
+                Sign out
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
 
       {error && (
         <div
@@ -213,6 +273,7 @@ export default function UserProfile() {
         </div>
       )}
 
+      {/* ... (keep the rest of the component's JSX structure) */}
       {userData && (
         <div className="space-y-6">
           <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">

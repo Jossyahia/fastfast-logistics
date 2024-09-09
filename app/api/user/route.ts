@@ -4,9 +4,7 @@ import { auth } from "@/auth";
 
 async function getUserSession(request: NextRequest) {
   const session = await auth();
-  console.log("Session:", session); // Keep this for debugging
   if (!session || !session.user?.id) {
-    console.log("No valid session found"); // Keep this for debugging
     return null;
   }
   return session;

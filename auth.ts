@@ -188,11 +188,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   events: {
     signIn: ({ user }) => {
       // You can perform actions after successful sign in here
-      console.log("User signed in:", user);
     },
     signOut: () => {
       // You can perform actions after sign out here
-      console.log("User signed out");
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
