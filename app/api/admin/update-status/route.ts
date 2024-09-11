@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const trackingNumber = url.searchParams.get("trackingNumber");
-
+    console.log("Received tracking number:", trackingNumber);
+    console.log("Fetched shipment:", shipment);
     if (!trackingNumber) {
       return NextResponse.json(
         { error: "Tracking number is required" },

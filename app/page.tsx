@@ -192,7 +192,8 @@ export default function EnhancedLandingPage() {
               <span>support@fastfast.com.ng</span>
             </Link>
             <Link
-              href="https://wa.me/2348097034355"
+              href="https://wa.me/message/UJINI7XSAOXFH1
+"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-4"
