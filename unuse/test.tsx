@@ -1,24 +1,22 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Calendar, Clock, Package, Truck } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-interface UserData {
-  id: string;
-  name: string | null;
-  email: string;
-  emailVerified: string | null;
-  image: string | null;
-  role: "ADMIN" | "USER" | "RIDER";
-  createdAt: string;
-  updatedAt: string;
-  bookings: Booking[];
-  shipments: Shipment[];
-  rider: Rider | null;
-}
-
-interface Booking {
-  id: string;
+interface FormData {
   pickupAddress: string;
   deliveryAddress: string;
   pickupDate: string;
@@ -26,384 +24,508 @@ interface Booking {
   pickupTime: string;
   deliveryTime: string;
   packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
-  packageDescription: string | null;
-  status:
-    | "PROCESSING"
-    | "SHIPPED"
-    | "IN_TRANSIT"
-    | "DELIVERED"
-    | "RETURNED"
-    | "CANCELLED";
+  packageDescription: string;
   isUrgent: boolean;
   paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
-  route: string;
-  price: number;
   pickupPhoneNumber: string;
   deliveryPhoneNumber: string;
-  notificationSent: boolean;
-  riderResponse: "ACCEPTED" | "REJECTED" | "PENDING";
 }
 
-interface Shipment {
-  id: string;
-  trackingNumber: string;
-  status:
-    | "PROCESSING"
-    | "SHIPPED"
-    | "IN_TRANSIT"
-    | "DELIVERED"
-    | "RETURNED"
-    | "CANCELLED";
-  currentLocation: string | null;
-  estimatedDelivery: string | null;
-}
-
-interface Rider {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string | null;
-  address: string | null;
-  guarantorName: string | null;
-  guarantorPhoneNumber: string | null;
-  guarantorAddress: string | null;
-  relationshipWithGuarantor: string | null;
-  maritalStatus: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | null;
-}
-
-interface AdminStats {
-  totalUsers: number;
-  totalRiders: number;
-  totalBookings: number;
-  totalShipments: number;
-}
-
-export default function UserProfile() {
-  const { data: session, status } = useSession();
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
+const BookingPage: React.FC = () => {
   const router = useRouter();
+  const [formData, setFormData] = useState<FormData>({
+    pickupAddress: "",
+    deliveryAddress: "",
+    pickupDate: "",
+    deliveryDate: "",
+    pickupTime: "",
+    deliveryTime: "",
+    packageSize: "SMALL",
+    packageDescription: "",
+    isUrgent: false,
+    paymentMethod: "CREDIT_CARD",
+    pickupPhoneNumber: "",
+    deliveryPhoneNumber: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    } else if (status === "authenticated") {
-      fetchUserData();
-    }
-  }, [status, router]);
+    // Load form data if available
+    const savedData = sessionStorage.getItem("bookingForm");
+    if (savedData) setFormData(JSON.parse(savedData));
+  }, []);
 
-  const fetchUserData = async () => {
-    try {
-      const res = await fetch("/api/user");
-      if (res.ok) {
-        const data: UserData = await res.json();
-        setUserData(data);
-        if (data.role === "ADMIN") {
-          fetchAdminStats();
-        }
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Failed to fetch user data");
-      }
-    } catch (error) {
-      setError("Error fetching user data");
-    }
+  const handleChange = (field: keyof FormData, value: string | boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    sessionStorage.setItem("bookingForm", JSON.stringify(formData));
   };
 
-  const fetchAdminStats = async () => {
-    try {
-      const res = await fetch("/api/admin/stats");
-      if (res.ok) {
-        const stats: AdminStats = await res.json();
-        setAdminStats(stats);
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Failed to fetch admin stats");
-      }
-    } catch (error) {
-      setError("Error fetching admin stats");
-    }
+  const validateForm = (): boolean => {
+    const errors: any = {};
+    if (!formData.pickupAddress)
+      errors.pickupAddress = "Pickup address is required";
+    if (!formData.deliveryAddress)
+      errors.deliveryAddress = "Delivery address is required";
+    // Other validations
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setUserData((prevData) => {
-      if (!prevData) return null;
-      if (name.startsWith("rider.")) {
-        const riderField = name.split(".")[1] as keyof Rider;
-        return {
-          ...prevData,
-          rider: prevData.rider
-            ? {
-                ...prevData.rider,
-                [riderField]: value,
-              }
-            : null,
-        };
-      }
-      return { ...prevData, [name]: value };
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    setFormError(null);
+    setSuccess(false);
+
     try {
-      const res = await fetch("/api/user", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: userData?.name,
-          rider: userData?.rider
-            ? {
-                phoneNumber: userData.rider.phoneNumber,
-                address: userData.rider.address,
-                maritalStatus: userData.rider.maritalStatus,
-                guarantorName: userData.rider.guarantorName,
-                guarantorPhoneNumber: userData.rider.guarantorPhoneNumber,
-                guarantorAddress: userData.rider.guarantorAddress,
-                relationshipWithGuarantor:
-                  userData.rider.relationshipWithGuarantor,
-              }
-            : null,
-        }),
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
-      if (res.ok) {
-        setError(null);
-        alert("Profile updated successfully");
-        fetchUserData(); // Refresh the data after update
-      } else {
-        const errorData = await res.json();
-        setError(errorData.message || "Failed to update user data");
+
+      if (!response.ok) {
+        throw new Error("Booking failed, please try again.");
       }
-    } catch (error) {
-      setError("Error updating user data");
+
+      const result = await response.json();
+      setSuccess(true);
+      router.push(`/booking/confirmation/${result.id}`);
+      sessionStorage.removeItem("bookingForm");
+    } catch (err: any) {
+      setFormError(err.message || "Failed to create booking.");
+    } finally {
+      setLoading(false);
     }
   };
-
-  if (status === "loading") {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return null;
-  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-      <h1 className="text-3xl font-bold mb-6">
-        {userData?.name || session?.user?.name}'s Profile
-      </h1>
+    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
+      <CardHeader>
+        <h1 className="text-3xl font-bold text-center">Create a Booking</h1>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label
+              htmlFor="pickupAddress"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Truck className="w-4 h-4 mr-2" /> Pickup Address
+            </Label>
+            <Input
+              id="pickupAddress"
+              value={formData.pickupAddress}
+              onChange={(e) => handleChange("pickupAddress", e.target.value)}
+              placeholder="Enter pickup address Eg Akintola juction"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.pickupAddress ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.pickupAddress && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.pickupAddress}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="deliveryAddress"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Truck className="w-4 h-4 mr-2" /> Delivery Address
+            </Label>
+            <Input
+              id="deliveryAddress"
+              value={formData.deliveryAddress}
+              onChange={(e) => handleChange("deliveryAddress", e.target.value)}
+              placeholder="Enter delivery address eg Amukpe by the park"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.deliveryAddress ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.deliveryAddress && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.deliveryAddress}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="pickupDate"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Calendar className="w-4 h-4 mr-2" /> Pickup Date
+            </Label>
+            <Input
+              type="date"
+              id="pickupDate"
+              value={formData.pickupDate}
+              onChange={(e) => handleChange("pickupDate", e.target.value)}
+              placeholder="Select pickup date"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.pickupDate ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.pickupDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.pickupDate}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="deliveryDate"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Calendar className="w-4 h-4 mr-2" /> Delivery Date
+            </Label>
+            <Input
+              type="date"
+              id="deliveryDate"
+              value={formData.deliveryDate}
+              onChange={(e) => handleChange("deliveryDate", e.target.value)}
+              placeholder="Select delivery date"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.deliveryDate ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.deliveryDate && (
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="pickupTime"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Clock className="w-4 h-4 mr-2" /> Pickup Time
+            </Label>
+            <Input
+              type="time"
+              id="pickupTime"
+              value={formData.pickupTime}
+              onChange={(e) => handleChange("pickupTime", e.target.value)}
+              placeholder="Select pickup time"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.pickupTime ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.pickupTime && (
+              <p className="text-red-500 text-xs mt-1">{errors.pickupTime}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="deliveryTime"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Clock className="w-4 h-4 mr-2" /> Delivery Time
+            </Label>
+            <Input
+              type="time"
+              id="deliveryTime"
+              value={formData.deliveryTime}
+              onChange={(e) => handleChange("deliveryTime", e.target.value)}
+              placeholder="Select delivery time"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.deliveryTime ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.deliveryTime && (
+              <p className="text-red-500 text-xs mt-1">{errors.deliveryTime}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="packageSize"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Package className="w-4 h-4 mr-2" /> Package Size
+            </Label>
+            <Select
+              value={formData.packageSize}
+              onValueChange={(value) => handleChange("packageSize", value)}
+            >
+              <SelectTrigger className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800">
+                <SelectValue placeholder="Select package size" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                <SelectItem value="SMALL">Small (Up to 1kg or less)</SelectItem>
+                <SelectItem value="MEDIUM">
+                  Medium (5kg - 15kg or less)
+                </SelectItem>
+                <SelectItem value="LARGE">
+                  Large (15kg - 30k or less)
+                </SelectItem>
+                <SelectItem value="EXTRA_LARGE">
+                  Extra Large (30kg+ or mor)
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="packageDescription"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Package className="w-4 h-4 mr-2" /> Package Description
+            </Label>
+            <Input
+              id="packageDescription"
+              value={formData.packageDescription}
+              onChange={(e) =>
+                handleChange("packageDescription", e.target.value)
+              }
+              placeholder="Describe the package"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.packageDescription ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.packageDescription && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.packageDescription}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="pickupPhoneNumber"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Phone className="w-4 h-4 mr-2" /> Pickup Phone Number
+            </Label>
+            <Input
+              id="pickupPhoneNumber"
+              maxLength={11}
+              value={formData.pickupPhoneNumber}
+              onChange={(e) =>
+                handleChange("pickupPhoneNumber", e.target.value)
+              }
+              placeholder="Enter phone number"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.pickupPhoneNumber ? "border-red-500" : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.pickupPhoneNumber && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.pickupPhoneNumber}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="deliveryPhoneNumber"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Phone className="w-4 h-4 mr-2" /> Delivery Phone Number
+            </Label>
+            <Input
+              id="deliveryPhoneNumber"
+              maxLength={11}
+              value={formData.deliveryPhoneNumber}
+              onChange={(e) =>
+                handleChange("deliveryPhoneNumber", e.target.value)
+              }
+              placeholder="Enter phone number"
+              className={`w-full px-3 py-2 border rounded-md ${
+                errors.deliveryPhoneNumber
+                  ? "border-red-500"
+                  : "border-gray-300"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              required
+            />
+            {errors.deliveryPhoneNumber && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.deliveryPhoneNumber}
+              </p>
+            )}
+          </div>
 
-      {error && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-          role="alert"
+          <div className="space-y-2">
+            <Label
+              htmlFor="paymentMethod"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-100"
+            >
+              <CreditCard className="w-4 h-4 mr-2" /> Payment Method
+            </Label>
+            <Select
+              onValueChange={(value) =>
+                handleChange(
+                  "paymentMethod",
+                  value as FormData["paymentMethod"]
+                )
+              }
+              value={formData.paymentMethod}
+              required
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
+                <SelectItem value="CASH">Cash</SelectItem>
+                <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {errors.form && (
+            <Alert
+              variant="destructive"
+              className="flex items-center space-x-2 mt-6"
+            >
+              <AlertDescription>{errors.form}</AlertDescription>
+            </Alert>
+          )}
+          {success && (
+            <Alert className="flex items-center space-x-2 mt-6 bg-green-100 border-green-400 text-green-700">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <AlertDescription>
+                Your dispatch rider has been booked successfully. You will
+                receive a confirmation shortly.
+              </AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-end">
+        <Button
+          type="submit"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
         >
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> {error}</span>
-        </div>
-      )}
-
-      {userData && (
-        <div className="space-y-6">
-          <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-            <h2 className="text-2xl font-semibold mb-4">User Details</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <p>
-                <span className="font-medium">Email:</span> {userData.email}
-              </p>
-              <p>
-                <span className="font-medium">Role:</span> {userData.role}
-              </p>
-              <p>
-                <span className="font-medium">Joined:</span>{" "}
-                {new Date(userData.createdAt).toLocaleDateString()}
-              </p>
-              <p>
-                <span className="font-medium">Last Updated:</span>{" "}
-                {new Date(userData.updatedAt).toLocaleDateString()}
-              </p>
-              {userData.emailVerified && (
-                <p>
-                  <span className="font-medium">Email Verified:</span>{" "}
-                  {new Date(userData.emailVerified).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          </section>
-
-          {userData.role === "USER" && (
-            <>
-              <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-                <h2 className="text-2xl font-semibold mb-4">
-                  Bookings ({userData.bookings.length})
-                </h2>
-                {userData.bookings.length > 0 ? (
-                  <ul className="space-y-4">
-                    {userData.bookings.map((booking) => (
-                      <li key={booking.id} className="border-b pb-2">
-                        <p>
-                          <span className="font-medium">Pickup:</span>{" "}
-                          {booking.pickupAddress}
-                        </p>
-                        <p>
-                          <span className="font-medium">Delivery:</span>{" "}
-                          {booking.deliveryAddress}
-                        </p>
-                        <p>
-                          <span className="font-medium">Status:</span>{" "}
-                          {booking.status}
-                        </p>
-                        <p>
-                          <span className="font-medium">Package Size:</span>{" "}
-                          {booking.packageSize}
-                        </p>
-                        <p>
-                          <span className="font-medium">Price:</span> $
-                          {booking.price.toFixed(2)}
-                        </p>
-                        <p>
-                          <span className="font-medium">Urgent:</span>{" "}
-                          {booking.isUrgent ? "Yes" : "No"}
-                        </p>
-                        <p>
-                          <span className="font-medium">Payment Method:</span>{" "}
-                          {booking.paymentMethod}
-                        </p>
-                        <p>
-                          <span className="font-medium">Rider Response:</span>{" "}
-                          {booking.riderResponse}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No bookings found.</p>
-                )}
-              </section>
-              <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-                <h2 className="text-2xl font-semibold mb-4">
-                  Shipments ({userData.shipments.length})
-                </h2>
-                {userData.shipments.length > 0 ? (
-                  <ul className="space-y-4">
-                    {userData.shipments.map((shipment) => (
-                      <li key={shipment.id} className="border-b pb-2">
-                        <p>
-                          <span className="font-medium">Tracking Number:</span>{" "}
-                          {shipment.trackingNumber}
-                        </p>
-                        <p>
-                          <span className="font-medium">Status:</span>{" "}
-                          {shipment.status}
-                        </p>
-                        {shipment.currentLocation && (
-                          <p>
-                            <span className="font-medium">
-                              Current Location:
-                            </span>{" "}
-                            {shipment.currentLocation}
-                          </p>
-                        )}
-                        {shipment.estimatedDelivery && (
-                          <p>
-                            <span className="font-medium">
-                              Estimated Delivery:
-                            </span>{" "}
-                            {new Date(
-                              shipment.estimatedDelivery
-                            ).toLocaleDateString()}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No shipments found.</p>
-                )}
-              </section>
-            </>
-          )}
-
-          {userData.role === "RIDER" && userData.rider && (
-            <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-              <h2 className="text-2xl font-semibold mb-4">Rider Details</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <p>
-                  <span className="font-medium">Phone Number:</span>{" "}
-                  {userData.rider.phoneNumber || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">Address:</span>{" "}
-                  {userData.rider.address || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">Marital Status:</span>{" "}
-                  {userData.rider.maritalStatus || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">Guarantor Name:</span>{" "}
-                  {userData.rider.guarantorName || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">Guarantor Phone:</span>{" "}
-                  {userData.rider.guarantorPhoneNumber || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">Guarantor Address:</span>{" "}
-                  {userData.rider.guarantorAddress || "Not provided"}
-                </p>
-                <p>
-                  <span className="font-medium">
-                    Relationship with Guarantor:
-                  </span>{" "}
-                  {userData.rider.relationshipWithGuarantor || "Not provided"}
-                </p>
-              </div>
-            </section>
-          )}
-
-          {userData && userData.role === "ADMIN" && (
-            <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-              <h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2>
-              {adminStats ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <p>
-                    <span className="font-medium">Total Users:</span>{" "}
-                    {adminStats.totalUsers}
-                  </p>
-                  <p>
-                    <span className="font-medium">Total Riders:</span>{" "}
-                    {adminStats.totalRiders}
-                  </p>
-                  <p>
-                    <span className="font-medium">Total Bookings:</span>{" "}
-                    {adminStats.totalBookings}
-                  </p>
-                  <p>
-                    <span className="font-medium">Total Shipments:</span>{" "}
-                    {adminStats.totalShipments}
-                  </p>
-                </div>
-              ) : (
-                <p>Loading admin stats...</p>
-              )}
-            </section>
-          )}
-        </div>
-      )}
-    </div>
+          {loading ? "Creating Booking..." : "Create Booking"}
+        </Button>
+      </CardFooter>
+    </Card>
   );
+};
+
+export default BookingPage;
+
+
+
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { auth } from "@/auth";
+
+function generateTrackingNumber() {
+  return "Fls-Sap" + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
 
+export async function POST(request: Request) {
+  try {
+    const session = await auth();
 
+    if (!session || !session.user || !session.user.id) {
+      return NextResponse.json(
+        { error: "You are not authorized. Please login." },
+        { status: 401 }
+      );
+    }
 
+    const userId = session.user.id;
+
+    const body = await request.json();
+    const {
+      pickupAddress,
+      deliveryAddress,
+      pickupDate,
+      deliveryDate,
+      pickupTime,
+      deliveryTime,
+      packageSize,
+      packageDescription,
+      isUrgent,
+      paymentMethod,
+      pickupPhoneNumber,
+      deliveryPhoneNumber,
+    } = body;
+
+    const route = `${pickupAddress} to ${deliveryAddress}`;
+
+    const basePrice = 800;
+    const urgentFee = isUrgent ? 500 : 0;
+
+    const sizeFees: { [key: string]: number } = {
+      SMALL: 200,
+      MEDIUM: 500,
+      LARGE: 1000,
+      EXTRA_LARGE: 1500,
+    };
+
+    const sizeFee = sizeFees[packageSize] || 0;
+    const price = basePrice + urgentFee + sizeFee;
+
+    const result = await prisma.$transaction(async (prisma) => {
+      try {
+        const booking = await prisma.booking.create({
+          data: {
+            userId,
+            pickupAddress,
+            deliveryAddress,
+            pickupDate: new Date(pickupDate),
+            deliveryDate: new Date(deliveryDate),
+            pickupTime,
+            deliveryTime,
+            packageSize,
+            packageDescription,
+            isUrgent,
+            paymentMethod,
+            route,
+            price,
+            pickupPhoneNumber,
+            deliveryPhoneNumber,
+            status: "PROCESSING",
+            shipment: {
+              create: {
+                trackingNumber: generateTrackingNumber(),
+                status: "PROCESSING",
+                currentLocation: pickupAddress,
+                estimatedDelivery: new Date(deliveryDate),
+                userId,
+              },
+            },
+          },
+          include: {
+            shipment: true,
+          },
+        });
+        return booking;
+      } catch (err) {
+        console.error("Transaction error: ", err);
+        throw new Error("Error in booking transaction"); // Rollback the transaction
+      }
+    });
+
+    return NextResponse.json({ success: true, booking: result });
+  } catch (error) {
+    console.error("Error creating booking:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
+    return NextResponse.json(
+      { error: "Failed to create booking", details: errorMessage },
+      { status: 500 }
+    );
+  }
+}

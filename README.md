@@ -231,3 +231,8 @@ const BookingPage: React.FC = () => {
 };
 
 export default BookingPage;
+
+
+
+FastFast Logistics Service: Your Express Lane to Seamless Shipping
+We're not just fast we're FastFast. Specializing in rapid, reliable logistics solutions for businesses of all sizes. From local deliveries to global shipments, 
