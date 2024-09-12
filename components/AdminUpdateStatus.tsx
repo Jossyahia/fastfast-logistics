@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,10 +23,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-
+import clsx from "clsx";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const schema = z.object({
   trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
@@ -38,20 +37,13 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const statusOptions = [
-  { value: "PROCESSING", label: "Processing" },
-  { value: "SHIPPED", label: "Shipped" },
-  { value: "IN_TRANSIT", label: "In Transit" },
-  { value: "DELIVERED", label: "Delivered" },
-  { value: "RETURNED", label: "Returned" },
-  { value: "CANCELLED", label: "Cancelled" },
-];
-
 export default function AdminUpdateStatusComponent() {
   const [updateResult, setUpdateResult] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
-  const [shipmentDetails, setShipmentDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -64,79 +56,114 @@ export default function AdminUpdateStatusComponent() {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    try {
-      const session = await auth();
-      if (!session || session.user.role !== "ADMIN") {
-        redirect("/restricted");
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session || session.user.role !== "ADMIN") {
+      router.push("/restricted");
+    }
+  }, [session, status, router]);
+
+  const fetchShipmentData = useCallback(
+    async (trackingNumber: string) => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/admin/update-status?trackingNumber=${trackingNumber}`
+        );
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to fetch shipment data");
+        }
+        const data = await response.json();
+        form.reset({
+          ...data,
+          shipmentStatus: data.shipmentStatus,
+          bookingStatus: data.bookingStatus,
+        });
+        setIsError(false);
+        setUpdateResult(null);
+      } catch (error) {
+        setUpdateResult(
+          "Error fetching shipment data: " + (error as Error).message
+        );
+        setIsError(true);
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [form]
+  );
+
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (
+        name === "trackingNumber" &&
+        value.trackingNumber &&
+        value.trackingNumber.length > 0
+      ) {
+        fetchShipmentData(value.trackingNumber);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form, fetchShipmentData]);
+
+  const onSubmit = async (data: FormData) => {
+    setIsUpdating(true);
+    try {
       const response = await fetch("/api/admin/update-status", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error("Failed to update status");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update status");
+      }
 
       const result = await response.json();
       setUpdateResult(result.message);
       setIsError(false);
-      form.reset();
-      setShipmentDetails(null);
     } catch (error) {
-      setUpdateResult("Error updating status. Please try again.");
+      setUpdateResult("Error updating status: " + (error as Error).message);
       setIsError(true);
     } finally {
-      setIsLoading(false);
+      setIsUpdating(false);
     }
   };
 
-  const fetchShipmentDetails = async (trackingNumber: string) => {
-    setIsLoading(true);
-    try {
-       const session = await auth();
-       if (!session || session.user.role !== "ADMIN") {
-         redirect("/restricted");
-       }
-      const response = await fetch(
-        `/api/admin/update-status?trackingNumber=${trackingNumber}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch shipment details");
-      const data = await response.json();
-      setShipmentDetails(data.shipment);
-      form.setValue("shipmentStatus", data.shipment.status);
-      form.setValue("bookingStatus", data.shipment.booking.status);
-      form.setValue("currentLocation", data.shipment.currentLocation || "");
-      form.setValue(
-        "estimatedDelivery",
-        data.shipment.estimatedDelivery
-          ? new Date(data.shipment.estimatedDelivery).toISOString().slice(0, 16)
-          : ""
-      );
-    } catch (error) {
-      setUpdateResult("Error fetching shipment details. Please try again.");
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
+  const getBackgroundColorClass = (value: string) => {
+    switch (value) {
+      case "PROCESSING":
+        return "bg-yellow-500 text-black";
+      case "SHIPPED":
+        return "bg-blue-500 text-white";
+      case "IN_TRANSIT":
+        return "bg-orange-500 text-white";
+      case "DELIVERED":
+        return "bg-green-500 text-white";
+      case "RETURNED":
+        return "bg-purple-500 text-white";
+      case "CANCELLED":
+        return "bg-red-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
     }
   };
 
-  const getStatusColor = (value: string) => {
-    const colors = {
-      PROCESSING: "bg-yellow-500 text-black",
-      SHIPPED: "bg-blue-500 text-white",
-      IN_TRANSIT: "bg-orange-500 text-white",
-      DELIVERED: "bg-green-500 text-white",
-      RETURNED: "bg-purple-500 text-white",
-      CANCELLED: "bg-red-500 text-white",
-    };
-    return colors[value as keyof typeof colors] || "bg-gray-500 text-white";
-  };
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
+
+  if (!session || session.user.role !== "ADMIN") {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="w-full max-w-lg mx-auto">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
             Update Shipment & Booking Status
@@ -154,62 +181,83 @@ export default function AdminUpdateStatusComponent() {
                     <FormControl>
                       <Input
                         placeholder="Enter tracking number"
+                        aria-label="Tracking Number"
                         {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          if (e.target.value)
-                            fetchShipmentDetails(e.target.value);
-                          else setShipmentDetails(null);
-                        }}
-                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {["shipmentStatus", "bookingStatus"].map((status) => (
-                <FormField
-                  key={status}
-                  control={form.control}
-                  name={status as "shipmentStatus" | "bookingStatus"}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {status === "shipmentStatus"
-                          ? "Shipment Status"
-                          : "Booking Status"}
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+              {isLoading && <p>Loading shipment data...</p>}
+              <FormField
+                control={form.control}
+                name="shipmentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Shipment Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={clsx(getBackgroundColorClass(field.value))}
+                          aria-label="Shipment Status"
+                        >
+                          <SelectValue placeholder="Select shipment status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Shipment Status Options"
                       >
-                        <FormControl>
-                          <SelectTrigger
-                            className={`w-full ${getStatusColor(field.value)}`}
-                          >
-                            <SelectValue
-                              placeholder={`Select ${
-                                status === "shipmentStatus"
-                                  ? "shipment"
-                                  : "booking"
-                              } status`}
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-white dark:bg-gray-800 max-h-60 overflow-auto">
-                          {statusOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
+                        <SelectItem value="PROCESSING">Processing</SelectItem>
+                        <SelectItem value="SHIPPED">Shipped</SelectItem>
+                        <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+                        <SelectItem value="DELIVERED">Delivered</SelectItem>
+                        <SelectItem value="RETURNED">Returned</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="bookingStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Booking Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          className={clsx(getBackgroundColorClass(field.value))}
+                          aria-label="Booking Status"
+                        >
+                          <SelectValue placeholder="Select booking status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent
+                        className="bg-white dark:bg-gray-800 max-h-60 overflow-auto z-50"
+                        aria-label="Booking Status Options"
+                      >
+                        <SelectItem value="PROCESSING">Processing</SelectItem>
+                        <SelectItem value="SHIPPED">Shipped</SelectItem>
+                        <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
+                        <SelectItem value="DELIVERED">Delivered</SelectItem>
+                        <SelectItem value="RETURNED">Returned</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="currentLocation"
@@ -219,8 +267,8 @@ export default function AdminUpdateStatusComponent() {
                     <FormControl>
                       <Input
                         placeholder="Enter current location"
+                        aria-label="Current Location"
                         {...field}
-                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
@@ -236,19 +284,16 @@ export default function AdminUpdateStatusComponent() {
                     <FormControl>
                       <Input
                         type="datetime-local"
+                        aria-label="Estimated Delivery"
                         {...field}
-                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : null}
-                Update Status
+              <Button type="submit" className="w-full" disabled={isUpdating}>
+                {isUpdating ? "Updating..." : "Update Status"}
               </Button>
             </form>
           </Form>
@@ -262,40 +307,6 @@ export default function AdminUpdateStatusComponent() {
             >
               <AlertDescription>{updateResult}</AlertDescription>
             </Alert>
-          )}
-          {shipmentDetails && (
-            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-md">
-              <h3 className="font-bold mb-2">Current Shipment Details:</h3>
-              <p>
-                Status:{" "}
-                <span
-                  className={`px-2 py-1 rounded ${getStatusColor(
-                    shipmentDetails.status
-                  )}`}
-                >
-                  {shipmentDetails.status}
-                </span>
-              </p>
-              <p>
-                Booking Status:{" "}
-                <span
-                  className={`px-2 py-1 rounded ${getStatusColor(
-                    shipmentDetails.booking.status
-                  )}`}
-                >
-                  {shipmentDetails.booking.status}
-                </span>
-              </p>
-              <p>
-                Current Location: {shipmentDetails.currentLocation || "N/A"}
-              </p>
-              <p>
-                Estimated Delivery:{" "}
-                {shipmentDetails.estimatedDelivery
-                  ? new Date(shipmentDetails.estimatedDelivery).toLocaleString()
-                  : "N/A"}
-              </p>
-            </div>
           )}
         </CardContent>
       </Card>
