@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { getLocationPrice } from "@/prices";
+import { getLocations } from "@/price";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { getPrice } from "@/price";
 
