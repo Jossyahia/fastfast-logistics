@@ -28,6 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { getLocationPrice } from "@/prices";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { getPrice } from "@/price";
 
 interface FormData {
   pickupAddress: string;
@@ -42,13 +45,15 @@ interface FormData {
   paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
   pickupPhoneNumber: string;
   deliveryPhoneNumber: string;
+  route: string;
+  price: number;
 }
 
 interface FormErrors {
   [key: string]: string;
 }
 
-const STORAGE_KEY = 'bookingFormData';
+const STORAGE_KEY = "bookingFormData";
 
 const BookingPage: React.FC = () => {
   const router = useRouter();
@@ -65,6 +70,8 @@ const BookingPage: React.FC = () => {
     paymentMethod: "CREDIT_CARD",
     pickupPhoneNumber: "",
     deliveryPhoneNumber: "",
+    route: "",
+    price: 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -118,13 +125,37 @@ const BookingPage: React.FC = () => {
         }
       }
 
+      // Recalculate price when addresses, package size, or isUrgent change
+      if (
+        field === "pickupAddress" ||
+        field === "deliveryAddress" ||
+        field === "packageSize" ||
+        field === "isUrgent"
+      ) {
+        updatedData.price = calculatePrice(updatedData);
+      }
+
+      // Update route
+      updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
+
       // Save updated form data to sessionStorage
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
 
       return updatedData;
     });
   };
-
+  const calculatePrice = (data: FormData) => {
+    const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
+    const urgentFee = data.isUrgent ? 500 : 0;
+    const sizeFees: { [key: string]: number } = {
+      SMALL: 200,
+      MEDIUM: 500,
+      LARGE: 1000,
+      EXTRA_LARGE: 1500,
+    };
+    const sizeFee = sizeFees[data.packageSize] || 0;
+    return basePrice + urgentFee + sizeFee;
+  };
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -235,21 +266,13 @@ const BookingPage: React.FC = () => {
             >
               <Truck className="w-4 h-4 mr-2" /> Pickup Address
             </Label>
-            <Input
+            <AddressAutocomplete
               id="pickupAddress"
               value={formData.pickupAddress}
-              onChange={(e) => handleChange("pickupAddress", e.target.value)}
-              placeholder="Enter pickup address Eg Akintola juction"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.pickupAddress ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
+              onChange={(value) => handleChange("pickupAddress", value)}
+              placeholder="Enter pickup address"
+              error={errors.pickupAddress}
             />
-            {errors.pickupAddress && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.pickupAddress}
-              </p>
-            )}
           </div>
           <div className="space-y-2">
             <Label
@@ -258,21 +281,13 @@ const BookingPage: React.FC = () => {
             >
               <Truck className="w-4 h-4 mr-2" /> Delivery Address
             </Label>
-            <Input
+            <AddressAutocomplete
               id="deliveryAddress"
               value={formData.deliveryAddress}
-              onChange={(e) => handleChange("deliveryAddress", e.target.value)}
-              placeholder="Enter delivery address eg Amukpe by the park"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.deliveryAddress ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
+              onChange={(value) => handleChange("deliveryAddress", value)}
+              placeholder="Enter delivery address"
+              error={errors.deliveryAddress}
             />
-            {errors.deliveryAddress && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.deliveryAddress}
-              </p>
-            )}
           </div>
           <div className="space-y-2">
             <Label
@@ -287,6 +302,7 @@ const BookingPage: React.FC = () => {
               value={formData.pickupDate}
               onChange={(e) => handleChange("pickupDate", e.target.value)}
               placeholder="Select pickup date"
+              min={new Date().toISOString().split("T")[0]}
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupDate ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -309,6 +325,9 @@ const BookingPage: React.FC = () => {
               value={formData.deliveryDate}
               onChange={(e) => handleChange("deliveryDate", e.target.value)}
               placeholder="Select delivery date"
+              min={
+                formData.pickupDate || new Date().toISOString().split("T")[0]
+              }
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.deliveryDate ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -385,7 +404,7 @@ const BookingPage: React.FC = () => {
                   Large (15kg - 30k or less)
                 </SelectItem>
                 <SelectItem value="EXTRA_LARGE">
-                  Extra Large (30kg+ or mor)
+                  Extra Large (30kg+ or more)
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -498,6 +517,37 @@ const BookingPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="isUrgent"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" /> Urgent Delivery
+            </Label>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isUrgent"
+                checked={formData.isUrgent}
+                onChange={(e) => handleChange("isUrgent", e.target.checked)}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Mark as urgent (additional fee applies)
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
+              <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
+            </Label>
+            <p className="text-lg font-semibold">
+              ₦{formData.price.toFixed(2)}
+            </p>
+          </div>
+
           {errors.form && (
             <Alert
               variant="destructive"
