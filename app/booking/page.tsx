@@ -9,6 +9,7 @@ import {
   Phone,
   Truck,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { getLocations } from "@/price";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { getPrice } from "@/price";
+import BankTransferDetails from "@/components/BankTransferDetails";
+
 
 interface FormData {
   pickupAddress: string;
@@ -47,6 +51,7 @@ interface FormData {
   deliveryPhoneNumber: string;
   route: string;
   price: number;
+  transactionCode: string;
 }
 
 interface FormErrors {
@@ -54,6 +59,8 @@ interface FormErrors {
 }
 
 const STORAGE_KEY = "bookingFormData";
+
+
 
 const BookingPage: React.FC = () => {
   const router = useRouter();
@@ -72,6 +79,7 @@ const BookingPage: React.FC = () => {
     deliveryPhoneNumber: "",
     route: "",
     price: 0,
+    transactionCode: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -79,7 +87,6 @@ const BookingPage: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
-    // Load saved form data from sessionStorage when component mounts
     const savedFormData = sessionStorage.getItem(STORAGE_KEY);
     if (savedFormData) {
       setFormData(JSON.parse(savedFormData));
@@ -125,7 +132,6 @@ const BookingPage: React.FC = () => {
         }
       }
 
-      // Recalculate price when addresses, package size, or isUrgent change
       if (
         field === "pickupAddress" ||
         field === "deliveryAddress" ||
@@ -135,15 +141,20 @@ const BookingPage: React.FC = () => {
         updatedData.price = calculatePrice(updatedData);
       }
 
-      // Update route
       updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
 
-      // Save updated form data to sessionStorage
+      if (field === "paymentMethod" && value === "BANK_TRANSFER") {
+        updatedData.transactionCode = generateTransactionCode();
+      } else if (field === "paymentMethod" && value !== "BANK_TRANSFER") {
+        updatedData.transactionCode = "";
+      }
+
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
 
       return updatedData;
     });
   };
+
   const calculatePrice = (data: FormData) => {
     const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
     const urgentFee = data.isUrgent ? 500 : 0;
@@ -156,6 +167,11 @@ const BookingPage: React.FC = () => {
     const sizeFee = sizeFees[data.packageSize] || 0;
     return basePrice + urgentFee + sizeFee;
   };
+
+  const generateTransactionCode = (): string => {
+    return "TXN" + Math.random().toString(36).substr(2, 8).toUpperCase();
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -231,7 +247,6 @@ const BookingPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setSuccess(true);
-        // Clear the saved form data from sessionStorage on successful submission
         sessionStorage.removeItem(STORAGE_KEY);
         setTimeout(() => {
           router.push(`/booking/confirmation/${data.booking.id}`);
@@ -274,6 +289,7 @@ const BookingPage: React.FC = () => {
               error={errors.pickupAddress}
             />
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="deliveryAddress"
@@ -289,6 +305,7 @@ const BookingPage: React.FC = () => {
               error={errors.deliveryAddress}
             />
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="pickupDate"
@@ -301,7 +318,6 @@ const BookingPage: React.FC = () => {
               id="pickupDate"
               value={formData.pickupDate}
               onChange={(e) => handleChange("pickupDate", e.target.value)}
-              placeholder="Select pickup date"
               min={new Date().toISOString().split("T")[0]}
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupDate ? "border-red-500" : "border-gray-300"
@@ -312,6 +328,7 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.pickupDate}</p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="deliveryDate"
@@ -324,7 +341,6 @@ const BookingPage: React.FC = () => {
               id="deliveryDate"
               value={formData.deliveryDate}
               onChange={(e) => handleChange("deliveryDate", e.target.value)}
-              placeholder="Select delivery date"
               min={
                 formData.pickupDate || new Date().toISOString().split("T")[0]
               }
@@ -337,6 +353,7 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="pickupTime"
@@ -349,7 +366,6 @@ const BookingPage: React.FC = () => {
               id="pickupTime"
               value={formData.pickupTime}
               onChange={(e) => handleChange("pickupTime", e.target.value)}
-              placeholder="Select pickup time"
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupTime ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -359,6 +375,7 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.pickupTime}</p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="deliveryTime"
@@ -371,7 +388,6 @@ const BookingPage: React.FC = () => {
               id="deliveryTime"
               value={formData.deliveryTime}
               onChange={(e) => handleChange("deliveryTime", e.target.value)}
-              placeholder="Select delivery time"
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.deliveryTime ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -381,6 +397,7 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.deliveryTime}</p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="packageSize"
@@ -390,7 +407,9 @@ const BookingPage: React.FC = () => {
             </Label>
             <Select
               value={formData.packageSize}
-              onValueChange={(value) => handleChange("packageSize", value)}
+              onValueChange={(value) =>
+                handleChange("packageSize", value as FormData["packageSize"])
+              }
             >
               <SelectTrigger className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800">
                 <SelectValue placeholder="Select package size" />
@@ -409,6 +428,7 @@ const BookingPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="packageDescription"
@@ -434,6 +454,7 @@ const BookingPage: React.FC = () => {
               </p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="pickupPhoneNumber"
@@ -460,6 +481,7 @@ const BookingPage: React.FC = () => {
               </p>
             )}
           </div>
+
           <div className="space-y-2">
             <Label
               htmlFor="deliveryPhoneNumber"
@@ -510,13 +532,15 @@ const BookingPage: React.FC = () => {
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                <SelectItem value="DEBIT_CARD">Debit Card</SelectItem>
                 <SelectItem value="CASH">Cash</SelectItem>
                 <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {formData.paymentMethod === "BANK_TRANSFER" && (
+            <BankTransferDetails transactionCode={formData.transactionCode} />
+          )}
 
           <div className="space-y-2">
             <Label

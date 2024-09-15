@@ -1,5 +1,3 @@
-// prices.ts
-
 interface LocationPair {
   from: string;
   to: string;
@@ -10,38 +8,39 @@ interface PriceEntry {
   price: number;
 }
 
-export const priceList: PriceEntry[] = [
-  { locations: { from: "amukpe", to: "torpical" }, price: 1000 },
-  { locations: { from: "amukpe", to: "nddc" }, price: 1000 },
-  { locations: { from: "amukpe", to: "okpe road" }, price: 1200 },
-  { locations: { from: "amukpe", to: "ajogodo" }, price: 1200 },
-  { locations: { from: "amukpe", to: "okirigwe" }, price: 1200 },
-  { locations: { from: "amukpe", to: "olympia" }, price: 1200 },
-  { locations: { from: "amukpe", to: "mtn road" }, price: 1200 },
-  { locations: { from: "amukpe", to: "okirigwe park" }, price: 1200 },
-  { locations: { from: "amukpe", to: "market" }, price: 1500 },
-  { locations: { from: "amukpe", to: "ogorode" }, price: 1500 },
-  { locations: { from: "amukpe", to: "uton" }, price: 2000 },
-  { locations: { from: "amukpe", to: "jese" }, price: 2000 },
-  { locations: { from: "amukpe", to: "mosugar" }, price: 2000 },
-  // Include the previously defined routes
-];
-
 export const DEFAULT_PRICE = 1000;
+export const HIGHER_PRICE = 2000;
+export const MEDIUM_PRICE = 1500;
+
+const higherPriceLocations = ["uton", "jese"];
+const mediumPriceLocations = ["mosugar", "ugberikoko"];
+
+export const priceList: PriceEntry[] = [
+  { locations: { from: "amukpe", to: "torpical" }, price: DEFAULT_PRICE },
+  // Remove all other specific price entries as they will now be handled by the new pricing logic
+];
 
 export function getPrice(from: string, to: string): number {
   const normalizedFrom = from.trim().toLowerCase();
   const normalizedTo = to.trim().toLowerCase();
 
-  const priceEntry = priceList.find(
-    (entry) =>
-      (entry.locations.from.includes(normalizedFrom) &&
-        entry.locations.to.includes(normalizedTo)) ||
-      (entry.locations.from.includes(normalizedTo) &&
-        entry.locations.to.includes(normalizedFrom))
-  );
+  if (
+    higherPriceLocations.some(
+      (loc) => normalizedFrom.includes(loc) || normalizedTo.includes(loc)
+    )
+  ) {
+    return HIGHER_PRICE;
+  }
 
-  return priceEntry ? priceEntry.price : DEFAULT_PRICE;
+  if (
+    mediumPriceLocations.some(
+      (loc) => normalizedFrom.includes(loc) || normalizedTo.includes(loc)
+    )
+  ) {
+    return MEDIUM_PRICE;
+  }
+
+  return DEFAULT_PRICE;
 }
 
 export function getLocations(): string[] {
@@ -50,5 +49,8 @@ export function getLocations(): string[] {
     locations.add(entry.locations.from);
     locations.add(entry.locations.to);
   });
+  // Add the special locations to the set
+  higherPriceLocations.forEach((loc) => locations.add(loc));
+  mediumPriceLocations.forEach((loc) => locations.add(loc));
   return Array.from(locations);
 }
