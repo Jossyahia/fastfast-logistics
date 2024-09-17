@@ -65,7 +65,7 @@ export default function EnhancedLandingPage() {
               size="lg"
               className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              Book Your Shipping Now
+              Book a rider Now
             </Button>
           </Link>
         </section>
@@ -87,7 +87,7 @@ export default function EnhancedLandingPage() {
             title="Secure Delivery"
             description="Rest easy knowing your packages are handled with care and delivered safely."
             icon={ShieldCheckIcon}
-            href="/security"
+            href="/booking"
           />
         </section>
 
@@ -182,7 +182,7 @@ export default function EnhancedLandingPage() {
               className="flex items-center space-x-4"
             >
               <PhoneIcon className="w-6 h-6" />
-              <span>+234(815) 606-7874</span>
+              <span> 08156067874</span>
             </Link>
             <Link
               href="mailto:support@fastfast.com.ng"
@@ -199,7 +199,7 @@ export default function EnhancedLandingPage() {
               className="flex items-center space-x-4"
             >
               <FaWhatsapp className="w-6 h-6" />
-              <span>WhatsApp: +234(809) 703-4355</span>
+              <span>WhatsApp: 08097034355</span>
             </Link>
             <Link
               href="https://facebook.com"

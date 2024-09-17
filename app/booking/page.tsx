@@ -159,7 +159,7 @@ const BookingPage: React.FC = () => {
     const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
     const urgentFee = data.isUrgent ? 500 : 0;
     const sizeFees: { [key: string]: number } = {
-      SMALL: 200,
+      SMALL: 0,
       MEDIUM: 500,
       LARGE: 1000,
       EXTRA_LARGE: 1500,
