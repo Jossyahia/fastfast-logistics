@@ -71,8 +71,8 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   const session = await auth();
 
   // Check if the user is authenticated and has the ADMIN role
-  if (!session || !session.user ) {
-    redirect("/api/auth/signin");
+  if (!session || !session.user || session.user.role !== "ADMIN") {
+    redirect("/restricted");
   }
 
   const { users, total } = await getUsers(searchParams);
