@@ -12,7 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export default function ModeToggle() {
+interface ModeToggleProps {
+  className?: string; // Make sure this is included
+}
+const ModeToggle: React.FC<ModeToggleProps> = ({ className }) => {
   const { setTheme } = useTheme();
 
   return (
@@ -37,4 +40,5 @@ export default function ModeToggle() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
+export default ModeToggle;

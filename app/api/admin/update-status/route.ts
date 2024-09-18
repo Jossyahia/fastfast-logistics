@@ -12,12 +12,66 @@ interface StatusUpdateData {
   estimatedDelivery?: string;
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Unauthorized. Admin access required." },
+        { status: 401 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const trackingNumber = url.searchParams.get("trackingNumber");
+
+    if (!trackingNumber) {
+      return NextResponse.json(
+        { error: "Tracking number is required" },
+        { status: 400 }
+      );
+    }
+
+    const shipment = await prisma.shipment.findUnique({
+      where: { trackingNumber },
+      include: { booking: true },
+    });
+
+    if (!shipment) {
+      return NextResponse.json(
+        { error: "Shipment not found for tracking number: " + trackingNumber },
+        { status: 404 }
+      );
+    }
+
+    const formattedData = {
+      trackingNumber: shipment.trackingNumber,
+      shipmentStatus: shipment.status,
+      bookingStatus: shipment.booking?.status || "UNKNOWN",
+      currentLocation: shipment.currentLocation || "",
+      estimatedDelivery: shipment.estimatedDelivery
+        ? shipment.estimatedDelivery.toISOString().slice(0, 16)
+        : "",
+    };
+
+    return NextResponse.json(formattedData);
+  } catch (error) {
+    console.error("Error fetching shipment:", error);
+    return NextResponse.json(
+      { error: "An unexpected error occurred: " + (error as Error).message },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
       return NextResponse.json(
-        { error: "Unauthorized. Please log in." },
+        { error: "Unauthorized. Admin access required." },
         { status: 401 }
       );
     }
@@ -40,7 +94,7 @@ export async function PUT(request: NextRequest) {
         currentLocation: data.currentLocation,
         estimatedDelivery: data.estimatedDelivery
           ? new Date(data.estimatedDelivery)
-          : undefined,
+          : null,
         booking: {
           update: {
             status: data.bookingStatus,
@@ -50,25 +104,14 @@ export async function PUT(request: NextRequest) {
       include: { booking: true },
     });
 
-    console.log(
-      "Shipment and booking status updated successfully:",
-      updatedShipment.trackingNumber
-    );
-
     return NextResponse.json({
       message: "Shipment and booking status updated successfully",
       shipment: updatedShipment,
     });
   } catch (error) {
     console.error("Error updating status:", error);
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: `Error updating status: ${error.message}` },
-        { status: 500 }
-      );
-    }
     return NextResponse.json(
-      { error: "An unexpected error occurred" },
+      { error: "An unexpected error occurred: " + (error as Error).message },
       { status: 500 }
     );
   } finally {
