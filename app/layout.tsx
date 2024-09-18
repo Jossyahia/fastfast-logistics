@@ -3,9 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/Footer";
 import { SessionProvider } from "next-auth/react";
-import LoadingWrapper from "@/components/LoadingWrapper";
-import { LoadingProvider } from "@/components/LoadingContext"; // Import the LoadingProvider
-import NavBarClient from "@/components/NavBarClient";
+import NavBarServer from "@/components/NavBarServer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,7 +12,7 @@ export const metadata = {
   description: "Your reliable logistics partner",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -29,10 +27,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <LoadingProvider>
-              <NavBarClient/>
-              <LoadingWrapper>{children}</LoadingWrapper>
-            </LoadingProvider>
+            <NavBarServer />
+            {children}
           </ThemeProvider>
           <Footer />
         </SessionProvider>

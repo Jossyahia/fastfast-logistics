@@ -1,17 +1,12 @@
 "use client";
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import ModeToggle from "@/components/ModeToggle";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  Menu,
+  X,
+  LogOut,
   Home,
   Package,
   Calendar,
@@ -22,15 +17,12 @@ import {
   BookOpen,
   RefreshCw,
   Settings,
-  X,
-  Menu,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
+import ModeToggle from "@/components/ModeToggle";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
-import { useSession } from "next-auth/react";
-import { Role } from "@prisma/client";
-
-type UserRole = "USER" | "RIDER" | "ADMIN";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface NavItem {
   href: string;
@@ -38,254 +30,170 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-interface UserData {
-  name: string;
-  role: UserRole;
-  image?: string;
+interface NavBarClientProps {
+  user: {
+    name: string;
+    role: string;
+    image?: string;
+  } | null;
 }
 
-const NavBarClient: React.FC = () => {
+const NavLink: React.FC<{ href: string; children: React.ReactNode }> =
+  React.memo(({ href, children }) => {
+    const pathname = usePathname();
+    const isActive = pathname === href || pathname.startsWith(`${href}/`);
+
+    return (
+      <Link
+        href={href}
+        className={`text-sm font-medium transition-colors hover:text-primary px-3 py-2 rounded-md ${
+          isActive
+            ? "text-primary bg-accent"
+            : "text-muted-foreground hover:bg-accent/50"
+        }`}
+        aria-current={isActive ? "page" : undefined}
+      >
+        {children}
+      </Link>
+    );
+  });
+
+const NavBarClient: React.FC<NavBarClientProps> = ({ user }) => {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const isAdmin = user?.role === "ADMIN";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = userData?.role === "ADMIN";
-
-  const navItems: NavItem[] = useMemo(
-    () =>
-      isAdmin
-        ? [
-            {
-              href: "/admin/dashboard",
-              label: "Admin Dashboard",
-              icon: Settings,
-            },
-            {
-              href: "/admin/ViewAllUsers",
-              label: "View All Users",
-              icon: Users,
-            },
-            {
-              href: "/admin/ViewAllBookings",
-              label: "View All Bookings",
-              icon: BookOpen,
-            },
-            {
-              href: "/admin/update-status",
-              label: "Update Status",
-              icon: RefreshCw,
-            },
-          ]
-        : [
-            { href: "/", label: "Home", icon: Home },
-            { href: "/services", label: "Services", icon: Package },
-            { href: "/booking", label: "Booking", icon: Calendar },
-            { href: "/tracking", label: "Tracking", icon: MapPin },
-            { href: "/contact-us", label: "Contact", icon: Mail },
-            { href: "/about", label: "About", icon: Info },
-          ],
-    [isAdmin]
+  const regularNavItems: NavItem[] = useMemo(
+    () => [
+      { href: "/", label: "Home", icon: Home },
+      { href: "/services", label: "Services", icon: Package },
+      { href: "/booking", label: "Booking", icon: Calendar },
+      { href: "/tracking", label: "Tracking", icon: MapPin },
+      { href: "/contact-us", label: "Contact", icon: Mail },
+      { href: "/about", label: "About", icon: Info },
+    ],
+    []
   );
 
-  const fetchUserData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/user");
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-      const data = await response.json();
-      setUserData(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  }, []);
+  const adminNavItems: NavItem[] = useMemo(
+    () => [
+      { href: "/admin", label: "Admin Dashboard", icon: Settings },
+      { href: "/ViewAllUsers", label: "View All Users", icon: Users },
+      { href: "/ViewAllBookings", label: "View All Bookings", icon: BookOpen },
+      { href: "/update-status", label: "Update Status", icon: RefreshCw },
+    ],
+    []
+  );
 
-  useEffect(() => {
-    if (session) {
-      fetchUserData();
-    } else {
-      setUserData(null);
-    }
-  }, [session, fetchUserData]);
+  const navItems = useMemo(
+    () => (isAdmin ? [...adminNavItems] : regularNavItems),
+    [isAdmin, adminNavItems, regularNavItems]
+  );
 
   const handleAuth = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (userData) {
-        await serverSignOut();
-        setUserData(null);
-        router.push("/");
-        router.refresh();
-      } else {
-        await serverSignIn();
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Authentication error:", error);
-    } finally {
-      setIsLoading(false);
+    if (user) {
+      await serverSignOut();
+    } else {
+      await serverSignIn();
     }
-  }, [userData, router]);
+    router.refresh();
+  }, [user, router]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
-  const toggleProfileMenu = useCallback(() => {
-    setIsProfileMenuOpen((prev) => !prev);
-  }, []);
-
-  const closeProfileMenu = useCallback(() => {
-    setIsProfileMenuOpen(false);
-  }, []);
-
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        closeProfileMenu();
-      }
-    },
-    [closeProfileMenu]
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [handleClickOutside]);
-
-  const displayName = userData?.name || "";
-  const image = userData?.image || "";
-
   return (
-    <nav className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative flex h-16 items-center justify-between">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex-shrink-0">
-              <Link href="/">
-                <Logo className="text-5xl font-signature" />
-              </Link>
-            </div>
-            <div className="hidden sm:block">
-              <div className="flex space-x-4">
-                {navItems.map(({ href, label, icon: Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center transition duration-150 ease-in-out"
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center">
-              {userData && (
-                <div className="relative ml-3" ref={dropdownRef}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleProfileMenu}
-                  >
-                    <span className="sr-only">Open user menu</span>
-                    {image ? (
-                      <img
-                        src={image}
-                        alt={displayName}
-                        className="rounded-full h-8 w-8"
-                      />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-base font-medium text-gray-700 dark:text-gray-300">
-                        {displayName.charAt(0)}
-                      </div>
-                    )}
-                  </Button>
-                  {isProfileMenuOpen && (
-                    <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={closeProfileMenu}
-                      >
-                        Your Profile
-                      </Link>
-                      <Link
-                        href="/profile/edit"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={closeProfileMenu}
-                      >
-                        Settings
-                      </Link>
-                      <button
-                        onClick={() => {
-                          closeProfileMenu();
-                          handleAuth();
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Sign out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 hidden md:flex">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Logo />
+          </Link>
+          <nav className="flex items-center space-x-1 text-sm font-medium">
+            {navItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
 
-              {!userData && (
-                <Button
-                  onClick={handleAuth}
-                  disabled={isLoading}
-                  variant="default"
-                  className="ml-3"
-                >
-                  {isLoading ? "Loading..." : "Login"}
-                </Button>
-              )}
+        <Button
+          variant="ghost"
+          className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+          onClick={toggleMobileMenu}
+        >
+          {isMobileMenuOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <Menu className="h-5 w-5" />
+          )}
+          <span className="sr-only">Toggle Menu</span>
+        </Button>
 
-              <ModeToggle className="ml-3" />
-            </div>
+        <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+          <div className="w-full flex-1 md:w-auto md:flex-none">
+            {/* Add search functionality here if needed */}
           </div>
-
-          <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
-              <span className="sr-only">Open main menu</span>
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" aria-hidden="true" />
+          <nav className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={handleAuth}
+              className="flex items-center space-x-2 text-sm hover:bg-accent hover:text-accent-foreground"
+            >
+              {user ? (
+                <>
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </>
               ) : (
-                <Menu className="h-6 w-6" aria-hidden="true" />
+                <span>Sign in</span>
               )}
             </Button>
-          </div>
+            {user && (
+              <div className="flex items-center space-x-2">
+                <Avatar>
+                  {user.image ? (
+                    <div className="rounded-full h-20 w-20">
+                      <Image
+                        src={user.image}
+                        alt={user.name}
+                        width={72}
+                        height={72}
+                        className="rounded-full"
+                      />
+                    </div>
+                  ) : (
+                    <AvatarFallback>
+                      {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </div>
+            )}
+            <ModeToggle />
+          </nav>
         </div>
       </div>
 
       {isMobileMenuOpen && (
-        <div className="sm:hidden">
+        <div className="md:hidden">
           <div className="space-y-1 px-2 pb-3 pt-2">
-            {navItems.map(({ href, label, icon: Icon }) => (
+            {navItems.map((item) => (
               <Link
-                key={href}
-                href={href}
-                className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center transition duration-150 ease-in-out"
-                onClick={() => setIsMobileMenuOpen(false)}
+                key={item.href}
+                href={item.href}
+                className="block rounded-md px-3 py-2 text-base font-medium text-gray-30 hover:bg-gray-200 hover:text-gray-900"
+                onClick={toggleMobileMenu}
               >
-                <Icon className="mr-2 h-5 w-5" />
-                {label}
+                {item.label}
               </Link>
             ))}
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 

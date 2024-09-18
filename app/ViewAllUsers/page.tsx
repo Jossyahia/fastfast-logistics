@@ -90,8 +90,8 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
     !searchParams.endDate
   ) {
     return (
-      <div className="max-w-4xl mx-auto mt-8 p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
+      <div className="max-w-4xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
+        <h1 className="text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
           All Users
         </h1>
         <p className="text-center text-gray-600 dark:text-gray-300">
@@ -102,8 +102,8 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   }
 
   return (
-    <div className="max-w-full sm:max-w-6xl mx-auto mt-8 p-4 sm:p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
+    <div className="max-w-6xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg transition-colors duration-200">
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">
         All Users
       </h1>
 
@@ -111,47 +111,59 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
 
       <div className="overflow-x-auto mt-6">
         <table className="w-full table-auto">
-          <thead className="bg-gray-100 dark:bg-gray-700">
-            <tr>
-              <TableHeader field="id" label="ID" searchParams={searchParams} />
-              <TableHeader
-                field="name"
-                label="Name"
-                searchParams={searchParams}
-              />
-              <TableHeader
-                field="email"
-                label="Email"
-                searchParams={searchParams}
-              />
-              <TableHeader
-                field="role"
-                label="Role"
-                searchParams={searchParams}
-              />
-              <TableHeader
-                field="createdAt"
-                label="Created At"
-                searchParams={searchParams}
-              />
-              <th className="px-4 py-2 text-left text-gray-700 dark:text-gray-300">
-                Actions
+          <thead>
+            <tr className="bg-gray-100 dark:bg-gray-700">
+              <th className="px-4 py-2 text-left">ID</th>
+              <th className="px-4 py-2 text-left">
+                <SortableHeader
+                  field="name"
+                  label="Name"
+                  searchParams={searchParams}
+                />
               </th>
+              <th className="px-4 py-2 text-left">
+                <SortableHeader
+                  field="email"
+                  label="Email"
+                  searchParams={searchParams}
+                />
+              </th>
+              <th className="px-4 py-2 text-left">
+                <SortableHeader
+                  field="role"
+                  label="Role"
+                  searchParams={searchParams}
+                />
+              </th>
+              <th className="px-4 py-2 text-left">
+                <SortableHeader
+                  field="createdAt"
+                  label="Created At"
+                  searchParams={searchParams}
+                />
+              </th>
+              <th className="px-4 py-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((user: User) => (
               <tr key={user.id} className="border-b dark:border-gray-700">
-                <TableCell>{user.id.slice(0, 8)}...</TableCell>
-                <TableCell>{user.name || "N/A"}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
+                  {user.id.slice(0, 8)}...
+                </td>
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
+                  {user.name || "N/A"}
+                </td>
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
+                  {user.email}
+                </td>
+                <td className="px-4 py-2">
                   <RoleBadge role={user.role} />
-                </TableCell>
-                <TableCell>
+                </td>
+                <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
                   {new Date(user.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
+                </td>
+                <td className="px-4 py-2">
                   <Link
                     href={`/users/${user.id}`}
                     className="text-blue-500 hover:text-blue-700 mr-2 transition-colors duration-200"
@@ -164,7 +176,7 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
                   >
                     Edit
                   </Link>
-                </TableCell>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -182,7 +194,7 @@ const ViewAllUsersPage: FC<ViewAllUsersPageProps> = async ({
   );
 };
 
-const TableHeader: FC<{
+const SortableHeader: FC<{
   field: string;
   label: string;
   searchParams: ViewAllUsersPageProps["searchParams"];
@@ -192,29 +204,23 @@ const TableHeader: FC<{
     isSorted && searchParams.sortOrder === "asc" ? "desc" : "asc";
 
   return (
-    <th className="px-4 py-2 text-left">
-      <Link
-        href={`/users?sortBy=${field}&sortOrder=${nextOrder}&role=${
-          searchParams.role || ""
-        }&startDate=${searchParams.startDate || ""}&endDate=${
-          searchParams.endDate || ""
-        }&search=${searchParams.search || ""}`}
-        className="flex items-center text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
-      >
-        {label}
-        {isSorted && (
-          <span className="ml-1">
-            {searchParams.sortOrder === "asc" ? "▲" : "▼"}
-          </span>
-        )}
-      </Link>
-    </th>
+    <Link
+      href={`/users?sortBy=${field}&sortOrder=${nextOrder}&role=${
+        searchParams.role || ""
+      }&startDate=${searchParams.startDate || ""}&endDate=${
+        searchParams.endDate || ""
+      }&search=${searchParams.search || ""}`}
+      className="flex items-center text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
+    >
+      {label}
+      {isSorted && (
+        <span className="ml-1">
+          {searchParams.sortOrder === "asc" ? "▲" : "▼"}
+        </span>
+      )}
+    </Link>
   );
 };
-
-const TableCell: FC<{ children: React.ReactNode }> = ({ children }) => (
-  <td className="px-4 py-2 text-gray-800 dark:text-gray-200">{children}</td>
-);
 
 const RoleBadge: FC<{ role: Role }> = ({ role }) => {
   const badgeColor =
@@ -280,7 +286,7 @@ const PaginationLink: FC<{
   searchParams: ViewAllUsersPageProps["searchParams"];
 }> = ({ page, disabled, active, children, searchParams }) => {
   const baseClasses =
-    "relative inline-flex items-center px-2 sm:px-4 py-2 text-sm font-medium";
+    "relative inline-flex items-center px-4 py-2 text-sm font-medium";
   const activeClasses =
     "z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600";
   const inactiveClasses =

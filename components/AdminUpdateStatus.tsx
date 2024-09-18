@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,8 +24,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import clsx from "clsx";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 const schema = z.object({
   trackingNumber: z.string().min(1, { message: "Tracking number is required" }),
@@ -40,10 +38,6 @@ type FormData = z.infer<typeof schema>;
 export default function AdminUpdateStatusComponent() {
   const [updateResult, setUpdateResult] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const router = useRouter();
-  const { data: session, status } = useSession();
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -56,59 +50,7 @@ export default function AdminUpdateStatusComponent() {
     },
   });
 
-  useEffect(() => {
-    if (status === "loading") return;
-    if (!session || session.user.role !== "ADMIN") {
-      router.push("/restricted");
-    }
-  }, [session, status, router]);
-
-  const fetchShipmentData = useCallback(
-    async (trackingNumber: string) => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `/api/admin/update-status?trackingNumber=${trackingNumber}`
-        );
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to fetch shipment data");
-        }
-        const data = await response.json();
-        form.reset({
-          ...data,
-          shipmentStatus: data.shipmentStatus,
-          bookingStatus: data.bookingStatus,
-        });
-        setIsError(false);
-        setUpdateResult(null);
-      } catch (error) {
-        setUpdateResult(
-          "Error fetching shipment data: " + (error as Error).message
-        );
-        setIsError(true);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [form]
-  );
-
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (
-        name === "trackingNumber" &&
-        value.trackingNumber &&
-        value.trackingNumber.length > 0
-      ) {
-        fetchShipmentData(value.trackingNumber);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form, fetchShipmentData]);
-
   const onSubmit = async (data: FormData) => {
-    setIsUpdating(true);
     try {
       const response = await fetch("/api/admin/update-status", {
         method: "PUT",
@@ -119,18 +61,16 @@ export default function AdminUpdateStatusComponent() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update status");
+        throw new Error("Failed to update status");
       }
 
       const result = await response.json();
       setUpdateResult(result.message);
       setIsError(false);
+      form.reset();
     } catch (error) {
-      setUpdateResult("Error updating status: " + (error as Error).message);
+      setUpdateResult("Error updating status. Please try again.");
       setIsError(true);
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -152,14 +92,6 @@ export default function AdminUpdateStatusComponent() {
         return "bg-gray-500 text-white";
     }
   };
-
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
-
-  if (!session || session.user.role !== "ADMIN") {
-    return null;
-  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -189,7 +121,6 @@ export default function AdminUpdateStatusComponent() {
                   </FormItem>
                 )}
               />
-              {isLoading && <p>Loading shipment data...</p>}
               <FormField
                 control={form.control}
                 name="shipmentStatus"
@@ -292,8 +223,8 @@ export default function AdminUpdateStatusComponent() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isUpdating}>
-                {isUpdating ? "Updating..." : "Update Status"}
+              <Button type="submit" className="w-full">
+                Update Status
               </Button>
             </form>
           </Form>

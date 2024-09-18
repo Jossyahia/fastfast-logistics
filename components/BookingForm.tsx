@@ -22,19 +22,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
 const FastFastLogisticsBooking = () => {
   const { data: session, status } = useSession();
-  const [pickupDate, setPickupDate] = useState<Date | undefined>(undefined);
-  const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
+  const [pickupDate, setPickupDate] = useState<Date>(new Date());
+  const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
   const [isUrgent, setIsUrgent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [error, setError] = useState<React.ReactNode>("");
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [formData, setFormData] = useState({
     pickupAddress: "",
     deliveryAddress: "",
@@ -54,41 +53,10 @@ const FastFastLogisticsBooking = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-    validateField(name, value);
   };
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
-    validateField(name, value);
-  };
-
-  const validateField = (name: string, value: string) => {
-    let error = "";
-    switch (name) {
-      case "pickupAddress":
-      case "deliveryAddress":
-      case "route":
-        if (!value.trim()) error = "This field is required";
-        break;
-      case "pickupPhoneNumber":
-      case "deliveryPhoneNumber":
-        if (!/^\d{0,11}$/.test(value)) {
-          error = "Phone number must be up to 11 digits";
-        }
-        break;
-      case "price":
-        if (isNaN(Number(value)) || Number(value) <= 0) {
-          error = "Please enter a valid price";
-        }
-        break;
-      case "pickupTime":
-      case "deliveryTime":
-      case "packageSize":
-      case "paymentMethod":
-        if (!value) error = "Please select an option";
-        break;
-    }
-    setFormErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,19 +74,6 @@ const FastFastLogisticsBooking = () => {
           .
         </>
       );
-      setIsLoading(false);
-      return;
-    }
-
-    if (!pickupDate || !deliveryDate) {
-      setError("Please select both pickup and delivery dates.");
-      setIsLoading(false);
-      return;
-    }
-
-    const hasErrors = Object.values(formErrors).some((error) => error !== "");
-    if (hasErrors) {
-      setError("Please correct the errors in the form before submitting.");
       setIsLoading(false);
       return;
     }
@@ -163,7 +118,7 @@ const FastFastLogisticsBooking = () => {
     return (
       <Card className="w-full sm:w-[500px] lg:w-[600px] mx-auto p-4 sm:p-6">
         <CardContent className="text-center">
-          <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
+          <AlertCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
           <h2 className="text-2xl font-bold mb-2">Booking Confirmed!</h2>
           <p>
             Your dispatch rider has been booked successfully. You will receive a
@@ -194,34 +149,22 @@ const FastFastLogisticsBooking = () => {
             <Input
               id="pickupAddress"
               name="pickupAddress"
-              placeholder="Enter your pickup location"
+              placeholder="Enter Your Pickup Location"
               required
               onChange={handleInputChange}
-              className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                formErrors.pickupAddress ? "border-red-500" : ""
-              }`}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
-            {formErrors.pickupAddress && (
-              <p className="text-red-500 text-sm">{formErrors.pickupAddress}</p>
-            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="deliveryAddress">Delivery Address</Label>
             <Input
               id="deliveryAddress"
               name="deliveryAddress"
-              placeholder="Enter your delivery location"
+              placeholder="Enter Your Delivery Location"
               required
               onChange={handleInputChange}
-              className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                formErrors.deliveryAddress ? "border-red-500" : ""
-              }`}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
-            {formErrors.deliveryAddress && (
-              <p className="text-red-500 text-sm">
-                {formErrors.deliveryAddress}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -231,18 +174,8 @@ const FastFastLogisticsBooking = () => {
                 mode="single"
                 selected={pickupDate}
                 onSelect={(date) => date && setPickupDate(date)}
-                disabled={(date) =>
-                  date < new Date(new Date().setHours(0, 0, 0, 0))
-                }
-                className={`bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md ${
-                  !pickupDate ? "border-red-500" : ""
-                }`}
+                disabled={(date) => date < new Date()}
               />
-              {!pickupDate && (
-                <p className="text-red-500 text-sm">
-                  Please select a pickup date
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label>Delivery Date</Label>
@@ -250,16 +183,8 @@ const FastFastLogisticsBooking = () => {
                 mode="single"
                 selected={deliveryDate}
                 onSelect={(date) => date && setDeliveryDate(date)}
-                disabled={(date) => !pickupDate || date < pickupDate}
-                className={`bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md ${
-                  !deliveryDate ? "border-red-500" : ""
-                }`}
+                disabled={(date) => date < pickupDate}
               />
-              {!deliveryDate && (
-                <p className="text-red-500 text-sm">
-                  Please select a delivery date
-                </p>
-              )}
             </div>
           </div>
 
@@ -271,24 +196,30 @@ const FastFastLogisticsBooking = () => {
                   handleSelectChange("pickupTime", value)
                 }
               >
-                <SelectTrigger
-                  className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                    formErrors.pickupTime ? "border-red-500" : ""
-                  }`}
-                >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                  <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                  <SelectItem value="afternoon">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
                     Afternoon (12PM - 4PM)
                   </SelectItem>
-                  <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              {formErrors.pickupTime && (
-                <p className="text-red-500 text-sm">{formErrors.pickupTime}</p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="deliveryTime">Delivery Time</Label>
@@ -297,26 +228,30 @@ const FastFastLogisticsBooking = () => {
                   handleSelectChange("deliveryTime", value)
                 }
               >
-                <SelectTrigger
-                  className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                    formErrors.deliveryTime ? "border-red-500" : ""
-                  }`}
-                >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select time" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                  <SelectItem value="morning">Morning (8AM - 12PM)</SelectItem>
-                  <SelectItem value="afternoon">
+                  <SelectItem
+                    value="morning"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Morning (8AM - 12PM)
+                  </SelectItem>
+                  <SelectItem
+                    value="afternoon"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
                     Afternoon (12PM - 4PM)
                   </SelectItem>
-                  <SelectItem value="evening">Evening (4PM - 8PM)</SelectItem>
+                  <SelectItem
+                    value="evening"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Evening (4PM - 8PM)
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              {formErrors.deliveryTime && (
-                <p className="text-red-500 text-sm">
-                  {formErrors.deliveryTime}
-                </p>
-              )}
             </div>
           </div>
 
@@ -328,25 +263,36 @@ const FastFastLogisticsBooking = () => {
                   handleSelectChange("packageSize", value)
                 }
               >
-                <SelectTrigger
-                  className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                    formErrors.packageSize ? "border-red-500" : ""
-                  }`}
-                >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select package size" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                  <SelectItem value="small">Small (Up to 1kg or less)</SelectItem>
-                  <SelectItem value="medium">Medium (5kg - 15kg or less)</SelectItem>
-                  <SelectItem value="large">Large (15kg - 30k or less)</SelectItem>
-                  <SelectItem value="extra-large">
-                    Extra Large (30kg+ or mor)
+                  <SelectItem
+                    value="small"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Small (Up to 5kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="medium"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Medium (5kg - 15kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Large (15kg - 30kg)
+                  </SelectItem>
+                  <SelectItem
+                    value="extra-large"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Extra Large (30kg+)
                   </SelectItem>
                 </SelectContent>
               </Select>
-              {formErrors.packageSize && (
-                <p className="text-red-500 text-sm">{formErrors.packageSize}</p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -354,18 +300,11 @@ const FastFastLogisticsBooking = () => {
               <Textarea
                 id="packageDescription"
                 name="packageDescription"
-                placeholder="Describe the package contents"
+                placeholder="Describe the package"
                 required
                 onChange={handleInputChange}
-                className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                  formErrors.packageDescription ? "border-red-500" : ""
-                }`}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              {formErrors.packageDescription && (
-                <p className="text-red-500 text-sm">
-                  {formErrors.packageDescription}
-                </p>
-              )}
             </div>
           </div>
 
@@ -378,16 +317,8 @@ const FastFastLogisticsBooking = () => {
                 placeholder="Enter pickup phone number"
                 required
                 onChange={handleInputChange}
-                maxLength={11}
-                className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                  formErrors.pickupPhoneNumber ? "border-red-500" : ""
-                }`}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              {formErrors.pickupPhoneNumber && (
-                <p className="text-red-500 text-sm">
-                  {formErrors.pickupPhoneNumber}
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="deliveryPhoneNumber">Delivery Phone Number</Label>
@@ -397,16 +328,8 @@ const FastFastLogisticsBooking = () => {
                 placeholder="Enter delivery phone number"
                 required
                 onChange={handleInputChange}
-                maxLength={11}
-                className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                  formErrors.deliveryPhoneNumber ? "border-red-500" : ""
-                }`}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              {formErrors.deliveryPhoneNumber && (
-                <p className="text-red-500 text-sm">
-                  {formErrors.deliveryPhoneNumber}
-                </p>
-              )}
             </div>
           </div>
 
@@ -418,24 +341,30 @@ const FastFastLogisticsBooking = () => {
                   handleSelectChange("paymentMethod", value)
                 }
               >
-                <SelectTrigger
-                  className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                    formErrors.paymentMethod ? "border-red-500" : ""
-                  }`}
-                >
+                <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
                   <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                  <SelectItem value="credit-card">Credit Card</SelectItem>
-                  <SelectItem value="paypal">PayPal</SelectItem>
-                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem
+                    value="credit-card"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Credit Card
+                  </SelectItem>
+                  <SelectItem
+                    value="paypal"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    PayPal
+                  </SelectItem>
+                  <SelectItem
+                    value="cash"
+                    className="bg-gray-100 dark:bg-gray-600"
+                  >
+                    Cash
+                  </SelectItem>
                 </SelectContent>
               </Select>
-              {formErrors.paymentMethod && (
-                <p className="text-red-500 text-sm">
-                  {formErrors.paymentMethod}
-                </p>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="route">Route</Label>
@@ -445,13 +374,8 @@ const FastFastLogisticsBooking = () => {
                 placeholder="Enter route information"
                 required
                 onChange={handleInputChange}
-                className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                  formErrors.route ? "border-red-500" : ""
-                }`}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
               />
-              {formErrors.route && (
-                <p className="text-red-500 text-sm">{formErrors.route}</p>
-              )}
             </div>
           </div>
 
@@ -463,26 +387,17 @@ const FastFastLogisticsBooking = () => {
               placeholder="Enter estimated price"
               required
               onChange={handleInputChange}
-              className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 ${
-                formErrors.price ? "border-red-500" : ""
-              }`}
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"
             />
-            {formErrors.price && (
-              <p className="text-red-500 text-sm">{formErrors.price}</p>
-            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="isUrgent">Is this urgent?</Label>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isUrgent"
-                checked={isUrgent}
-                onCheckedChange={setIsUrgent}
-                className="bg-blue-500"
-              />
-              <span>{isUrgent ? "Yes" : "No"}</span>
-            </div>
+            <Label>Is this urgent?</Label>
+            <Switch
+              checked={isUrgent}
+              onCheckedChange={setIsUrgent}
+              className="bg-blue-500"
+            />
           </div>
 
           <Button
@@ -491,10 +406,7 @@ const FastFastLogisticsBooking = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <div className="flex items-center justify-center">
-                <Loader2 className="animate-spin mr-2" />
-                <span>Processing...</span>
-              </div>
+              <Loader2 className="animate-spin" />
             ) : (
               "Submit Booking"
             )}
@@ -502,7 +414,6 @@ const FastFastLogisticsBooking = () => {
 
           {error && (
             <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>

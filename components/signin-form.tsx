@@ -96,7 +96,7 @@ export default function SignInForm() {
           No account yet? Sign up
         </Link>
         <Link
-          href="/auth/signin"
+          href="/forgot-password"
           className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
         >
           Forgot your password?

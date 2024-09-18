@@ -30,7 +30,7 @@ const TrackingPage = () => {
     } catch (error) {
       console.error("Error fetching shipment:", error);
       setError(
-        "Shipment with this tracking number not found. Please check the tracking number and try again."
+        "Failed to fetch shipment. Please check the tracking number and try again."
       );
     }
   };

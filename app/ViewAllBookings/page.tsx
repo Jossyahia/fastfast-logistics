@@ -252,12 +252,9 @@ const SortableHeader: FC<{
 const StatusBadge: FC<{ status: string }> = ({ status }) => {
   const badgeColor =
     {
-      PROCESSING: "bg-yellow-500 text-black",
-      SHIPPED: "bg-blue-500 text-white",
-      IN_TRANSIT: "bg-orange-500 text-white",
-      DELIVERED: "bg-green-500 text-white",
-      RETURNED: "bg-purple-500 text-white",
-      CANCELLED: "bg-red-500 text-white",
+      PROCESSING: "bg-yellow-100 text-yellow-800",
+      COMPLETED: "bg-green-100 text-green-800",
+      CANCELLED: "bg-red-100 text-red-800",
     }[status] || "bg-gray-100 text-gray-800";
 
   return (
