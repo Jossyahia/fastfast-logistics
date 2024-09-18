@@ -1,76 +1,54 @@
 "use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
-// ... (keep all the existing interfaces)
+// Interfaces remain the same, so I'll omit them for brevity
 interface UserData {
   id: string;
-  name: string | null;
+  name: string;
   email: string;
-  emailVerified: string | null;
-  image: string | null;
-  role: "ADMIN" | "USER" | "RIDER";
+  image?: string;
+  role: "USER" | "RIDER" | "ADMIN";
   createdAt: string;
   updatedAt: string;
+  emailVerified?: string;
   bookings: Booking[];
   shipments: Shipment[];
-  rider: Rider | null;
+  rider?: RiderData;
 }
 
 interface Booking {
   id: string;
   pickupAddress: string;
   deliveryAddress: string;
-  pickupDate: string;
-  deliveryDate: string;
-  pickupTime: string;
-  deliveryTime: string;
-  packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
-  packageDescription: string | null;
-  status:
-    | "PROCESSING"
-    | "SHIPPED"
-    | "IN_TRANSIT"
-    | "DELIVERED"
-    | "RETURNED"
-    | "CANCELLED";
-  isUrgent: boolean;
-  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
-  route: string;
+  status: string;
+  packageSize: string;
   price: number;
-  pickupPhoneNumber: string;
-  deliveryPhoneNumber: string;
-  notificationSent: boolean;
-  riderResponse: "ACCEPTED" | "REJECTED" | "PENDING";
+  isUrgent: boolean;
+  paymentMethod: string;
+  riderResponse: string;
 }
 
 interface Shipment {
   id: string;
   trackingNumber: string;
-  status:
-    | "PROCESSING"
-    | "SHIPPED"
-    | "IN_TRANSIT"
-    | "DELIVERED"
-    | "RETURNED"
-    | "CANCELLED";
-  currentLocation: string | null;
-  estimatedDelivery: string | null;
+  status: string;
+  currentLocation?: string;
+  estimatedDelivery?: string;
 }
 
-interface Rider {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string | null;
-  address: string | null;
-  guarantorName: string | null;
-  guarantorPhoneNumber: string | null;
-  guarantorAddress: string | null;
-  relationshipWithGuarantor: string | null;
-  maritalStatus: "SINGLE" | "MARRIED" | "DIVORCED" | "WIDOWED" | null;
+interface RiderData {
+  phoneNumber?: string;
+  address?: string;
+  maritalStatus?: string;
+  guarantorName?: string;
+  guarantorPhoneNumber?: string;
+  guarantorAddress?: string;
+  relationshipWithGuarantor?: string;
 }
 
 interface AdminStats {
@@ -113,39 +91,39 @@ export default function UserProfile() {
     };
   }, []);
 
-  // ... (keep all the existing functions: fetchUserData, fetchAdminStats, handleInputChange, handleSubmit)
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch("/api/user");
-        if (res.ok) {
-          const data: UserData = await res.json();
-          setUserData(data);
-          if (data.role === "ADMIN") {
-            fetchAdminStats();
-          }
-        } else {
-          const errorData = await res.json();
-          setError(errorData.message || "Failed to fetch user data");
+  const fetchUserData = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data: UserData = await res.json();
+        setUserData(data);
+        if (data.role === "ADMIN") {
+          fetchAdminStats();
         }
-      } catch (error) {
-        setError("Error fetching user data");
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch user data");
       }
-    };
+    } catch (error) {
+      setError("Error fetching user data");
+    }
+  };
 
-    const fetchAdminStats = async () => {
-      try {
-        const res = await fetch("/api/admin/stats");
-        if (res.ok) {
-          const stats: AdminStats = await res.json();
-          setAdminStats(stats);
-        } else {
-          const errorData = await res.json();
-          setError(errorData.message || "Failed to fetch admin stats");
-        }
-      } catch (error) {
-        setError("Error fetching admin stats");
+  const fetchAdminStats = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const stats: AdminStats = await res.json();
+        setAdminStats(stats);
+      } else {
+        const errorData = await res.json();
+        setError(errorData.message || "Failed to fetch admin stats");
       }
-    };
+    } catch (error) {
+      setError("Error fetching admin stats");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -173,7 +151,7 @@ export default function UserProfile() {
       if (res.ok) {
         setError(null);
         alert("Profile updated successfully");
-        fetchUserData(); // Refresh the data after update
+        fetchUserData();
       } else {
         const errorData = await res.json();
         setError(errorData.message || "Failed to update user data");
@@ -237,27 +215,27 @@ export default function UserProfile() {
           </button>
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10">
-              <a
-                href="#profile"
+              <Link
+                href="/ViewAllBookings"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsDropdownOpen(false)}
               >
-                Profile
-              </a>
-              <a
-                href="#settings"
+                Your Bookings
+              </Link>
+              <Link
+                href="/profile/edit"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsDropdownOpen(false)}
               >
-                Settings
-              </a>
-              <a
-                href="/api/auth/signout"
+                Update Profile
+              </Link>
+              <Link
+                href="/"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 Sign out
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -273,7 +251,6 @@ export default function UserProfile() {
         </div>
       )}
 
-      {/* ... (keep the rest of the component's JSX structure) */}
       {userData && (
         <div className="space-y-6">
           <section className="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
