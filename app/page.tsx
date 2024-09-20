@@ -17,6 +17,8 @@ import {
   LucideProps,
 } from "lucide-react";
 import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
+import BookingInstructionsModal from "@/components/BookingInstructionsModal";
+
 import { FaSquareThreads } from "react-icons/fa6";
 
 interface FeatureCardProps {
@@ -50,6 +52,8 @@ export default function EnhancedLandingPage() {
   return (
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <main className="container mx-auto px-4 py-16 md:py-24">
+        <BookingInstructionsModal />
+
         <section className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
             FastFast Logistics Services
@@ -84,10 +88,10 @@ export default function EnhancedLandingPage() {
             href="/tracking"
           />
           <FeatureCard
-            title="Secure Delivery"
-            description="Rest easy knowing your packages are handled with care and delivered safely."
+            title="How to Book Delivery"
+            description="Easy Step By Step Guide On How To Book A delivery And Save Money"
             icon={ShieldCheckIcon}
-            href="/booking"
+            href="/booking-guide"
           />
         </section>
 
