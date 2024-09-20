@@ -306,7 +306,7 @@ export default function UserProfile() {
                           {booking.packageSize}
                         </p>
                         <p>
-                          <span className="font-medium">Price:</span> $
+                          <span className="font-medium">Price:</span> #
                           {booking.price.toFixed(2)}
                         </p>
                         <p>
