@@ -203,10 +203,12 @@ const NavBarClient: React.FC = () => {
                   >
                     <span className="sr-only">Open user menu</span>
                     {image ? (
-                      <img
+                      <Image
                         src={image}
                         alt={displayName}
-                        className="rounded-full h-8 w-8"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-base font-medium text-gray-700 dark:text-gray-300">
