@@ -8,7 +8,7 @@ export default function CouponsPage() {
         Admin: Manage Coupons
       </h1>
       <CouponForm />
-      <CouponList />
+      <CouponList/>
     </div>
   );
 }
