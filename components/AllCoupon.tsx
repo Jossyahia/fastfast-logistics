@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -9,7 +9,7 @@ interface Coupon {
   type: "percentage" | "fixed";
 }
 
-const CouponList: React.FC = () => {
+const AllCoupon: React.FC = () => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,10 +72,7 @@ const CouponList: React.FC = () => {
             </thead>
             <tbody className="text-gray-700 dark:text-gray-300">
               {coupons.map((coupon) => (
-                <tr
-                  key={coupon.id}
-                  className="border-b border-gray-200"
-                >
+                <tr key={coupon.id} className="border-b border-gray-200">
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {coupon.code}
                   </td>
@@ -111,4 +108,4 @@ const CouponList: React.FC = () => {
   );
 };
 
-export default CouponList;
+export default AllCoupon;
