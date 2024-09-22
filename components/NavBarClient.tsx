@@ -1,4 +1,5 @@
 "use client";
+
 import React, {
   useState,
   useEffect,
@@ -24,11 +25,12 @@ import {
   Settings,
   X,
   Menu,
+  Bike,
+  FileText,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
 import { useSession } from "next-auth/react";
-import { Role } from "@prisma/client";
 
 type UserRole = "USER" | "RIDER" | "ADMIN";
 
@@ -53,83 +55,85 @@ const NavBarClient: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const isAdmin = userData?.role === "ADMIN";
 
-  const navItems: NavItem[] = useMemo(
-    () =>
-      isAdmin
-        ? [
-            {
-              href: "/admin/dashboard",
-              label: "Admin Dashboard",
-              icon: Settings,
-            },
-            {
-              href: "/admin/ViewAllUsers",
-              label: "View All Users",
-              icon: Users,
-            },
-            {
-              href: "/admin/ViewAllBookings",
-              label: "View All Bookings",
-              icon: BookOpen,
-            },
-            {
-              href: "/admin/update-status",
-              label: "Update Status",
-              icon: RefreshCw,
-            },
-          ]
-        : [
-            { href: "/", label: "Home", icon: Home },
-            { href: "/services", label: "Services", icon: Package },
-            { href: "/booking", label: "Booking", icon: Calendar },
-            { href: "/tracking", label: "Tracking", icon: MapPin },
-            { href: "/contact-us", label: "Contact", icon: Mail },
-            { href: "/about", label: "About", icon: Info },
-          ],
-    [isAdmin]
-  );
-
-  const fetchUserData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/user");
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
+    const fetchUserData = useCallback(async () => {
+      try {
+        const response = await fetch("/api/user");
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+        const data = await response.json();
+        setUserData(data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
-      const data = await response.json();
-      setUserData(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  }, []);
+    }, []);
 
-  useEffect(() => {
-    if (session) {
-      fetchUserData();
-    } else {
-      setUserData(null);
-    }
-  }, [session, fetchUserData]);
-
-  const handleAuth = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (userData) {
-        await serverSignOut();
-        setUserData(null);
-        router.push("/");
-        router.refresh();
+    useEffect(() => {
+      if (session) {
+        fetchUserData();
       } else {
-        await serverSignIn();
-        router.refresh();
+        setUserData(null);
       }
-    } catch (error) {
-      console.error("Authentication error:", error);
-    } finally {
-      setIsLoading(false);
+    }, [session, fetchUserData]);
+
+    const handleAuth = useCallback(async () => {
+      setIsLoading(true);
+      try {
+        if (userData) {
+          await serverSignOut();
+          setUserData(null);
+          router.push("/");
+          router.refresh();
+        } else {
+          await serverSignIn();
+          router.refresh();
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, [userData, router]);
+
+  const isAdmin = userData?.role === "ADMIN";
+  const isRider = userData?.role === "RIDER";
+
+  const navItems: NavItem[] = useMemo(() => {
+    if (isAdmin) {
+      return [
+        { href: "/admin/dashboard", label: "Admin Dashboard", icon: Settings },
+        { href: "/admin/ViewAllUsers", label: "View All Users", icon: Users },
+        {
+          href: "/admin/ViewAllBookings",
+          label: "View All Bookings",
+          icon: BookOpen,
+        },
+        {
+          href: "/admin/update-status",
+          label: "Update Status",
+          icon: RefreshCw,
+        },
+      ];
+    } else if (isRider) {
+      return [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/rider/dashboard", label: "Rider", icon: Bike },
+        { href: "/rider/dashboard/task", label: "Task", icon: FileText },
+        { href: "/contact-us", label: "Contact", icon: Mail },
+        { href: "/about", label: "About", icon: Info },
+      ];
+    } else {
+      return [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/services", label: "Services", icon: Package },
+        { href: "/booking", label: "Booking", icon: Calendar },
+        { href: "/tracking", label: "Tracking", icon: MapPin },
+        { href: "/contact-us", label: "Contact", icon: Mail },
+        { href: "/about", label: "About", icon: Info },
+      ];
     }
-  }, [userData, router]);
+  }, [isAdmin, isRider]);
 
   const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -190,7 +194,7 @@ const NavBarClient: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center">
-              {userData && (
+              {userData ? (
                 <div className="relative ml-3" ref={dropdownRef}>
                   <Button
                     variant="ghost"
@@ -199,10 +203,12 @@ const NavBarClient: React.FC = () => {
                   >
                     <span className="sr-only">Open user menu</span>
                     {image ? (
-                      <img
+                      <Image
                         src={image}
                         alt={displayName}
-                        className="rounded-full h-8 w-8"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-base font-medium text-gray-700 dark:text-gray-300">
@@ -214,40 +220,38 @@ const NavBarClient: React.FC = () => {
                     <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200">
                       <Link
                         href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm"
                         onClick={closeProfileMenu}
                       >
                         Your Profile
                       </Link>
                       <Link
                         href="/profile/edit"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block px-4 py-2 text-sm"
                         onClick={closeProfileMenu}
                       >
-                        Settings
+                        Update Profile
                       </Link>
                       <button
                         onClick={() => {
                           closeProfileMenu();
                           handleAuth();
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2 text-sm"
                       >
                         Sign out
                       </button>
                     </div>
                   )}
                 </div>
-              )}
-
-              {!userData && (
+              ) : (
                 <Button
                   onClick={handleAuth}
                   disabled={isLoading}
                   variant="default"
                   className="ml-3"
                 >
-                  {isLoading ? "Loading..." : "Login"}
+                  {isLoading ? "Loading..." : "Sign in"}
                 </Button>
               )}
 
@@ -276,9 +280,9 @@ const NavBarClient: React.FC = () => {
                 key={href}
                 href={href}
                 className="text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center transition duration-150 ease-in-out"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={toggleMobileMenu}
               >
-                <Icon className="mr-2 h-5 w-5" />
+                <Icon className="mr-2 h-4 w-4" />
                 {label}
               </Link>
             ))}

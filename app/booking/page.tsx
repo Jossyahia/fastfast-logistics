@@ -10,6 +10,7 @@ import {
   Truck,
   CheckCircle,
   AlertTriangle,
+  Tag,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,6 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { getPrice } from "@/price";
 import BankTransferDetails from "@/components/BankTransferDetails";
 
-
 interface FormData {
   pickupAddress: string;
   deliveryAddress: string;
@@ -52,15 +52,14 @@ interface FormData {
   route: string;
   price: number;
   transactionCode: string;
+  couponCode: string;
+  discountAmount: number;
 }
 
 interface FormErrors {
-  [key: string]: string;
+  [key: string]: string | undefined;
 }
-
 const STORAGE_KEY = "bookingFormData";
-
-
 
 const BookingPage: React.FC = () => {
   const router = useRouter();
@@ -80,11 +79,14 @@ const BookingPage: React.FC = () => {
     route: "",
     price: 0,
     transactionCode: "",
+    couponCode: "",
+    discountAmount: 0,
   });
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [couponApplied, setCouponApplied] = useState(false);
 
   useEffect(() => {
     const savedFormData = sessionStorage.getItem(STORAGE_KEY);
@@ -165,11 +167,54 @@ const BookingPage: React.FC = () => {
       EXTRA_LARGE: 1500,
     };
     const sizeFee = sizeFees[data.packageSize] || 0;
-    return basePrice + urgentFee + sizeFee;
-  };
+    const totalBeforeDiscount = basePrice + urgentFee + sizeFee;
+    const totalAfterDiscount = totalBeforeDiscount - data.discountAmount;
 
+    // Ensure the total price is not negative
+    return Math.max(totalAfterDiscount, 0);
+  };
   const generateTransactionCode = (): string => {
     return "TXN" + Math.random().toString(36).substr(2, 8).toUpperCase();
+  };
+
+  const validateCoupon = async (couponCode: string) => {
+    try {
+      const response = await fetch(`/api/validate-coupon?code=${couponCode}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.discount;
+      }
+      return 0;
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      return 0;
+    }
+  };
+
+  const applyCoupon = async () => {
+    if (!formData.couponCode) {
+      setErrors({ ...errors, coupon: "Please enter a coupon code" });
+      return;
+    }
+
+    setLoading(true);
+    const discount = await validateCoupon(formData.couponCode);
+    setLoading(false);
+
+    if (discount > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        discountAmount: discount,
+        price: calculatePrice({ ...prev, discountAmount: discount }),
+      }));
+      setCouponApplied(true);
+      setErrors((prevErrors) => {
+        const { coupon, ...restErrors } = prevErrors;
+        return restErrors;
+      });
+    } else {
+      setErrors({ ...errors, coupon: "Invalid coupon code" });
+    }
   };
 
   const validateForm = (): boolean => {
@@ -368,7 +413,7 @@ const BookingPage: React.FC = () => {
               onChange={(e) => handleChange("pickupTime", e.target.value)}
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupTime ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              } focus:outline-none focus:ring-2 focus:blue-500`}
               required
             />
             {errors.pickupTime && (
@@ -564,12 +609,56 @@ const BookingPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
+            <Label
+              htmlFor="couponCode"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
+            >
+              <Tag className="w-4 h-4 mr-2" /> Coupon Code
+            </Label>
+            <div className="flex">
+              <Input
+                id="couponCode"
+                value={formData.couponCode}
+                onChange={(e) => handleChange("couponCode", e.target.value)}
+                placeholder="Enter coupon code"
+                className={`flex-grow mr-2 ${
+                  errors.coupon ? "border-red-500" : "border-gray-300"
+                }`}
+                disabled={couponApplied}
+              />
+              <Button
+                type="button"
+                onClick={applyCoupon}
+                disabled={loading || couponApplied}
+                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-green-700 focus:outline-none"
+              >
+                {loading ? "Applying..." : couponApplied ? "Applied" : "Apply"}
+              </Button>
+            </div>
+            {errors.coupon && (
+              <p className="text-red-500 text-xs mt-1">{errors.coupon}</p>
+            )}
+            {couponApplied && (
+              <p className="text-green-500 text-xs mt-1">
+                Coupon applied successfully! Discount: ₦
+                {formData.discountAmount.toFixed(2)}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
               <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
             </Label>
             <p className="text-lg font-semibold">
-              ₦{formData.price.toFixed(2)}
+              ₦{formData.price ? formData.price.toFixed(2) : "0.00"}
             </p>
+            {couponApplied && formData.price && formData.discountAmount > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Original price: ₦
+                {(formData.price + formData.discountAmount).toFixed(2)}
+              </p>
+            )}
           </div>
 
           {errors.form && (
@@ -596,7 +685,7 @@ const BookingPage: React.FC = () => {
           type="submit"
           onClick={handleSubmit}
           disabled={loading}
-          className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
+          className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-green-700 focus:outline-none"
         >
           {loading ? "Creating Booking..." : "Create Booking"}
         </Button>
