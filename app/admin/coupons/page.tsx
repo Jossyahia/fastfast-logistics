@@ -1,4 +1,5 @@
 import CouponForm from "@/components/CreateCouponForm";
+import  CouponList  from "@/components/CouponList";
 
 export default function CouponsPage() {
   return (
@@ -7,6 +8,7 @@ export default function CouponsPage() {
         Admin: Manage Coupons
       </h1>
       <CouponForm />
+      <CouponList/>
     </div>
   );
 }
