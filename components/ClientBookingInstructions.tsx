@@ -10,7 +10,7 @@ type Step = {
 };
 
 const steps: Step[] = [
-  { text: "Open the booking page", icon: "CheckSquare" },
+  { text: "Click on the booking page", icon: "CheckSquare" },
   { text: "Fill in the pickup address", icon: "MapPin" },
   { text: "Enter the delivery address", icon: "MapPin" },
   { text: "Choose pickup date and time", icon: "Calendar" },
@@ -31,7 +31,7 @@ export default function ClientBookingInstructions() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
-        How to Make a Booking
+        How to Book
       </h1>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -59,7 +59,12 @@ export default function ClientBookingInstructions() {
           })}
         </ol>
       </div>
-
+      <div className="mt-8 p-4 bg-white-100 rounded-lg">
+        <p className="text-red-800">
+          <strong>NOTICE!!!:</strong> Your Booking is only valid after Payment.
+          Send proof of payment to our Whatapp Number!
+        </p>
+      </div>
       <div className="mt-8 p-4 bg-yellow-100 rounded-lg">
         <p className="text-yellow-800">
           <strong>Tip:</strong> You can save your progress and come back later.
@@ -67,7 +72,7 @@ export default function ClientBookingInstructions() {
         </p>
       </div>
       <div className="mt-4 text-sm text-gray-500">
-        <a href="https://storyset.com/work" className="hover:underline">
+        <a href="/" className="hover:underline">
           Work illustrations by Storyset
         </a>
       </div>
