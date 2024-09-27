@@ -2,13 +2,16 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-type CouponType = "percentage" | "fixed";
+type DiscountType = "PERCENTAGE" | "FIXED_AMOUNT";
 
 interface CouponFormData {
   id?: string;
   code: string;
-  discount: number;
-  type: CouponType;
+  discountValue: number;
+  discountType: DiscountType;
+  expiryDate: string;
+  usageLimit: number;
+  isActive?: boolean;
 }
 
 interface CouponFormProps {
@@ -18,7 +21,14 @@ interface CouponFormProps {
 
 const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
   const [formData, setFormData] = useState<CouponFormData>(
-    initialData || { code: "", discount: 0, type: "percentage" }
+    initialData || {
+      code: "",
+      discountValue: 0,
+      discountType: "PERCENTAGE",
+      expiryDate: "",
+      usageLimit: 1,
+      isActive: true,
+    }
   );
   type FormErrors = {
     [K in keyof CouponFormData]?: string;
@@ -42,11 +52,20 @@ const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
       newErrors.code =
         "Coupon code must be 3-20 characters long and contain only uppercase letters and numbers";
     }
-    if (formData.discount <= 0) {
-      newErrors.discount = "Discount must be greater than 0";
+    if (formData.discountValue <= 0) {
+      newErrors.discountValue = "Discount value must be greater than 0";
     }
-    if (formData.type === "percentage" && formData.discount > 100) {
-      newErrors.discount = "Percentage discount cannot exceed 100%";
+    if (
+      formData.discountType === "PERCENTAGE" &&
+      formData.discountValue > 100
+    ) {
+      newErrors.discountValue = "Percentage discount cannot exceed 100%";
+    }
+    if (!formData.expiryDate) {
+      newErrors.expiryDate = "Expiry date is required";
+    }
+    if (formData.usageLimit <= 0) {
+      newErrors.usageLimit = "Usage limit must be greater than 0";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -58,7 +77,10 @@ const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "discount" ? parseFloat(value) : value,
+      [name]:
+        name === "discountValue" || name === "usageLimit"
+          ? parseFloat(value)
+          : value,
     }));
   };
 
@@ -72,8 +94,8 @@ const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
     }
 
     try {
-      const url = formData.id ? `/api/coupons/${formData.id}` : "/api/coupons";
-      const method = formData.id ? "PATCH" : "POST"; // Use PATCH for updates
+      const url = "/api/coupons";
+      const method = formData.id ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
@@ -90,12 +112,19 @@ const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
 
       setSuccess(true);
       if (!formData.id) {
-        setFormData({ code: "", discount: 0, type: "percentage" });
+        setFormData({
+          code: "",
+          discountValue: 0,
+          discountType: "PERCENTAGE",
+          expiryDate: "",
+          usageLimit: 1,
+          isActive: true,
+        });
       }
       if (onSuccess) {
         onSuccess();
       }
-      router.refresh(); // Refresh the router to show updated data
+      router.refresh();
     } catch (err) {
       setServerError(
         err instanceof Error ? err.message : "An unexpected error occurred"
@@ -144,47 +173,115 @@ const CouponForm: React.FC<CouponFormProps> = ({ initialData, onSuccess }) => {
         </div>
         <div>
           <label
-            htmlFor="discount"
+            htmlFor="discountValue"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Discount Amount
+            Discount Value
           </label>
           <input
             type="number"
-            id="discount"
-            name="discount"
-            value={formData.discount}
+            id="discountValue"
+            name="discountValue"
+            value={formData.discountValue}
             onChange={handleInputChange}
             min="0"
             step="0.01"
             className={`mt-1 block w-full rounded-md shadow-sm focus:ring focus:ring-opacity-50 ${
-              errors.discount
+              errors.discountValue
                 ? "border-red-500 focus:border-red-500 focus:ring-red-200"
                 : "border-gray-300 focus:border-indigo-300 focus:ring-indigo-200"
             }`}
           />
-          {errors.discount && (
-            <p className="mt-1 text-sm text-red-500">{errors.discount}</p>
+          {errors.discountValue && (
+            <p className="mt-1 text-sm text-red-500">{errors.discountValue}</p>
           )}
         </div>
         <div>
           <label
-            htmlFor="type"
+            htmlFor="discountType"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Discount Type
           </label>
           <select
-            id="type"
-            name="type"
-            value={formData.type}
+            id="discountType"
+            name="discountType"
+            value={formData.discountType}
             onChange={handleInputChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           >
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed Amount</option>
+            <option value="PERCENTAGE">Percentage</option>
+            <option value="FIXED_AMOUNT">Fixed Amount</option>
           </select>
         </div>
+        <div>
+          <label
+            htmlFor="expiryDate"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Expiry Date
+          </label>
+          <input
+            type="date"
+            id="expiryDate"
+            name="expiryDate"
+            value={formData.expiryDate}
+            onChange={handleInputChange}
+            className={`mt-1 block w-full rounded-md shadow-sm focus:ring focus:ring-opacity-50 ${
+              errors.expiryDate
+                ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-300 focus:border-indigo-300 focus:ring-indigo-200"
+            }`}
+          />
+          {errors.expiryDate && (
+            <p className="mt-1 text-sm text-red-500">{errors.expiryDate}</p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="usageLimit"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Usage Limit
+          </label>
+          <input
+            type="number"
+            id="usageLimit"
+            name="usageLimit"
+            value={formData.usageLimit}
+            onChange={handleInputChange}
+            min="1"
+            step="1"
+            className={`mt-1 block w-full rounded-md shadow-sm focus:ring focus:ring-opacity-50 ${
+              errors.usageLimit
+                ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-300 focus:border-indigo-300 focus:ring-indigo-200"
+            }`}
+          />
+          {errors.usageLimit && (
+            <p className="mt-1 text-sm text-red-500">{errors.usageLimit}</p>
+          )}
+        </div>
+        {formData.id && (
+          <div>
+            <label
+              htmlFor="isActive"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Active
+            </label>
+            <input
+              type="checkbox"
+              id="isActive"
+              name="isActive"
+              checked={formData.isActive}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, isActive: e.target.checked }))
+              }
+              className="mt-1 rounded"
+            />
+          </div>
+        )}
         <button
           type="submit"
           className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

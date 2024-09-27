@@ -22,6 +22,7 @@ model User {
   bookings      Booking[]
   rider         Rider?
   sessions      Session[]
+  usedCoupons UsedCoupon[]
   shipments     Shipment[]
 }
 
@@ -90,6 +91,7 @@ model Booking {
   rider               Rider?        @relation(fields: [riderId], references: [id])
   user                User          @relation(fields: [userId], references: [id])
   shipment            Shipment?
+  usedCoupon UsedCoupon?
 
   @@index([userId])
   @@index([riderId])
@@ -133,12 +135,36 @@ model Shipment {
 }
 
 model Coupon {
-  id       String   @id @default(cuid())
-  code     String   @unique
-  discount Float
-  type     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  code         String   @unique
+  discountType DiscountType
+  discountValue Float
+  expiryDate   DateTime
+  usageLimit   Int
+  usedCount    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  usedCoupons  UsedCoupon[]
+}
+
+model UsedCoupon {
+  id        String   @id @default(cuid())
+  couponId  String
+  userId    String
+  bookingId String   @unique
+  usedAt    DateTime @default(now())
+  coupon    Coupon   @relation(fields: [couponId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([couponId])
+  @@index([userId])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
 }
 
 enum Role {
