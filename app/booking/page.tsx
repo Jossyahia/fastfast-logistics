@@ -49,11 +49,12 @@ interface FormData {
   paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
   pickupPhoneNumber: string;
   deliveryPhoneNumber: string;
+  couponCode: string; // Keep only one declaration
+  discountAmount: number;
+  discountType: "PERCENTAGE" | "FIXED" | null;
   route: string;
   price: number;
   transactionCode: string;
-  couponCode: string;
-  discountAmount: number;
 }
 
 interface FormErrors {
@@ -81,6 +82,7 @@ const BookingPage: React.FC = () => {
     transactionCode: "",
     couponCode: "",
     discountAmount: 0,
+    discountType: null, // Add this line
   });
 
   const [loading, setLoading] = useState(false);
@@ -160,6 +162,7 @@ const BookingPage: React.FC = () => {
   const calculatePrice = (data: FormData) => {
     const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
     const urgentFee = data.isUrgent ? 500 : 0;
+
     const sizeFees: { [key: string]: number } = {
       SMALL: 0,
       MEDIUM: 500,
@@ -167,8 +170,21 @@ const BookingPage: React.FC = () => {
       EXTRA_LARGE: 1500,
     };
     const sizeFee = sizeFees[data.packageSize] || 0;
-    const totalBeforeDiscount = basePrice + urgentFee + sizeFee;
-    const totalAfterDiscount = totalBeforeDiscount - data.discountAmount;
+
+    let totalBeforeDiscount = basePrice + urgentFee + sizeFee;
+
+    console.log("Total before discount:", totalBeforeDiscount);
+
+    // Apply discount based on discountType
+    let totalAfterDiscount = totalBeforeDiscount;
+    if (data.discountType === "PERCENTAGE" && data.discountAmount) {
+      totalAfterDiscount =
+        totalBeforeDiscount - (totalBeforeDiscount * data.discountAmount) / 100;
+    } else if (data.discountType === "FIXED" && data.discountAmount) {
+      totalAfterDiscount = totalBeforeDiscount - data.discountAmount;
+    }
+
+    console.log("Total after discount:", totalAfterDiscount);
 
     // Ensure the total price is not negative
     return Math.max(totalAfterDiscount, 0);
@@ -179,15 +195,42 @@ const BookingPage: React.FC = () => {
 
   const validateCoupon = async (couponCode: string) => {
     try {
-      const response = await fetch(`/api/validate-coupon?code=${couponCode}`);
-      if (response.ok) {
-        const data = await response.json();
-        return data.discount;
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code: couponCode }),
+      });
+
+      if (response.status === 401) {
+        throw new Error("Authentication required");
       }
-      return 0;
-    } catch (error) {
+
+      if (!response.ok) {
+        throw new Error("Failed to validate coupon");
+      }
+
+      const data = await response.json();
+      console.log("Full API response:", data); // Log the entire response
+
+      if (data.valid) {
+        return {
+          discountAmount: data.discountAmount,
+          discountType: data.discountType,
+        };
+      } else {
+        return { discountAmount: 0, discountType: null };
+      }
+    } catch (error: unknown) {
       console.error("Error validating coupon:", error);
-      return 0;
+      if (
+        error instanceof Error &&
+        error.message === "Authentication required"
+      ) {
+        // Handle authentication error
+      }
+      return { discountAmount: 0, discountType: null };
     }
   };
 
@@ -198,25 +241,36 @@ const BookingPage: React.FC = () => {
     }
 
     setLoading(true);
-    const discount = await validateCoupon(formData.couponCode);
+    const result = await validateCoupon(formData.couponCode);
+    console.log("Coupon validation result:", result);
     setLoading(false);
 
-    if (discount > 0) {
-      setFormData((prev) => ({
-        ...prev,
-        discountAmount: discount,
-        price: calculatePrice({ ...prev, discountAmount: discount }),
-      }));
+    if (result.discountAmount !== undefined && result.discountType) {
+      console.log(
+        "Applying discount:",
+        result.discountAmount,
+        result.discountType
+      );
+      setFormData((prev) => {
+        const updatedData = {
+          ...prev,
+          discountAmount: result.discountAmount,
+          discountType: result.discountType,
+        };
+        const newPrice = calculatePrice(updatedData);
+        console.log("New price after discount:", newPrice);
+        return { ...updatedData, price: newPrice };
+      });
       setCouponApplied(true);
       setErrors((prevErrors) => {
         const { coupon, ...restErrors } = prevErrors;
         return restErrors;
       });
     } else {
+      console.log("Invalid coupon result:", result);
       setErrors({ ...errors, coupon: "Invalid coupon code" });
     }
   };
-
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -286,7 +340,13 @@ const BookingPage: React.FC = () => {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          price: formData.price,
+          couponCode: formData.couponCode,
+          discountAmount: formData.discountAmount,
+          discountType: formData.discountType,
+        }),
       });
 
       if (response.ok) {
@@ -334,7 +394,6 @@ const BookingPage: React.FC = () => {
               error={errors.pickupAddress}
             />
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="deliveryAddress"
@@ -350,7 +409,6 @@ const BookingPage: React.FC = () => {
               error={errors.deliveryAddress}
             />
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="pickupDate"
@@ -373,7 +431,6 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.pickupDate}</p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="deliveryDate"
@@ -398,7 +455,6 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="pickupTime"
@@ -420,7 +476,6 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.pickupTime}</p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="deliveryTime"
@@ -442,7 +497,6 @@ const BookingPage: React.FC = () => {
               <p className="text-red-500 text-xs mt-1">{errors.deliveryTime}</p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="packageSize"
@@ -473,7 +527,6 @@ const BookingPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="packageDescription"
@@ -499,7 +552,6 @@ const BookingPage: React.FC = () => {
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="pickupPhoneNumber"
@@ -526,7 +578,6 @@ const BookingPage: React.FC = () => {
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="deliveryPhoneNumber"
@@ -555,7 +606,6 @@ const BookingPage: React.FC = () => {
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="paymentMethod"
@@ -582,11 +632,9 @@ const BookingPage: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
-
           {formData.paymentMethod === "BANK_TRANSFER" && (
             <BankTransferDetails transactionCode={formData.transactionCode} />
           )}
-
           <div className="space-y-2">
             <Label
               htmlFor="isUrgent"
@@ -607,7 +655,6 @@ const BookingPage: React.FC = () => {
               </span>
             </div>
           </div>
-
           <div className="space-y-2">
             <Label
               htmlFor="couponCode"
@@ -640,27 +687,30 @@ const BookingPage: React.FC = () => {
             )}
             {couponApplied && (
               <p className="text-green-500 text-xs mt-1">
-                Coupon applied successfully! Discount: ₦
-                {formData.discountAmount.toFixed(2)}
+                Coupon applied successfully!!!
+                
               </p>
             )}
           </div>
-
           <div className="space-y-2">
             <Label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
               <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
             </Label>
             <p className="text-lg font-semibold">
-              ₦{formData.price ? formData.price.toFixed(2) : "0.00"}
+              ₦{formData.price.toFixed(2)}
             </p>
-            {couponApplied && formData.price && formData.discountAmount > 0 && (
+            {couponApplied && formData.discountAmount > 0 && (
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Original price: ₦
                 {(formData.price + formData.discountAmount).toFixed(2)}
+                <br />
+                Discount:{" "}
+                {formData.discountType === "PERCENTAGE"
+                  ? `${formData.discountAmount}%`
+                  : `₦${formData.discountAmount}`}
               </p>
             )}
           </div>
-
           {errors.form && (
             <Alert
               variant="destructive"

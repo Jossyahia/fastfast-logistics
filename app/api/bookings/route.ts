@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { getPrice } from "@/price";
 
 function generateTrackingNumber() {
   return "Fls-Sap" + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     const userId = session.user.id;
 
     const body = await request.json();
+    console.log("Received body:", body);
+
     const {
       pickupAddress,
       deliveryAddress,
@@ -33,65 +36,136 @@ export async function POST(request: Request) {
       paymentMethod,
       pickupPhoneNumber,
       deliveryPhoneNumber,
+      couponCode,
+      price,
     } = body;
 
     const route = `${pickupAddress} to ${deliveryAddress}`;
 
-    const basePrice = 800;
-    const urgentFee = isUrgent ? 500 : 0;
+    let finalPrice = price;
 
-    const sizeFees: { [key: string]: number } = {
-      SMALL: 200,
-      MEDIUM: 500,
-      LARGE: 1000,
-      EXTRA_LARGE: 1500,
-    };
+    console.log("Coupon code received:", couponCode);
 
-    const sizeFee = sizeFees[packageSize] || 0;
-    const price = basePrice + urgentFee + sizeFee;
+    // Validate coupon if provided
+    let appliedCoupon = null;
+    if (couponCode) {
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // Set to midnight for date comparison
 
-   const result = await prisma.$transaction(async (prisma) => {
-     try {
-       const booking = await prisma.booking.create({
-         data: {
-           userId,
-           pickupAddress,
-           deliveryAddress,
-           pickupDate: new Date(pickupDate),
-           deliveryDate: new Date(deliveryDate),
-           pickupTime,
-           deliveryTime,
-           packageSize,
-           packageDescription,
-           isUrgent,
-           paymentMethod,
-           route,
-           price,
-           pickupPhoneNumber,
-           deliveryPhoneNumber,
-           status: "PROCESSING",
-           shipment: {
-             create: {
-               trackingNumber: generateTrackingNumber(),
-               status: "PROCESSING",
-               currentLocation: pickupAddress,
-               estimatedDelivery: new Date(deliveryDate),
-               userId,
-             },
-           },
-         },
-         include: {
-           shipment: true,
-         },
-       });
-       return booking;
-     } catch (err) {
-       console.error("Transaction error: ", err);
-       throw new Error("Error in booking transaction"); // Rollback the transaction
-     }
-   });
+      appliedCoupon = await prisma.coupon.findFirst({
+        where: {
+          code: couponCode.toUpperCase(),
+          isActive: true,
+          expiryDate: {
+            gte: currentDate,
+          },
+        },
+      });
 
-    return NextResponse.json({ success: true, booking: result });
+      console.log("Applied coupon:", appliedCoupon);
+
+      if (!appliedCoupon) {
+        const inactiveCoupon = await prisma.coupon.findFirst({
+          where: { code: couponCode.toUpperCase() },
+        });
+        if (inactiveCoupon) {
+          console.log("Coupon found but inactive or expired:", inactiveCoupon);
+        } else {
+          console.log("No coupon found with code:", couponCode.toUpperCase());
+        }
+
+        return NextResponse.json(
+          { error: "Invalid or expired coupon code" },
+          { status: 400 }
+        );
+      }
+
+      const usedCount = await prisma.usedCoupon.count({
+        where: { couponId: appliedCoupon.id },
+      });
+
+      if (usedCount >= appliedCoupon.usageLimit) {
+        return NextResponse.json(
+          { error: "Coupon usage limit exceeded" },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.log("Final price:", finalPrice);
+
+    const result = await prisma.$transaction(async (prisma) => {
+      try {
+        const booking = await prisma.booking.create({
+          data: {
+            userId,
+            pickupAddress,
+            deliveryAddress,
+            pickupDate: new Date(pickupDate),
+            deliveryDate: new Date(deliveryDate),
+            pickupTime,
+            deliveryTime,
+            packageSize,
+            packageDescription,
+            isUrgent,
+            paymentMethod,
+            route,
+            price: finalPrice,
+            pickupPhoneNumber,
+            deliveryPhoneNumber,
+            status: "PROCESSING",
+            shipment: {
+              create: {
+                trackingNumber: generateTrackingNumber(),
+                status: "PROCESSING",
+                currentLocation: pickupAddress,
+                estimatedDelivery: new Date(deliveryDate),
+                userId,
+              },
+            },
+            usedCoupon: appliedCoupon
+              ? {
+                  create: {
+                    couponId: appliedCoupon.id,
+                    userId,
+                  },
+                }
+              : undefined,
+          },
+          include: {
+            shipment: true,
+            usedCoupon: true,
+          },
+        });
+
+        if (appliedCoupon) {
+          await prisma.coupon.update({
+            where: { id: appliedCoupon.id },
+            data: { usedCount: { increment: 1 } },
+          });
+        }
+
+        return booking;
+      } catch (err) {
+        console.error("Transaction error: ", err);
+        throw new Error("Error in booking transaction");
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      booking: {
+        ...result,
+        price: finalPrice,
+        appliedCoupon: appliedCoupon
+          ? {
+              code: appliedCoupon.code,
+              discountType: appliedCoupon.discountType,
+              discountValue: appliedCoupon.discountValue,
+            }
+          : null,
+      },
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
 

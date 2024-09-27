@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 interface Coupon {
   id: string;
   code: string;
-  discount: number;
-  type: "percentage" | "fixed";
+  discountValue: number;
+  discountType: "PERCENTAGE" | "FIXED_AMOUNT";
+  expiryDate: string;
+  usageLimit: number;
+  usedCount: number;
 }
 
 const AllCoupon: React.FC = () => {
@@ -21,7 +24,7 @@ const AllCoupon: React.FC = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await fetch("/api/coupons");
+      const response = await fetch("/api/coupons/available");
       if (!response.ok) {
         throw new Error("Failed to fetch coupons");
       }
@@ -29,6 +32,7 @@ const AllCoupon: React.FC = () => {
       setCoupons(data);
     } catch (err) {
       setError("Failed to load coupons");
+      console.error("Error fetching coupons:", err);
     } finally {
       setIsLoading(false);
     }
@@ -47,46 +51,64 @@ const AllCoupon: React.FC = () => {
         router.refresh();
       } catch (err) {
         setError("Failed to delete coupon");
+        console.error("Error deleting coupon:", err);
       }
     }
+  };
+
+  const handleEdit = (id: string) => {
+    router.push(`/admin/edit-coupon/${id}`);
   };
 
   if (isLoading) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
-    <div className="mt-8 dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
-      <h2 className="text-2xl font-bold mb-4">Existing Coupons</h2>
+    <div className="mt-8 dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200 p-6">
+      <h2 className="text-2xl font-bold mb-4">Available Coupons</h2>
       {coupons.length === 0 ? (
-        <p>No coupons found.</p>
+        <p>No available coupons found.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
-              <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+              <tr className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-200 uppercase text-sm leading-normal">
                 <th className="py-3 px-6 text-left">Code</th>
                 <th className="py-3 px-6 text-left">Discount</th>
                 <th className="py-3 px-6 text-left">Type</th>
+                <th className="py-3 px-6 text-left">Expiry Date</th>
+                <th className="py-3 px-6 text-left">Usage</th>
                 <th className="py-3 px-6 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="text-gray-700 dark:text-gray-300">
               {coupons.map((coupon) => (
-                <tr key={coupon.id} className="border-b border-gray-200">
+                <tr
+                  key={coupon.id}
+                  className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
                   <td className="py-3 px-6 text-left whitespace-nowrap">
                     {coupon.code}
                   </td>
                   <td className="py-3 px-6 text-left">
-                    {coupon.type === "percentage"
-                      ? `${coupon.discount}%`
-                      : `$${coupon.discount.toFixed(2)}`}
+                    {coupon.discountType === "PERCENTAGE"
+                      ? `${coupon.discountValue}%`
+                      : `#${coupon.discountValue.toFixed(2)}`}
                   </td>
-                  <td className="py-3 px-6 text-left">{coupon.type}</td>
+                  <td className="py-3 px-6 text-left">
+                    {coupon.discountType === "PERCENTAGE"
+                      ? "Percentage"
+                      : "Fixed Amount"}
+                  </td>
+                  <td className="py-3 px-6 text-left">
+                    {new Date(coupon.expiryDate).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 px-6 text-left">
+                    {coupon.usedCount} / {coupon.usageLimit}
+                  </td>
                   <td className="py-3 px-6 text-center">
                     <button
-                      onClick={() =>
-                        router.push(`/admin/edit-coupon/${coupon.id}`)
-                      }
+                      onClick={() => handleEdit(coupon.id)}
                       className="text-blue-500 hover:text-blue-700 mr-4"
                     >
                       Edit

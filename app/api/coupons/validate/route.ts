@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"; // Import NextRequest for typing
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function GET(request: NextRequest) {
-  // Type the request parameter
-  // Check authentication
+export async function POST(request: NextRequest) {
+  // Check if the user is authenticated
   const session = await auth();
   if (!session) {
     return new NextResponse(
@@ -16,9 +15,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get("code");
+  // Get coupon code from request body
+  const { code } = await request.json();
 
+  // Return an error if no coupon code is provided
   if (!code) {
     return new NextResponse(
       JSON.stringify({ error: "Coupon code is required" }),
@@ -34,12 +34,14 @@ export async function GET(request: NextRequest) {
       where: { code: code.toUpperCase() },
     });
 
-    if (coupon) {
+    console.log("Coupon data:", coupon); // Keep this for debugging
+
+    if (coupon && coupon.isActive) {
       return new NextResponse(
         JSON.stringify({
           valid: true,
-          discount: coupon.discount,
-          type: coupon.type,
+          discountAmount: coupon.discountValue,
+          discountType: coupon.discountType,
         }),
         {
           status: 200,
