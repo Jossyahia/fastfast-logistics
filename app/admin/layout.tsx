@@ -1,16 +1,17 @@
 import React from "react";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import AdminLayoutClient from "./../../components/AdminLayoutClient";
+import AdminLayoutClient from "@/components/AdminLayoutClient";
+import protectAdminRoute  from "@/lib/authHelpers";
 
 const AdminLayout = async ({ children }: { children: React.ReactNode }) => {
-  const session = await auth();
+  try {
+    await protectAdminRoute();
 
-  if (!session || session.user.role !== "ADMIN") {
-    redirect("/api/auth/signin");
+    return <AdminLayoutClient>{children}</AdminLayoutClient>;
+  } catch (error) {
+    console.error("Authentication error:", error);
+     redirect("/restricted");
   }
-
-  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 };
 
 export default AdminLayout;

@@ -1,6 +1,7 @@
 import CouponForm from "@/components/CreateCouponForm";
 import AllCoupon from "@/components/AllCoupon";
 
+
 export default function CouponsPage() {
   return (
     <div className="container mx-auto px-4 py-8">

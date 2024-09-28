@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Booking } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { auth } from "@/auth";
 
 interface BookingListProps {
   bookings: Booking[];
@@ -11,16 +10,15 @@ interface BookingListProps {
 
 const BookingList: React.FC<BookingListProps> = ({ bookings }) => {
   const router = useRouter();
-  const [loading, setLoading] = useState<string | null>(null); // Track loading state for each booking
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Store error message
+  const [loading, setLoading] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleBookingAction = async (
-    
     bookingId: string,
     action: "accept" | "reject"
   ) => {
-    setLoading(bookingId); // Set loading state to current booking
-    setErrorMessage(null); // Clear previous error message
+    setLoading(bookingId);
+    setErrorMessage(null);
 
     try {
       const response = await fetch(`/api/bookings/${bookingId}`, {
@@ -36,20 +34,22 @@ const BookingList: React.FC<BookingListProps> = ({ bookings }) => {
         throw new Error(errorData.error || "Failed to update booking");
       }
 
-      // Refresh the page to show updated data
       router.refresh();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating booking:", error);
-      setErrorMessage(error.message); // Set error message for user feedback
+      setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
-      setLoading(null); // Reset loading state
+      setLoading(null);
     }
   };
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {bookings.map((booking) => (
-        <div key={booking.id} className="bg-white shadow-md rounded-lg p-4">
+        <div
+          key={booking.id}
+          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md transition-colors duration-200 rounded-lg p-4"
+        >
           <h3 className="text-lg font-semibold mb-2">Booking #{booking.id}</h3>
           <p>Pickup: {booking.pickupAddress}</p>
           <p>Delivery: {booking.deliveryAddress}</p>
@@ -60,18 +60,18 @@ const BookingList: React.FC<BookingListProps> = ({ bookings }) => {
             Delivery Date: {new Date(booking.deliveryDate).toLocaleDateString()}
           </p>
           <p>Package Size: {booking.packageSize}</p>
-          <div className="mt-4">
+          <div className="mt-4 flex justify-between">
             <button
               onClick={() => handleBookingAction(booking.id, "accept")}
-              className="bg-green-500 text-white px-4 py-2 rounded mr-2 hover:bg-green-600 transition-colors"
-              disabled={loading === booking.id} // Disable button while loading
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
+              disabled={loading === booking.id}
             >
               {loading === booking.id ? "Processing..." : "Accept"}
             </button>
             <button
               onClick={() => handleBookingAction(booking.id, "reject")}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
-              disabled={loading === booking.id} // Disable button while loading
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors disabled:opacity-50"
+              disabled={loading === booking.id}
             >
               {loading === booking.id ? "Processing..." : "Reject"}
             </button>

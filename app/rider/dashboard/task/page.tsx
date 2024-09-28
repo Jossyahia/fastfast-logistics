@@ -37,8 +37,10 @@ export default async function RiderDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Rider Dashboard</h1>
+    <div className="container mx-auto px-4 py-8 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 flex items-center justify-center">
+      <h1 className="text-3xl font-bold mb-6 bg-neutral-100 dark:bg-neutral-900 transition-colors duration-200 flex items-center justify-center">
+        Rider Dashboard
+      </h1>
       <BookingList bookings={availableBookings} />
       <script
         type="text/javascript"
