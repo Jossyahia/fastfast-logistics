@@ -12,6 +12,14 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "FastFast Logistics Services",
   description: "Your reliable logistics partner",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Fastfast",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       {
@@ -39,6 +47,7 @@ export const metadata = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
