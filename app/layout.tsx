@@ -6,7 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import LoadingWrapper from "@/components/LoadingWrapper";
 import { LoadingProvider } from "@/components/LoadingContext";
 import NavBarClient from "@/components/NavBarClient";
-import InstallPWA from "@components/InstallPWA";
+import InstallPWA from "@/components/InstallPWA";
 
 const inter = Inter({ subsets: ["latin"] });
 
