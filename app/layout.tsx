@@ -6,7 +6,6 @@ import { SessionProvider } from "next-auth/react";
 import LoadingWrapper from "@/components/LoadingWrapper";
 import { LoadingProvider } from "@/components/LoadingContext";
 import NavBarClient from "@/components/NavBarClient";
-import InstallPWA from "@/components/InstallPWA";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,10 +67,7 @@ export default function RootLayout({
           >
             <LoadingProvider>
               <NavBarClient />
-              <LoadingWrapper>
-                <InstallPWA />
-                {children}
-              </LoadingWrapper>
+              <LoadingWrapper>{children}</LoadingWrapper>
             </LoadingProvider>
           </ThemeProvider>
           <Footer />
