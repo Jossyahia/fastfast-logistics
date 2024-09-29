@@ -31,7 +31,6 @@ import {
 import { Logo } from "@/components/logo";
 import { serverSignIn, serverSignOut } from "@/app/actions/auth";
 import { useSession } from "next-auth/react";
-import InstallPWA from "@/components/InstallPWA";
 
 type UserRole = "USER" | "RIDER" | "ADMIN";
 
@@ -56,45 +55,46 @@ const NavBarClient: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const fetchUserData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/user");
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
+
+    const fetchUserData = useCallback(async () => {
+      try {
+        const response = await fetch("/api/user");
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+        const data = await response.json();
+        setUserData(data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
-      const data = await response.json();
-      setUserData(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  }, []);
+    }, []);
 
-  useEffect(() => {
-    if (session) {
-      fetchUserData();
-    } else {
-      setUserData(null);
-    }
-  }, [session, fetchUserData]);
-
-  const handleAuth = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (userData) {
-        await serverSignOut();
-        setUserData(null);
-        router.push("/");
-        router.refresh();
+    useEffect(() => {
+      if (session) {
+        fetchUserData();
       } else {
-        await serverSignIn();
-        router.refresh();
+        setUserData(null);
       }
-    } catch (error) {
-      console.error("Authentication error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userData, router]);
+    }, [session, fetchUserData]);
+
+    const handleAuth = useCallback(async () => {
+      setIsLoading(true);
+      try {
+        if (userData) {
+          await serverSignOut();
+          setUserData(null);
+          router.push("/");
+          router.refresh();
+        } else {
+          await serverSignIn();
+          router.refresh();
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, [userData, router]);
 
   const isAdmin = userData?.role === "ADMIN";
   const isRider = userData?.role === "RIDER";
@@ -183,7 +183,6 @@ const NavBarClient: React.FC = () => {
               <Link href="/">
                 <Logo className="text-5xl font-signature" />
               </Link>
-              <InstallPWA />
             </div>
             <div className="hidden sm:block">
               <div className="flex space-x-4">
