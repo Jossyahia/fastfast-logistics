@@ -7,6 +7,7 @@ import LoadingWrapper from "@/components/LoadingWrapper";
 import { LoadingProvider } from "@/components/LoadingContext";
 import NavBarClient from "@/components/NavBarClient";
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
