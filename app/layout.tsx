@@ -11,6 +11,7 @@ import NavBarClient from "@/components/NavBarClient";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
+  manifest: "/site.webmanifest",
   title: "FastFast Logistics Services",
   description: "Your reliable logistics partner",
   appleWebApp: {
