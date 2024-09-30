@@ -10,25 +10,25 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "public/manifest-icon-192.maskable.png",
+      "src": "/manifest-icon-192.maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "public/manifest-icon-192.maskable.png",
+      "src": "/manifest-icon-192.maskable.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "public/manifest-icon-512.maskable.png",
+      "src": "/manifest-icon-512.maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "public/manifest-icon-512.maskable.png",
+      "src": "/manifest-icon-512.maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -42,31 +42,20 @@
   ],
   "shortcuts": [
     {
-      "name": "Start Live Session",
-      "short_name": "Start Live",
-      "description": "Jump direction into starting or joining a live session",
-      "url": "/?startLive",
+      "name": "FastFast Logistics Services",
+      "short_name": "Fastfast",
+      "description": "JYour reliable logistics partner",
+      "url": "/",
       "icons": [
         {
-          "src": "https://pwabuilder.com/assets/icons/icon_192.png",
+          "src": "/manifest-icon-192.maskable.png",
           "sizes": "192x192"
         }
       ]
     }
   ],
   "screenshots": [
-    {
-      "src": "https://www.pwabuilder.com/assets/screenshots/screen1.png",
-      "sizes": "2880x1800",
-      "type": "image/png",
-      "description": "PWABuilder Home Screen"
-    },
-    {
-      "src": "https://www.pwabuilder.com/assets/screenshots/screen2.png",
-      "sizes": "2880/1800",
-      "type": "image/png",
-      "description": "PWABuilder Report Card"
-    },
+ 
     {
       "src": "https://www.pwabuilder.com/assets/screenshots/screen3.png",
       "sizes": "2880x1800",
