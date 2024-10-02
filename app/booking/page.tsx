@@ -49,11 +49,14 @@ interface FormData {
   paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
   pickupPhoneNumber: string;
   deliveryPhoneNumber: string;
-  couponCode: string; // Keep only one declaration
+  couponCode: string;
   discountAmount: number;
   discountType: "PERCENTAGE" | "FIXED" | null;
   route: string;
-  price: number;
+  price: {
+    originalPrice: number;
+    finalPrice: number;
+  };
   transactionCode: string;
 }
 
@@ -78,11 +81,10 @@ const BookingPage: React.FC = () => {
     pickupPhoneNumber: "",
     deliveryPhoneNumber: "",
     route: "",
-    price: 0,
     transactionCode: "",
     couponCode: "",
     discountAmount: 0,
-    discountType: null, // Add this line
+    discountType: null,
   });
 
   const [loading, setLoading] = useState(false);
@@ -144,7 +146,6 @@ const BookingPage: React.FC = () => {
       ) {
         updatedData.price = calculatePrice(updatedData);
       }
-
       updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
 
       if (field === "paymentMethod" && value === "BANK_TRANSFER") {
@@ -159,36 +160,38 @@ const BookingPage: React.FC = () => {
     });
   };
 
-  const calculatePrice = (data: FormData) => {
-    const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
-    const urgentFee = data.isUrgent ? 500 : 0;
+const calculatePrice = (data: FormData) => {
+  if (!data.pickupAddress || !data.deliveryAddress) {
+    return { originalPrice: 0, finalPrice: 0 };
+  }
 
-    const sizeFees: { [key: string]: number } = {
-      SMALL: 0,
-      MEDIUM: 500,
-      LARGE: 1000,
-      EXTRA_LARGE: 1500,
-    };
-    const sizeFee = sizeFees[data.packageSize] || 0;
+  const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
+  const urgentFee = data.isUrgent ? 500 : 0;
 
-    let totalBeforeDiscount = basePrice + urgentFee + sizeFee;
-
-    console.log("Total before discount:", totalBeforeDiscount);
-
-    // Apply discount based on discountType
-    let totalAfterDiscount = totalBeforeDiscount;
-    if (data.discountType === "PERCENTAGE" && data.discountAmount) {
-      totalAfterDiscount =
-        totalBeforeDiscount - (totalBeforeDiscount * data.discountAmount) / 100;
-    } else if (data.discountType === "FIXED" && data.discountAmount) {
-      totalAfterDiscount = totalBeforeDiscount - data.discountAmount;
-    }
-
-    console.log("Total after discount:", totalAfterDiscount);
-
-    // Ensure the total price is not negative
-    return Math.max(totalAfterDiscount, 0);
+  const sizeFees: { [key: string]: number } = {
+    SMALL: 0,
+    MEDIUM: 500,
+    LARGE: 1000,
+    EXTRA_LARGE: 1500,
   };
+  const sizeFee = sizeFees[data.packageSize] || 0;
+
+  let totalBeforeDiscount = basePrice + urgentFee + sizeFee;
+
+  // Apply discount based on discountType
+  let finalPrice = totalBeforeDiscount;
+  if (data.discountType === "PERCENTAGE" && data.discountAmount) {
+    finalPrice = totalBeforeDiscount * (1 - data.discountAmount / 100);
+  } else if (data.discountType === "FIXED" && data.discountAmount) {
+    finalPrice = Math.max(totalBeforeDiscount - data.discountAmount, 0);
+  }
+
+  return {
+    originalPrice: totalBeforeDiscount,
+    finalPrice: finalPrice,
+  };
+};
+
   const generateTransactionCode = (): string => {
     return "TXN" + Math.random().toString(36).substr(2, 8).toUpperCase();
   };
@@ -212,7 +215,6 @@ const BookingPage: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log("Full API response:", data); // Log the entire response
 
       if (data.valid) {
         return {
@@ -242,15 +244,9 @@ const BookingPage: React.FC = () => {
 
     setLoading(true);
     const result = await validateCoupon(formData.couponCode);
-    console.log("Coupon validation result:", result);
     setLoading(false);
 
     if (result.discountAmount !== undefined && result.discountType) {
-      console.log(
-        "Applying discount:",
-        result.discountAmount,
-        result.discountType
-      );
       setFormData((prev) => {
         const updatedData = {
           ...prev,
@@ -258,7 +254,6 @@ const BookingPage: React.FC = () => {
           discountType: result.discountType,
         };
         const newPrice = calculatePrice(updatedData);
-        console.log("New price after discount:", newPrice);
         return { ...updatedData, price: newPrice };
       });
       setCouponApplied(true);
@@ -267,7 +262,6 @@ const BookingPage: React.FC = () => {
         return restErrors;
       });
     } else {
-      console.log("Invalid coupon result:", result);
       setErrors({ ...errors, coupon: "Invalid coupon code" });
     }
   };
@@ -329,49 +323,46 @@ const BookingPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    setLoading(true);
-    setSuccess(false);
+  setLoading(true);
+  setSuccess(false);
 
-    try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          price: formData.price,
-          couponCode: formData.couponCode,
-          discountAmount: formData.discountAmount,
-          discountType: formData.discountType,
-        }),
-      });
+  try {
+    const priceInfo = calculatePrice(formData);
+    const response = await fetch("/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        price: priceInfo.finalPrice, // Send only the finalPrice
+      }),
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        setSuccess(true);
-        sessionStorage.removeItem(STORAGE_KEY);
-        setTimeout(() => {
-          router.push(`/booking/confirmation/${data.booking.id}`);
-        }, 1000);
-      } else {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to create booking. Please login"
-        );
-      }
-    } catch (error: any) {
-      console.error("Error creating booking:", error);
-      setErrors({
-        form: error.message || "An error occurred while creating the booking.",
-      });
-    } finally {
-      setLoading(false);
+    if (response.ok) {
+      const data = await response.json();
+      setSuccess(true);
+      sessionStorage.removeItem(STORAGE_KEY);
+      setTimeout(() => {
+        router.push(`/booking/confirmation/${data.booking.id}`);
+      }, 1000);
+    } else {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || "Failed to create booking. Please login"
+      );
     }
-  };
-
+  } catch (error: any) {
+    console.error("Error creating booking:", error);
+    setErrors({
+      form: error.message || "An error occurred while creating the booking.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
       <CardHeader>
@@ -688,7 +679,6 @@ const BookingPage: React.FC = () => {
             {couponApplied && (
               <p className="text-green-500 text-xs mt-1">
                 Coupon applied successfully!!!
-                
               </p>
             )}
           </div>
@@ -697,17 +687,17 @@ const BookingPage: React.FC = () => {
               <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
             </Label>
             <p className="text-lg font-semibold">
-              ₦{formData.price.toFixed(2)}
+              ₦{(calculatePrice(formData)?.finalPrice || 0).toFixed(2)}
             </p>
             {couponApplied && formData.discountAmount > 0 && (
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Original price: ₦
-                {(formData.price + formData.discountAmount).toFixed(2)}
+                {(calculatePrice(formData)?.originalPrice || 0).toFixed(2)}
                 <br />
                 Discount:{" "}
                 {formData.discountType === "PERCENTAGE"
                   ? `${formData.discountAmount}%`
-                  : `₦${formData.discountAmount}`}
+                  : `₦${formData.discountAmount.toFixed(2)}`}
               </p>
             )}
           </div>

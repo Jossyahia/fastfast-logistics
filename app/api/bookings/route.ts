@@ -38,6 +38,8 @@ export async function POST(request: Request) {
       deliveryPhoneNumber,
       couponCode,
       price,
+      discountAmount,
+      discountType,
     } = body;
 
     const route = `${pickupAddress} to ${deliveryAddress}`;
@@ -65,15 +67,6 @@ export async function POST(request: Request) {
       console.log("Applied coupon:", appliedCoupon);
 
       if (!appliedCoupon) {
-        const inactiveCoupon = await prisma.coupon.findFirst({
-          where: { code: couponCode.toUpperCase() },
-        });
-        if (inactiveCoupon) {
-          console.log("Coupon found but inactive or expired:", inactiveCoupon);
-        } else {
-          console.log("No coupon found with code:", couponCode.toUpperCase());
-        }
-
         return NextResponse.json(
           { error: "Invalid or expired coupon code" },
           { status: 400 }
@@ -87,6 +80,17 @@ export async function POST(request: Request) {
       if (usedCount >= appliedCoupon.usageLimit) {
         return NextResponse.json(
           { error: "Coupon usage limit exceeded" },
+          { status: 400 }
+        );
+      }
+
+      // Verify that the discount amount and type match the coupon
+      if (
+        appliedCoupon.discountType !== discountType ||
+        appliedCoupon.discountValue !== discountAmount
+      ) {
+        return NextResponse.json(
+          { error: "Coupon discount mismatch" },
           { status: 400 }
         );
       }
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
             isUrgent,
             paymentMethod,
             route,
-            price: finalPrice,
+            price: finalPrice, // Change this line to use finalPrice directly
             pickupPhoneNumber,
             deliveryPhoneNumber,
             status: "PROCESSING",
@@ -147,8 +151,8 @@ export async function POST(request: Request) {
 
         return booking;
       } catch (err) {
-        console.error("Transaction error: ", err);
-        throw new Error("Error in booking transaction");
+        console.error("Transaction error details: ", err);
+        throw new Error(`Error in booking transaction: ${err.message}`);
       }
     });
 

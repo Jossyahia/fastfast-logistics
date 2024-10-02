@@ -9,8 +9,8 @@ interface PriceEntry {
 }
 
 export const DEFAULT_PRICE = 1000;
-export const HIGHER_PRICE = 2500;
-export const MEDIUM_PRICE = 1200;
+export const HIGHER_PRICE = 2000;
+export const MEDIUM_PRICE = 1500;
 
 const higherPriceLocations = ["uton", "jese"];
 const mediumPriceLocations = ["mosugar", "ugberikoko", "Ghana", "Ogorode"];
