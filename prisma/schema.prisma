@@ -84,6 +84,7 @@ model Booking {
   paymentMethod       PaymentMethod
   route               String
   price               Float
+  originalPrice   Float? 
   pickupPhoneNumber   String
   deliveryPhoneNumber String
   notificationSent    Boolean       @default(false)

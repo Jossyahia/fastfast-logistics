@@ -9,7 +9,6 @@ import {
   Phone,
   Truck,
   CheckCircle,
-  AlertTriangle,
   Tag,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -29,14 +28,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { getLocations } from "@/price";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { getPrice } from "@/price";
 import BankTransferDetails from "@/components/BankTransferDetails";
+import { getLocations } from "@/price";
+import { getPrice } from "@/price";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
-interface FormData {
+interface PriceBreakdown {
+  basePrice: number;
+  urgentFee: number;
+  sizeFee: number;
+  subtotal: number;
+  discount: number;
+  final: number;
+}
+
+interface FormState {
   pickupAddress: string;
   deliveryAddress: string;
   pickupDate: string;
@@ -46,97 +52,133 @@ interface FormData {
   packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
   packageDescription: string;
   isUrgent: boolean;
-  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
+  paymentMethod: "CASH" | "BANK_TRANSFER";
   pickupPhoneNumber: string;
   deliveryPhoneNumber: string;
   couponCode: string;
   discountAmount: number;
   discountType: "PERCENTAGE" | "FIXED" | null;
   route: string;
-  price: {
-    originalPrice: number;
-    finalPrice: number;
-  };
+  priceBreakdown: PriceBreakdown;
   transactionCode: string;
 }
 
-interface FormErrors {
-  [key: string]: string | undefined;
-}
-const STORAGE_KEY = "bookingFormData";
+const INITIAL_FORM_STATE: FormState = {
+  pickupAddress: "",
+  deliveryAddress: "",
+  pickupDate: "",
+  deliveryDate: "",
+  pickupTime: "",
+  deliveryTime: "",
+  packageSize: "SMALL",
+  packageDescription: "",
+  isUrgent: false,
+  paymentMethod: "CASH",
+  pickupPhoneNumber: "",
+  deliveryPhoneNumber: "",
+  couponCode: "",
+  discountAmount: 0,
+  discountType: null,
+  route: "",
+  priceBreakdown: {
+    basePrice: 0,
+    urgentFee: 0,
+    sizeFee: 0,
+    subtotal: 0,
+    discount: 0,
+    final: 0,
+  },
+  transactionCode: "",
+};
+
+const SIZE_FEES = {
+  SMALL: 0,
+  MEDIUM: 500,
+  LARGE: 1000,
+  EXTRA_LARGE: 1500,
+};
+
+const URGENT_FEE = 500;
 
 const BookingPage: React.FC = () => {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormData>({
-    pickupAddress: "",
-    deliveryAddress: "",
-    pickupDate: "",
-    deliveryDate: "",
-    pickupTime: "",
-    deliveryTime: "",
-    packageSize: "SMALL",
-    packageDescription: "",
-    isUrgent: false,
-    paymentMethod: "CREDIT_CARD",
-    pickupPhoneNumber: "",
-    deliveryPhoneNumber: "",
-    route: "",
-    transactionCode: "",
-    couponCode: "",
-    discountAmount: 0,
-    discountType: null,
-  });
-
+  const [formState, setFormState] = useState<FormState>(INITIAL_FORM_STATE);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [couponApplied, setCouponApplied] = useState(false);
 
   useEffect(() => {
-    const savedFormData = sessionStorage.getItem(STORAGE_KEY);
-    if (savedFormData) {
-      setFormData(JSON.parse(savedFormData));
-    }
-
-    const pickupDateInput = document.getElementById(
-      "pickupDate"
-    ) as HTMLInputElement;
-    const deliveryDateInput = document.getElementById(
-      "deliveryDate"
-    ) as HTMLInputElement;
-
-    const setMinDeliveryDate = () => {
-      if (pickupDateInput && deliveryDateInput) {
-        const pickupDate = pickupDateInput.value;
-        if (pickupDate) {
-          deliveryDateInput.min = new Date(pickupDate)
-            .toISOString()
-            .split("T")[0];
-        } else {
-          deliveryDateInput.min = new Date().toISOString().split("T")[0];
-        }
+    const savedData = sessionStorage.getItem("bookingFormData");
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      setFormState((prevState) => ({
+        ...parsedData,
+        priceBreakdown: prevState.priceBreakdown,
+      }));
+      if (parsedData.couponCode && parsedData.discountAmount > 0) {
+        setCouponApplied(true);
       }
-    };
-
-    setMinDeliveryDate();
-    pickupDateInput?.addEventListener("change", setMinDeliveryDate);
-
-    return () => {
-      pickupDateInput?.removeEventListener("change", setMinDeliveryDate);
-    };
+    }
   }, []);
 
-  const handleChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData((prev) => {
-      const updatedData = { ...prev, [field]: value };
+  const calculatePrice = (data: FormState): PriceBreakdown => {
+    if (!data.pickupAddress || !data.deliveryAddress) {
+      return {
+        basePrice: 0,
+        urgentFee: 0,
+        sizeFee: 0,
+        subtotal: 0,
+        discount: 0,
+        final: 0,
+      };
+    }
 
-      if (field === "pickupDate" && updatedData.deliveryDate) {
-        const pickupDate = new Date(updatedData.pickupDate);
-        const deliveryDate = new Date(updatedData.deliveryDate);
-        if (deliveryDate < pickupDate) {
-          updatedData.deliveryDate = "";
-        }
-      }
+    const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
+    const urgentFee = data.isUrgent ? URGENT_FEE : 0;
+    const sizeFee = SIZE_FEES[data.packageSize];
+    const subtotal = basePrice + urgentFee + sizeFee;
+
+    let discount = 0;
+    if (data.discountType === "PERCENTAGE") {
+      discount = subtotal * (data.discountAmount / 100);
+    } else if (data.discountType === "FIXED") {
+      discount = data.discountAmount;
+    }
+
+    const final = Math.max(subtotal - discount, 0);
+
+    return {
+      basePrice,
+      urgentFee,
+      sizeFee,
+      subtotal,
+      discount,
+      final,
+    };
+  };
+
+  const isValidDate = (dateStr: string): boolean => {
+    const date = new Date(dateStr);
+    const day = date.getDay();
+    return day >= 1 && day <= 6; // Monday to Saturday
+  };
+
+  const isValidTime = (time: string): boolean => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return (hours >= 7 && hours < 18) || (hours === 18 && minutes === 0);
+  };
+
+  const handleChange = (
+    field: keyof FormState,
+    value:
+      | string
+      | boolean
+      | FormState["packageSize"]
+      | FormState["paymentMethod"]
+  ) => {
+    setFormState((prev) => {
+      const updatedData = { ...prev, [field]: value };
 
       if (
         field === "pickupAddress" ||
@@ -144,227 +186,148 @@ const BookingPage: React.FC = () => {
         field === "packageSize" ||
         field === "isUrgent"
       ) {
-        updatedData.price = calculatePrice(updatedData);
+        if (field === "pickupAddress" || field === "deliveryAddress") {
+          updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
+        }
+
+        updatedData.priceBreakdown = calculatePrice(updatedData);
       }
-      updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
 
       if (field === "paymentMethod" && value === "BANK_TRANSFER") {
-        updatedData.transactionCode = generateTransactionCode();
+        updatedData.transactionCode = `TXN${Math.random()
+          .toString(36)
+          .substr(2, 8)
+          .toUpperCase()}`;
       } else if (field === "paymentMethod" && value !== "BANK_TRANSFER") {
         updatedData.transactionCode = "";
       }
 
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-
+      sessionStorage.setItem("bookingFormData", JSON.stringify(updatedData));
       return updatedData;
     });
   };
 
-const calculatePrice = (data: FormData) => {
-  if (!data.pickupAddress || !data.deliveryAddress) {
-    return { originalPrice: 0, finalPrice: 0 };
-  }
-
-  const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
-  const urgentFee = data.isUrgent ? 500 : 0;
-
-  const sizeFees: { [key: string]: number } = {
-    SMALL: 0,
-    MEDIUM: 500,
-    LARGE: 1000,
-    EXTRA_LARGE: 1500,
-  };
-  const sizeFee = sizeFees[data.packageSize] || 0;
-
-  let totalBeforeDiscount = basePrice + urgentFee + sizeFee;
-
-  // Apply discount based on discountType
-  let finalPrice = totalBeforeDiscount;
-  if (data.discountType === "PERCENTAGE" && data.discountAmount) {
-    finalPrice = totalBeforeDiscount * (1 - data.discountAmount / 100);
-  } else if (data.discountType === "FIXED" && data.discountAmount) {
-    finalPrice = Math.max(totalBeforeDiscount - data.discountAmount, 0);
-  }
-
-  return {
-    originalPrice: totalBeforeDiscount,
-    finalPrice: finalPrice,
-  };
-};
-
-  const generateTransactionCode = (): string => {
-    return "TXN" + Math.random().toString(36).substr(2, 8).toUpperCase();
-  };
-
-  const validateCoupon = async (couponCode: string) => {
-    try {
-      const response = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: couponCode }),
-      });
-
-      if (response.status === 401) {
-        throw new Error("Authentication required");
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to validate coupon");
-      }
-
-      const data = await response.json();
-
-      if (data.valid) {
-        return {
-          discountAmount: data.discountAmount,
-          discountType: data.discountType,
-        };
-      } else {
-        return { discountAmount: 0, discountType: null };
-      }
-    } catch (error: unknown) {
-      console.error("Error validating coupon:", error);
-      if (
-        error instanceof Error &&
-        error.message === "Authentication required"
-      ) {
-        // Handle authentication error
-      }
-      return { discountAmount: 0, discountType: null };
-    }
-  };
-
-  const applyCoupon = async () => {
-    if (!formData.couponCode) {
-      setErrors({ ...errors, coupon: "Please enter a coupon code" });
-      return;
-    }
-
-    setLoading(true);
-    const result = await validateCoupon(formData.couponCode);
-    setLoading(false);
-
-    if (result.discountAmount !== undefined && result.discountType) {
-      setFormData((prev) => {
-        const updatedData = {
-          ...prev,
-          discountAmount: result.discountAmount,
-          discountType: result.discountType,
-        };
-        const newPrice = calculatePrice(updatedData);
-        return { ...updatedData, price: newPrice };
-      });
-      setCouponApplied(true);
-      setErrors((prevErrors) => {
-        const { coupon, ...restErrors } = prevErrors;
-        return restErrors;
-      });
-    } else {
-      setErrors({ ...errors, coupon: "Invalid coupon code" });
-    }
-  };
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: Record<string, string> = {};
 
-    if (!formData.pickupAddress.trim()) {
-      newErrors.pickupAddress = "Pickup address is required";
-    }
+    if (!formState.pickupDate) newErrors.pickupDate = "Pickup date is required";
+    else if (!isValidDate(formState.pickupDate))
+      newErrors.pickupDate = "Pickup date must be between Monday and Saturday";
 
-    if (!formData.deliveryAddress.trim()) {
-      newErrors.deliveryAddress = "Delivery address is required";
-    }
-
-    if (!formData.pickupDate) {
-      newErrors.pickupDate = "Pickup date is required";
-    } else {
-      const pickupDate = new Date(formData.pickupDate);
-      pickupDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (pickupDate < today) {
-        newErrors.pickupDate = "Pickup date cannot be in the past";
-      }
-    }
-
-    if (!formData.deliveryDate) {
+    if (!formState.deliveryDate)
       newErrors.deliveryDate = "Delivery date is required";
-    } else if (formData.pickupDate) {
-      const pickupDate = new Date(formData.pickupDate);
-      const deliveryDate = new Date(formData.deliveryDate);
-      if (deliveryDate < pickupDate) {
-        newErrors.deliveryDate = "Delivery date must be after pickup date";
-      }
-    }
+    else if (!isValidDate(formState.deliveryDate))
+      newErrors.deliveryDate =
+        "Delivery date must be between Monday and Saturday";
 
-    if (!formData.pickupTime) {
-      newErrors.pickupTime = "Pickup time is required";
-    }
+    if (!formState.pickupTime) newErrors.pickupTime = "Pickup time is required";
+    else if (!isValidTime(formState.pickupTime))
+      newErrors.pickupTime = "Pickup time must be between 7:00 AM and 6:00 PM";
 
-    if (!formData.deliveryTime) {
+    if (!formState.deliveryTime)
       newErrors.deliveryTime = "Delivery time is required";
-    }
+    else if (!isValidTime(formState.deliveryTime))
+      newErrors.deliveryTime =
+        "Delivery time must be between 7:00 AM and 6:00 PM";
 
-    if (!formData.packageDescription.trim()) {
+    if (!formState.packageDescription.trim())
       newErrors.packageDescription = "Package description is required";
-    }
 
     const phoneRegex = /^\d{1,11}$/;
-    if (!phoneRegex.test(formData.pickupPhoneNumber)) {
+    if (!phoneRegex.test(formState.pickupPhoneNumber))
       newErrors.pickupPhoneNumber = "Invalid phone number (max 11 digits)";
-    }
-
-    if (!phoneRegex.test(formData.deliveryPhoneNumber)) {
+    if (!phoneRegex.test(formState.deliveryPhoneNumber))
       newErrors.deliveryPhoneNumber = "Invalid phone number (max 11 digits)";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  const applyCoupon = async () => {
+    if (!formState.couponCode) {
+      setErrors({ ...errors, coupon: "Please enter a coupon code" });
+      return;
+    }
 
-  setLoading(true);
-  setSuccess(false);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: formState.couponCode }),
+      });
 
-  try {
-    const priceInfo = calculatePrice(formData);
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        price: priceInfo.finalPrice, // Send only the finalPrice
-      }),
-    });
+      if (!response.ok) {
+        throw new Error("Invalid coupon code");
+      }
 
-    if (response.ok) {
+      const data = await response.json();
+      if (data.valid) {
+        setFormState((prev) => {
+          const updatedData = {
+            ...prev,
+            discountAmount: data.discountAmount,
+            discountType: data.discountType,
+          };
+          updatedData.priceBreakdown = calculatePrice(updatedData);
+          return updatedData;
+        });
+        setCouponApplied(true);
+        // Remove the coupon error by creating a new object without the coupon property
+        setErrors((prev) => {
+          const { coupon, ...rest } = prev;
+          return rest;
+        });
+      } else {
+        setErrors((prev) => ({ ...prev, coupon: "Invalid coupon code" }));
+      }
+    } catch (error) {
+      setErrors((prev) => ({
+        ...prev,
+        coupon:
+          error instanceof Error ? error.message : "Failed to apply coupon",
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formState,
+          price: formState.priceBreakdown.final,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create booking");
+      }
+
       const data = await response.json();
       setSuccess(true);
-      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem("bookingFormData");
       setTimeout(() => {
         router.push(`/booking/confirmation/${data.booking.id}`);
       }, 1000);
-    } else {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || "Failed to create booking. Please login"
-      );
+    } catch (error) {
+      setErrors({
+        form: error instanceof Error ? error.message : "An error occurred",
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    console.error("Error creating booking:", error);
-    setErrors({
-      form: error.message || "An error occurred while creating the booking.",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   return (
-    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
+    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg">
       <CardHeader>
         <h1 className="text-3xl font-bold text-center">Create a Booking</h1>
       </CardHeader>
@@ -379,7 +342,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label>
             <AddressAutocomplete
               id="pickupAddress"
-              value={formData.pickupAddress}
+              value={formState.pickupAddress}
               onChange={(value) => handleChange("pickupAddress", value)}
               placeholder="Enter pickup address"
               error={errors.pickupAddress}
@@ -394,7 +357,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label>
             <AddressAutocomplete
               id="deliveryAddress"
-              value={formData.deliveryAddress}
+              value={formState.deliveryAddress}
               onChange={(value) => handleChange("deliveryAddress", value)}
               placeholder="Enter delivery address"
               error={errors.deliveryAddress}
@@ -405,12 +368,12 @@ const handleSubmit = async (e: React.FormEvent) => {
               htmlFor="pickupDate"
               className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              <Calendar className="w-4 h-4 mr-2" /> Pickup Date
+              <Calendar className="w-4 h-4 mr-2" /> Pickup Date (Mon-Sat)
             </Label>
             <Input
               type="date"
               id="pickupDate"
-              value={formData.pickupDate}
+              value={formState.pickupDate}
               onChange={(e) => handleChange("pickupDate", e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               className={`w-full px-3 py-2 border rounded-md ${
@@ -427,15 +390,15 @@ const handleSubmit = async (e: React.FormEvent) => {
               htmlFor="deliveryDate"
               className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              <Calendar className="w-4 h-4 mr-2" /> Delivery Date
+              <Calendar className="w-4 h-4 mr-2" /> Delivery Date (Mon-Sat)
             </Label>
             <Input
               type="date"
               id="deliveryDate"
-              value={formData.deliveryDate}
+              value={formState.deliveryDate}
               onChange={(e) => handleChange("deliveryDate", e.target.value)}
               min={
-                formData.pickupDate || new Date().toISOString().split("T")[0]
+                formState.pickupDate || new Date().toISOString().split("T")[0]
               }
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.deliveryDate ? "border-red-500" : "border-gray-300"
@@ -451,16 +414,18 @@ const handleSubmit = async (e: React.FormEvent) => {
               htmlFor="pickupTime"
               className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              <Clock className="w-4 h-4 mr-2" /> Pickup Time
+              <Clock className="w-4 h-4 mr-2" /> Pickup Time (7:00 AM - 6:00 PM)
             </Label>
             <Input
               type="time"
               id="pickupTime"
-              value={formData.pickupTime}
+              value={formState.pickupTime}
               onChange={(e) => handleChange("pickupTime", e.target.value)}
+              min="07:00"
+              max="18:00"
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupTime ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:blue-500`}
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               required
             />
             {errors.pickupTime && (
@@ -472,13 +437,16 @@ const handleSubmit = async (e: React.FormEvent) => {
               htmlFor="deliveryTime"
               className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              <Clock className="w-4 h-4 mr-2" /> Delivery Time
+              <Clock className="w-4 h-4 mr-2" /> Delivery Time (7:00 AM - 6:00
+              PM)
             </Label>
             <Input
               type="time"
               id="deliveryTime"
-              value={formData.deliveryTime}
+              value={formState.deliveryTime}
               onChange={(e) => handleChange("deliveryTime", e.target.value)}
+              min="07:00"
+              max="18:00"
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.deliveryTime ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -496,25 +464,19 @@ const handleSubmit = async (e: React.FormEvent) => {
               <Package className="w-4 h-4 mr-2" /> Package Size
             </Label>
             <Select
-              value={formData.packageSize}
+              value={formState.packageSize}
               onValueChange={(value) =>
-                handleChange("packageSize", value as FormData["packageSize"])
+                handleChange("packageSize", value as FormState["packageSize"])
               }
             >
-              <SelectTrigger className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select package size" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                <SelectItem value="SMALL">Small (Up to 1kg or less)</SelectItem>
-                <SelectItem value="MEDIUM">
-                  Medium (5kg - 15kg or less)
-                </SelectItem>
-                <SelectItem value="LARGE">
-                  Large (15kg - 30k or less)
-                </SelectItem>
-                <SelectItem value="EXTRA_LARGE">
-                  Extra Large (30kg+ or more)
-                </SelectItem>
+              <SelectContent>
+                <SelectItem value="SMALL">Small (Up to 1kg)</SelectItem>
+                <SelectItem value="MEDIUM">Medium (5kg - 15kg)</SelectItem>
+                <SelectItem value="LARGE">Large (15kg - 30kg)</SelectItem>
+                <SelectItem value="EXTRA_LARGE">Extra Large (30kg+)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -527,7 +489,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label>
             <Input
               id="packageDescription"
-              value={formData.packageDescription}
+              value={formState.packageDescription}
               onChange={(e) =>
                 handleChange("packageDescription", e.target.value)
               }
@@ -552,12 +514,12 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label>
             <Input
               id="pickupPhoneNumber"
-              maxLength={11}
-              value={formData.pickupPhoneNumber}
+              value={formState.pickupPhoneNumber}
               onChange={(e) =>
                 handleChange("pickupPhoneNumber", e.target.value)
               }
               placeholder="Enter phone number"
+              maxLength={11}
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.pickupPhoneNumber ? "border-red-500" : "border-gray-300"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
@@ -578,12 +540,12 @@ const handleSubmit = async (e: React.FormEvent) => {
             </Label>
             <Input
               id="deliveryPhoneNumber"
-              maxLength={11}
-              value={formData.deliveryPhoneNumber}
+              value={formState.deliveryPhoneNumber}
               onChange={(e) =>
                 handleChange("deliveryPhoneNumber", e.target.value)
               }
               placeholder="Enter phone number"
+              maxLength={11}
               className={`w-full px-3 py-2 border rounded-md ${
                 errors.deliveryPhoneNumber
                   ? "border-red-500"
@@ -600,31 +562,30 @@ const handleSubmit = async (e: React.FormEvent) => {
           <div className="space-y-2">
             <Label
               htmlFor="paymentMethod"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-100"
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
             >
               <CreditCard className="w-4 h-4 mr-2" /> Payment Method
             </Label>
             <Select
+              value={formState.paymentMethod}
               onValueChange={(value) =>
                 handleChange(
                   "paymentMethod",
-                  value as FormData["paymentMethod"]
+                  value as FormState["paymentMethod"]
                 )
               }
-              value={formData.paymentMethod}
-              required
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select payment method" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+              <SelectContent>
                 <SelectItem value="CASH">Cash</SelectItem>
                 <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {formData.paymentMethod === "BANK_TRANSFER" && (
-            <BankTransferDetails transactionCode={formData.transactionCode} />
+          {formState.paymentMethod === "BANK_TRANSFER" && (
+            <BankTransferDetails transactionCode={formState.transactionCode} />
           )}
           <div className="space-y-2">
             <Label
@@ -637,7 +598,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <input
                 type="checkbox"
                 id="isUrgent"
-                checked={formData.isUrgent}
+                checked={formState.isUrgent}
                 onChange={(e) => handleChange("isUrgent", e.target.checked)}
                 className="mr-2"
               />
@@ -656,7 +617,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             <div className="flex">
               <Input
                 id="couponCode"
-                value={formData.couponCode}
+                value={formState.couponCode}
                 onChange={(e) => handleChange("couponCode", e.target.value)}
                 placeholder="Enter coupon code"
                 className={`flex-grow mr-2 ${
@@ -668,7 +629,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 type="button"
                 onClick={applyCoupon}
                 disabled={loading || couponApplied}
-                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-green-700 focus:outline-none"
+                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none"
               >
                 {loading ? "Applying..." : couponApplied ? "Applied" : "Apply"}
               </Button>
@@ -678,28 +639,40 @@ const handleSubmit = async (e: React.FormEvent) => {
             )}
             {couponApplied && (
               <p className="text-green-500 text-xs mt-1">
-                Coupon applied successfully!!!
+                Coupon applied successfully!
               </p>
             )}
           </div>
           <div className="space-y-2">
-            <Label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
-              <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
+            <Label className="flex items-center text-sm font-medium">
+              <CreditCard className="w-4 h-4 mr-2" /> Price Breakdown
             </Label>
-            <p className="text-lg font-semibold">
-              ₦{(calculatePrice(formData)?.finalPrice || 0).toFixed(2)}
-            </p>
-            {couponApplied && formData.discountAmount > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Original price: ₦
-                {(calculatePrice(formData)?.originalPrice || 0).toFixed(2)}
-                <br />
-                Discount:{" "}
-                {formData.discountType === "PERCENTAGE"
-                  ? `${formData.discountAmount}%`
-                  : `₦${formData.discountAmount.toFixed(2)}`}
+            <div className="space-y-1 text-sm">
+              <p>
+                Base Price: ₦{formState.priceBreakdown.basePrice.toFixed(2)}
               </p>
-            )}
+              {formState.priceBreakdown.urgentFee > 0 && (
+                <p>
+                  Urgent Fee: ₦{formState.priceBreakdown.urgentFee.toFixed(2)}
+                </p>
+              )}
+              {formState.priceBreakdown.sizeFee > 0 && (
+                <p>Size Fee: ₦{formState.priceBreakdown.sizeFee.toFixed(2)}</p>
+              )}
+              <p className="font-semibold">
+                Subtotal: ₦{formState.priceBreakdown.subtotal.toFixed(2)}
+              </p>
+              {formState.priceBreakdown.discount > 0 && (
+                <p className="text-green-600">
+                  Discount: ₦{formState.priceBreakdown.discount.toFixed(2)}
+                  {formState.discountType === "PERCENTAGE" &&
+                    ` (${formState.discountAmount}%)`}
+                </p>
+              )}
+              <p className="text-lg font-bold mt-2">
+                Final Price: ₦{formState.priceBreakdown.final.toFixed(2)}
+              </p>
+            </div>
           </div>
           {errors.form && (
             <Alert

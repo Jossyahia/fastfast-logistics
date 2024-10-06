@@ -84,7 +84,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Verify that the discount amount and type match the coupon
       if (
         appliedCoupon.discountType !== discountType ||
         appliedCoupon.discountValue !== discountAmount
@@ -114,7 +113,7 @@ export async function POST(request: Request) {
             isUrgent,
             paymentMethod,
             route,
-            price: finalPrice, // Change this line to use finalPrice directly
+            price: finalPrice,
             pickupPhoneNumber,
             deliveryPhoneNumber,
             status: "PROCESSING",
@@ -152,7 +151,11 @@ export async function POST(request: Request) {
         return booking;
       } catch (err) {
         console.error("Transaction error details: ", err);
-        throw new Error(`Error in booking transaction: ${err.message}`);
+        if (err instanceof Error) {
+          throw new Error(`Error in booking transaction: ${err.message}`);
+        } else {
+          throw new Error(`Error in booking transaction: ${String(err)}`);
+        }
       }
     });
 
