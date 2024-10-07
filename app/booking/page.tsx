@@ -112,10 +112,15 @@ const BookingPage: React.FC = () => {
     const savedData = sessionStorage.getItem("bookingFormData");
     if (savedData) {
       const parsedData = JSON.parse(savedData);
+
+      // Recalculate price breakdown with the loaded data
+      const updatedPriceBreakdown = calculatePrice(parsedData);
+
       setFormState((prevState) => ({
         ...parsedData,
-        priceBreakdown: prevState.priceBreakdown,
+        priceBreakdown: updatedPriceBreakdown,
       }));
+
       if (parsedData.couponCode && parsedData.discountAmount > 0) {
         setCouponApplied(true);
       }
@@ -157,7 +162,6 @@ const BookingPage: React.FC = () => {
       final,
     };
   };
-
   const isValidDate = (dateStr: string): boolean => {
     const date = new Date(dateStr);
     const day = date.getDay();
