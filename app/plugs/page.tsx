@@ -13,7 +13,7 @@ export default function Home() {
           <ul className="space-y-4">
             {[
               {
-                href: "/food-vendor-directory",
+                href: "/food-vendors",
                 label: "Food Vendor Directory",
               },
               { href: "/carpooling-directory", label: "Carpooling Directory" },

@@ -707,6 +707,10 @@ const BookingPage: React.FC = () => {
           {loading ? "Creating Booking..." : "Create Booking"}
         </Button>
       </CardFooter>
+      <p className="text-sm sm:text-base md:text-lg p-4 mt-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-md shadow-md transition-colors duration-200 ease-in-out">
+        <strong className="font-bold">NOTICE!!!:</strong> Your Booking is only
+        valid after Payment. Send proof of payment to our WhatsApp Number! 08097034355
+      </p>
     </Card>
   );
 };
