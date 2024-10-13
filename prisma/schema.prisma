@@ -9,20 +9,20 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String?
-  email         String     @unique
+  email         String       @unique
   emailVerified DateTime?
   image         String?
   password      String?
-  role          Role       @default(USER)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  role          Role         @default(USER)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   accounts      Account[]
   bookings      Booking[]
   rider         Rider?
   sessions      Session[]
-  usedCoupons UsedCoupon[]
+  usedCoupons   UsedCoupon[]
   shipments     Shipment[]
 }
 
@@ -84,7 +84,7 @@ model Booking {
   paymentMethod       PaymentMethod
   route               String
   price               Float
-  originalPrice   Float? 
+  originalPrice       Float?
   pickupPhoneNumber   String
   deliveryPhoneNumber String
   notificationSent    Boolean       @default(false)
@@ -92,7 +92,7 @@ model Booking {
   rider               Rider?        @relation(fields: [riderId], references: [id])
   user                User          @relation(fields: [userId], references: [id])
   shipment            Shipment?
-  usedCoupon UsedCoupon?
+  usedCoupon          UsedCoupon?
 
   @@index([userId])
   @@index([riderId])
@@ -100,22 +100,22 @@ model Booking {
 }
 
 model Rider {
-  id                   String    @id @default(cuid())
-  name                 String
-  email                String    @unique
-  userId               String    @unique
-  password             String
-  phoneNumber          String?
-  address              String?
-  guarantorName        String?
-  guarantorPhoneNumber String?
-  guarantorAddress     String?
+  id                        String        @id @default(cuid())
+  name                      String
+  email                     String        @unique
+  userId                    String        @unique
+  password                  String
+  phoneNumber               String?
+  address                   String?
+  guarantorName             String?
+  guarantorPhoneNumber      String?
+  guarantorAddress          String?
   relationshipWithGuarantor String?
-  maritalStatus        MaritalStatus?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  bookings             Booking[]
-  user                 User      @relation(fields: [userId], references: [id])
+  maritalStatus             MaritalStatus?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  bookings                  Booking[]
+  user                      User          @relation(fields: [userId], references: [id])
 }
 
 model Shipment {
@@ -136,16 +136,16 @@ model Shipment {
 }
 
 model Coupon {
-  id           String   @id @default(cuid())
-  code         String   @unique
+  id           String       @id @default(cuid())
+  code         String       @unique
   discountType DiscountType
   discountValue Float
   expiryDate   DateTime
   usageLimit   Int
-  usedCount    Int      @default(0)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  usedCount    Int          @default(0)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   usedCoupons  UsedCoupon[]
 }
 
@@ -161,6 +161,27 @@ model UsedCoupon {
 
   @@index([couponId])
   @@index([userId])
+}
+
+model Vendor {
+  id        Int       @id @default(autoincrement())
+  name      String    @db.VarChar(255)
+  cuisine   String    @db.VarChar(255)
+  location  String    @db.VarChar(255)
+  rating    Decimal   @db.Decimal(3, 2)
+  likes     Int
+  reviews   Int
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id          Int     @id @default(autoincrement())
+  vendorId    Int
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+  price       Decimal @db.Decimal(10, 2)
+  image       String? @db.VarChar(255)
+  vendor      Vendor  @relation(fields: [vendorId], references: [id])
 }
 
 enum DiscountType {

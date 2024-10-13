@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
+import { PrismaClient } from "@prisma/client";
 import { auth } from "@/auth";
 
-const pool = new Pool({
-  connectionString: process.env.DATA_URL,
-});
+const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const client = await pool.connect();
-    try {
-      const result = await client.query("SELECT * FROM vendors");
-      return NextResponse.json(result.rows);
-    } finally {
-      client.release();
-    }
+    const vendors = await prisma.vendor.findMany();
+    return NextResponse.json(vendors);
   } catch (error) {
     console.error("Error fetching vendors:", error);
     return NextResponse.json(
@@ -23,6 +16,7 @@ export async function GET() {
     );
   }
 }
+
 export async function POST(request: NextRequest) {
   const session = await auth();
 
@@ -33,44 +27,37 @@ export async function POST(request: NextRequest) {
   try {
     const { vendor, menuItems } = await request.json();
 
-    const client = await pool.connect();
-
-    try {
-      await client.query("BEGIN");
-
+    const result = await prisma.$transaction(async (prisma) => {
       // Insert vendor
-      const vendorResult = await client.query(
-        "INSERT INTO vendors (name, cuisine, location, rating, likes, reviews) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-        [
-          vendor.name,
-          vendor.cuisine,
-          vendor.location,
-          vendor.rating,
-          vendor.likes,
-          vendor.reviews,
-        ]
-      );
-      const vendorId = vendorResult.rows[0].id;
+      const createdVendor = await prisma.vendor.create({
+        data: {
+          name: vendor.name,
+          cuisine: vendor.cuisine,
+          location: vendor.location,
+          rating: parseFloat(vendor.rating), // Convert to float if it's a string
+          likes: parseInt(vendor.likes), // Convert to integer
+          reviews: parseInt(vendor.reviews), // Convert to integer if needed
+        },
+      });
 
       // Insert menu items
-      for (const item of menuItems) {
-        await client.query(
-          "INSERT INTO menu_items (vendor_id, name, description, price, image) VALUES ($1, $2, $3, $4, $5)",
-          [vendorId, item.name, item.description, item.price, item.image]
-        );
-      }
+      await prisma.menuItem.createMany({
+        data: menuItems.map((item: any) => ({
+          vendorId: createdVendor.id,
+          name: item.name,
+          description: item.description,
+          price: parseFloat(item.price), // Convert to float if it's a string
+          image: item.image,
+        })),
+      });
 
-      await client.query("COMMIT");
-      return NextResponse.json(
-        { message: "Vendor and menu items created successfully" },
-        { status: 201 }
-      );
-    } catch (error) {
-      await client.query("ROLLBACK");
-      throw error;
-    } finally {
-      client.release();
-    }
+      return createdVendor;
+    });
+
+    return NextResponse.json(
+      { message: "Vendor and menu items created successfully", vendor: result },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating vendor:", error);
     return NextResponse.json(
