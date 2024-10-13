@@ -3,14 +3,24 @@ import { Suspense } from "react";
 import type { Vendor } from "../types/vendor";
 import ClientSideVendorList from "./../../components/ClientSideVendorList";
 
-// This function fetches vendors from the API
+import { headers } from "next/headers";
+
 async function getVendors(): Promise<Vendor[]> {
-  const res = await fetch("http://localhost:3000/api/vendors", {
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+  const host = headers().get("host") || "localhost:3000";
+  const apiUrl = `${protocol}://${host}`;
+
+  const res = await fetch(`${apiUrl}/api/vendors`, {
     cache: "no-store",
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
+
   if (!res.ok) {
     throw new Error("Failed to fetch vendors");
   }
+
   return res.json();
 }
 
