@@ -331,7 +331,7 @@ const BookingPage: React.FC = () => {
     }
   };
   return (
-    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg">
+    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg shadow-lg ">
       <CardHeader>
         <h1 className="text-3xl font-bold text-center">Create a Booking</h1>
       </CardHeader>
@@ -709,7 +709,8 @@ const BookingPage: React.FC = () => {
       </CardFooter>
       <p className="text-sm sm:text-base md:text-lg p-4 mt-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-md shadow-md transition-colors duration-200 ease-in-out">
         <strong className="font-bold">NOTICE!!!:</strong> Your Booking is only
-        valid after Payment. Send proof of payment to our WhatsApp Number! 08097034355
+        valid after Payment. Send proof of payment to our WhatsApp Number!
+        08097034355
       </p>
     </Card>
   );

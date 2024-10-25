@@ -14,12 +14,16 @@ import {
   ShieldCheckIcon,
   PhoneIcon,
   MailIcon,
+  WalletIcon,
+  BadgeCheckIcon,
+  HeadphonesIcon,
   LucideProps,
 } from "lucide-react";
 import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
 import BookingInstructionsModal from "@/components/BookingInstructionsModal";
-
 import { FaSquareThreads } from "react-icons/fa6";
+import TestimonialSection from "@/components/TestimonialSection";
+
 
 interface FeatureCardProps {
   title: string;
@@ -27,6 +31,7 @@ interface FeatureCardProps {
   icon: React.ComponentType<LucideProps>;
   href: string;
 }
+
 const FeatureCard: React.FC<FeatureCardProps> = ({
   title,
   description,
@@ -56,13 +61,16 @@ export default function EnhancedLandingPage() {
 
         <section className="text-center mb-16">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-            FastFast Logistics Services
+            Fastfast Logistics Services
           </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Your Express Lane to Seamless Shipping We're not just fast—we're
-            FastFast. Specializing in rapid, reliable logistics solutions for
-            businesses of all sizes. From local deliveries to global shipments,
-            we're revolutionizing the way you move goods.
+          <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto">
+            Your Express Lane to Seamless Shipping with Secure Pay on Delivery
+          </p>
+          <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
+            We're not just fast—we're FastFast. Specializing in rapid, reliable
+            logistics solutions with trusted Pay on Delivery services for
+            businesses of all sizes. Experience worry-free shipping with our
+            secure cash handling and real-time tracking.
           </p>
           <Link href="/booking" passHref>
             <Button
@@ -99,7 +107,40 @@ export default function EnhancedLandingPage() {
           <h2 className="text-3xl font-bold mb-6 text-center">
             Why Choose FastFast Logistics?
           </h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="flex items-center space-x-4">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
+                <WalletIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Secure POD</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  Trusted Pay on Delivery with secure cash handling
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
+                <BadgeCheckIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold">100% Reliable</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  Proven track record of successful deliveries
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
+                <HeadphonesIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold">24/7 Support</h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                  Round-the-clock customer service
+                </p>
+              </div>
+            </div>
             <div className="flex items-center space-x-4">
               <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
                 <svg
@@ -120,61 +161,14 @@ export default function EnhancedLandingPage() {
               <div>
                 <h3 className="font-semibold">Lightning Fast</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Speedy deliveries, always on time
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-indigo-600 dark:text-indigo-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold">Cost-Effective</h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Competitive prices for all services
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-full">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-indigo-600 dark:text-indigo-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-semibold">Secure & Reliable</h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Your packages are in safe hands
+                  Same-day delivery available
                 </p>
               </div>
             </div>
           </div>
         </section>
 
+        <TestimonialSection />
         <section
           id="contact-us"
           className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg shadow-lg p-8"
@@ -186,7 +180,7 @@ export default function EnhancedLandingPage() {
               className="flex items-center space-x-4"
             >
               <PhoneIcon className="w-6 h-6" />
-              <span> 08156067874</span>
+              <span>08156067874</span>
             </Link>
             <Link
               href="mailto:support@fastfast.com.ng"
@@ -196,8 +190,7 @@ export default function EnhancedLandingPage() {
               <span>support@fastfast.com.ng</span>
             </Link>
             <Link
-              href="https://wa.me/message/UJINI7XSAOXFH1
-"
+              href="https://wa.me/message/UJINI7XSAOXFH1"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-4"
