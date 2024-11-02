@@ -65,12 +65,13 @@ export default function EnhancedLandingPage() {
           </h1>
           <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto">
             Your Express Lane to Seamless Shipping with Secure Pay on Delivery
+            Service and a full range of warehousing services.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
-            We're not just fast—we're FastFast. Specializing in rapid, reliable
-            logistics solutions with trusted Pay on Delivery services for
-            businesses of all sizes. Experience worry-free shipping with our
-            secure cash handling and real-time tracking.
+            Ship Fast with fastfast, Pay Securely with fastfast, Track Instantly With
+            FastFast. Leverage our efficient
+            logistics, trusted Pay on Delivery, and robust tracking to ensure
+            seamless deliveries and peace of mind for your business.
           </p>
           <Link href="/booking" passHref>
             <Button
