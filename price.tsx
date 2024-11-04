@@ -12,11 +12,20 @@ export const DEFAULT_PRICE = 1000;
 export const HIGHER_PRICE = 2000;
 export const MEDIUM_PRICE = 1500;
 
-const higherPriceLocations = ["uton", "jese"];
+const higherPriceLocations = ["uton", "jese",];
 const mediumPriceLocations = ["mosugar", "ugberikoko", "Ghana", "Ogorode"];
 
 export const priceList: PriceEntry[] = [
   { locations: { from: "amukpe", to: "torpical" }, price: DEFAULT_PRICE },
+  {
+    locations: { from: "amukpe roundabout", to: "urakpa" },
+    price: HIGHER_PRICE,
+  },
+  {
+    locations: { from: "amukpe roundabout", to: "ogorode" },
+    price: HIGHER_PRICE,
+  },
+
   // Add more specific price entries if needed
 ];
 
