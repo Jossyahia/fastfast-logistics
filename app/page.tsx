@@ -200,7 +200,7 @@ export default function EnhancedLandingPage() {
               <span>support@fastfast.com.ng</span>
             </Link>
             <Link
-              href="https://wa.me/2348097034355" // Use the international format without symbols
+              href="https://api.whatsapp.com/send?phone=2348097034355" // Use the correct international format here
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-4"
@@ -208,6 +208,7 @@ export default function EnhancedLandingPage() {
               <FaWhatsapp className="w-6 h-6" />
               <span>WhatsApp: 08097034355</span>
             </Link>
+
             <Link
               href="https://facebook.com"
               target="_blank"
