@@ -24,7 +24,6 @@ import BookingInstructionsModal from "@/components/BookingInstructionsModal";
 import { FaSquareThreads } from "react-icons/fa6";
 import TestimonialSection from "@/components/TestimonialSection";
 
-
 interface FeatureCardProps {
   title: string;
   description: string;
@@ -68,19 +67,29 @@ export default function EnhancedLandingPage() {
             Service and a full range of warehousing services.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
-            Ship Fast with fastfast, Pay Securely with fastfast, Track Instantly With
-            FastFast. Leverage our efficient
-            logistics, trusted Pay on Delivery, and robust tracking to ensure
-            seamless deliveries and peace of mind for your business.
+            Ship Fast with fastfast, Pay Securely with fastfast, Track Instantly
+            With FastFast. Leverage our efficient logistics, trusted Pay on
+            Delivery, and robust tracking to ensure seamless deliveries and
+            peace of mind for your business.
           </p>
-          <Link href="/booking" passHref>
-            <Button
-              size="lg"
-              className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              Book a rider Now
-            </Button>
-          </Link>
+          <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
+            <Link href="/booking" passHref>
+              <Button
+                size="lg"
+                className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                Book a rider Now
+              </Button>
+            </Link>
+            <Link href="/" passHref>
+              <Button
+                size="lg"
+                className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                Request a rider Now
+              </Button>
+            </Link>
+          </div>
         </section>
 
         <section className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-16">
@@ -191,7 +200,7 @@ export default function EnhancedLandingPage() {
               <span>support@fastfast.com.ng</span>
             </Link>
             <Link
-              href="https://wa.me/message/UJINI7XSAOXFH1"
+              href="https://wa.me/2348097034355" // Use the international format without symbols
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-4"

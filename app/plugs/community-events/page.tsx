@@ -119,7 +119,7 @@ export default function Component() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <h1 className="text-3xl font-bold mb-8 text-center">Community Events</h1>
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-grow">
@@ -163,7 +163,7 @@ export default function Component() {
         {filteredEvents.map((event) => (
           <div
             key={event.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
+            className="bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200rounded-lg shadow-md overflow-hidden"
           >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-2">{event.name}</h2>

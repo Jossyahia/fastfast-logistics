@@ -91,7 +91,9 @@ export default function Home() {
         <div className="flex flex-wrap justify-center gap-4">
           <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center space-x-2 transition-colors">
             <Briefcase size={20} />
-            <span>Post a Service</span>
+            <Link href="/service-post">
+              <span>Post a Service</span>
+            </Link>
           </button>
           <button className="px-6 py-3 bg-white dark:bg-neutral-800 text-indigo-600 dark:text-indigo-400 border border-indigo-600 dark:border-indigo-400 rounded-xl flex items-center space-x-2 hover:bg-indigo-50 dark:hover:bg-neutral-700 transition-colors">
             <MessageCircle size={20} />

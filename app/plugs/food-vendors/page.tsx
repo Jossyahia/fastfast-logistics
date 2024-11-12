@@ -176,7 +176,7 @@ export default function Component() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <h1 className="text-3xl font-bold mb-8 text-center">
         Nigerian Food Vendors Directory
       </h1>
@@ -223,7 +223,7 @@ export default function Component() {
         {filteredVendors.map((vendor) => (
           <div
             key={vendor.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
+            className="bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200 shadow-md overflow-hidden"
           >
             <div className="p-6">
               <h2 className="text-xl font-semibold mb-2">{vendor.name}</h2>
@@ -293,134 +293,6 @@ export default function Component() {
           No vendors found. Try adjusting your search or filters.
         </p>
       )}
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="mt-8 mx-auto block">Post Your Restaurant</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Post Your Restaurant</DialogTitle>
-            <DialogDescription>
-              Fill out this form to add your restaurant to our directory.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmitNewVendor}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={newVendor.name}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">
-                  Type
-                </Label>
-                <Input
-                  id="type"
-                  name="type"
-                  value={newVendor.type}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="speciality" className="text-right">
-                  Speciality
-                </Label>
-                <Input
-                  id="speciality"
-                  name="speciality"
-                  value={newVendor.speciality}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="address" className="text-right">
-                  Address
-                </Label>
-                <Textarea
-                  id="address"
-                  name="address"
-                  value={newVendor.address}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Phone
-                </Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={newVendor.phone}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="whatsapp" className="text-right">
-                  WhatsApp
-                </Label>
-                <Input
-                  id="whatsapp"
-                  name="whatsapp"
-                  value={newVendor.whatsapp}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="website" className="text-right">
-                  Website
-                </Label>
-                <Input
-                  id="website"
-                  name="website"
-                  value={newVendor.website}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="facebook" className="text-right">
-                  Facebook
-                </Label>
-                <Input
-                  id="facebook"
-                  name="facebook"
-                  value={newVendor.facebook}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="instagram" className="text-right">
-                  Instagram
-                </Label>
-                <Input
-                  id="instagram"
-                  name="instagram"
-                  value={newVendor.instagram}
-                  onChange={handleNewVendorChange}
-                  className="col-span-3"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Submit</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

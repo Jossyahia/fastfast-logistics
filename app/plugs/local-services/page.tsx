@@ -4,266 +4,303 @@ import { useState } from "react";
 import {
   Search,
   MapPin,
-  Star,
-  Plus,
   Phone,
-  Instagram,
+  Mail,
+  ChevronDown,
+  Briefcase,
   Facebook,
+  Instagram,
+  Star,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
-// Dummy data for services
-const initialServices = [
+// Mock data for neighborhood professionals
+const professionals = [
   {
     id: 1,
-    title: "Plumbing Services",
-    provider: "John Doe",
-    rating: 4.5,
-    location: "Downtown",
-    phone: "+1 234-567-8901",
-    instagram: "@johndoeplumbing",
-    facebook: "johndoeplumbing",
+    name: "John Doe",
+    profession: "Plumber",
+    specialty: "Residential Plumbing",
+    rating: 4.8,
+    experience: "10 years",
+    address: "123 Main St, Neighborhoodville",
+    phone: "080-1234-5678",
+    email: "john.doe@example.com",
+    facebook: "johndoeplumber",
+    instagram: "john_the_plumber",
   },
   {
     id: 2,
-    title: "Electrical Repair",
-    provider: "Jane Smith",
-    rating: 4.8,
-    location: "Suburb",
-    phone: "+1 234-567-8902",
-    instagram: "@janeelectrical",
-    facebook: "janeelectrical",
+    name: "Jane Smith",
+    profession: "Electrician",
+    specialty: "Home Wiring and Repairs",
+    rating: 4.9,
+    experience: "15 years",
+    address: "456 Elm St, Neighborhoodville",
+    phone: "070-9876-5432",
+    email: "jane.smith@example.com",
+    facebook: "janetheelectrician",
+    instagram: "jane_sparks",
   },
   {
     id: 3,
-    title: "House Cleaning",
-    provider: "Clean Co.",
-    rating: 4.2,
-    location: "City Center",
-    phone: "+1 234-567-8903",
-    instagram: "@cleancoservices",
-    facebook: "cleancoservices",
+    name: "Mike Johnson",
+    profession: "Carpenter",
+    specialty: "Custom Furniture",
+    rating: 4.7,
+    experience: "8 years",
+    address: "789 Oak St, Neighborhoodville",
+    phone: "081-2345-6789",
+    email: "mike.johnson@example.com",
+    facebook: "mikescarpentry",
+    instagram: "mike_woodworks",
   },
   {
     id: 4,
-    title: "Gardening & Landscaping",
-    provider: "Green Thumbs",
+    name: "Sarah Lee",
+    profession: "Painter",
+    specialty: "Interior and Exterior Painting",
     rating: 4.6,
-    location: "Outskirts",
-    phone: "+1 234-567-8904",
-    instagram: "@greenthumbslandscaping",
-    facebook: "greenthumbslandscaping",
+    experience: "12 years",
+    address: "101 Pine St, Neighborhoodville",
+    phone: "090-8765-4321",
+    email: "sarah.lee@example.com",
+    facebook: "sarahspainting",
+    instagram: "sarah_paints",
+  },
+  {
+    id: 5,
+    name: "David Brown",
+    profession: "Landscaper",
+    specialty: "Garden Design and Maintenance",
+    rating: 4.9,
+    experience: "20 years",
+    address: "202 Maple St, Neighborhoodville",
+    phone: "070-1122-3344",
+    email: "david.brown@example.com",
+    facebook: "davidslandscaping",
+    instagram: "green_thumb_dave",
+  },
+  {
+    id: 6,
+    name: "Emily Chen",
+    profession: "House Cleaner",
+    specialty: "Deep Cleaning and Organization",
+    rating: 4.8,
+    experience: "5 years",
+    address: "303 Birch St, Neighborhoodville",
+    phone: "080-5544-3322",
+    email: "emily.chen@example.com",
+    facebook: "emilyscleaningservice",
+    instagram: "spotless_emily",
   },
 ];
 
+type ProfessionType =
+  | "Plumber"
+  | "Electrician"
+  | "Carpenter"
+  | "Painter"
+  | "Landscaper"
+  | "House Cleaner";
+
 export default function Component() {
-  const [services, setServices] = useState(initialServices);
   const [searchTerm, setSearchTerm] = useState("");
-  const [newService, setNewService] = useState({
-    title: "",
-    provider: "",
-    location: "",
+  const [selectedProfessions, setSelectedProfessions] = useState<
+    ProfessionType[]
+  >([]);
+  const [showContactInfo, setShowContactInfo] = useState<number | null>(null);
+  const [newProfessional, setNewProfessional] = useState({
+    name: "",
+    profession: "",
+    specialty: "",
+    experience: "",
+    address: "",
     phone: "",
-    instagram: "",
+    email: "",
     facebook: "",
+    instagram: "",
   });
-  const [selectedService, setSelectedService] = useState(null);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const filteredServices = services.filter(
-    (service) =>
-      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.location.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProfessionals = professionals.filter(
+    (professional) =>
+      (professional.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        professional.specialty
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) &&
+      (selectedProfessions.length === 0 ||
+        selectedProfessions.includes(professional.profession as ProfessionType))
   );
 
-  const handleNewServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewService({ ...newService, [e.target.name]: e.target.value });
+  const handleProfessionToggle = (profession: ProfessionType) => {
+    setSelectedProfessions((prev) =>
+      prev.includes(profession)
+        ? prev.filter((p) => p !== profession)
+        : [...prev, profession]
+    );
   };
 
-  const handleNewServiceSubmit = (e: React.FormEvent) => {
+  const handleContactNow = (id: number) => {
+    setShowContactInfo(id);
+  };
+
+  const handleNewProfessionalChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setNewProfessional((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitNewProfessional = (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = services.length + 1;
-    setServices([...services, { ...newService, id: newId, rating: 0 }]);
-    setNewService({
-      title: "",
-      provider: "",
-      location: "",
+    console.log("New professional submitted:", newProfessional);
+    // Here you would typically send this data to your backend
+    // Reset the form after submission
+    setNewProfessional({
+      name: "",
+      profession: "",
+      specialty: "",
+      experience: "",
+      address: "",
       phone: "",
-      instagram: "",
+      email: "",
       facebook: "",
+      instagram: "",
     });
   };
 
-  const handleCardClick = (service) => {
-    setSelectedService(service);
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">Local Services</h1>
-      <div className="flex justify-between items-center mb-8">
-        <div className="relative w-full max-w-md">
+    <div className="container mx-auto px-4 py-8 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Find Trusted Professionals in Your Neighborhood
+      </h1>
+      <div className="flex flex-col md:flex-row gap-4 mb-8 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
+        <div className="relative flex-grow">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <Input
             type="text"
-            placeholder="Search services..."
+            placeholder="Search by name or specialty..."
             className="pl-10 w-full"
             value={searchTerm}
-            onChange={handleSearch}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" /> Post a Service
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full md:w-auto">
+              Filter by Profession <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Post a New Service</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleNewServiceSubmit} className="space-y-4">
-              <Input
-                name="title"
-                placeholder="Service Title"
-                value={newService.title}
-                onChange={handleNewServiceChange}
-                required
-              />
-              <Input
-                name="provider"
-                placeholder="Service Provider"
-                value={newService.provider}
-                onChange={handleNewServiceChange}
-                required
-              />
-              <Input
-                name="location"
-                placeholder="Location"
-                value={newService.location}
-                onChange={handleNewServiceChange}
-                required
-              />
-              <Input
-                name="phone"
-                placeholder="Phone Number"
-                value={newService.phone}
-                onChange={handleNewServiceChange}
-                required
-              />
-              <Input
-                name="instagram"
-                placeholder="Instagram Handle"
-                value={newService.instagram}
-                onChange={handleNewServiceChange}
-              />
-              <Input
-                name="facebook"
-                placeholder="Facebook Page"
-                value={newService.facebook}
-                onChange={handleNewServiceChange}
-              />
-              <Button type="submit" className="w-full">
-                Post Service
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            {[
+              "Plumber",
+              "Electrician",
+              "Carpenter",
+              "Painter",
+              "Landscaper",
+              "House Cleaner",
+            ].map((profession) => (
+              <DropdownMenuCheckboxItem
+                key={profession}
+                checked={selectedProfessions.includes(
+                  profession as ProfessionType
+                )}
+                onCheckedChange={() =>
+                  handleProfessionToggle(profession as ProfessionType)
+                }
+              >
+                {profession}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredServices.map((service) => (
-          <Card
-            key={service.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
-            onClick={() => handleCardClick(service)}
+        {filteredProfessionals.map((professional) => (
+          <div
+            key={professional.id}
+            className="bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200e rounded-lg shadow-md overflow-hidden"
           >
-            <CardHeader>
-              <CardTitle>{service.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-500 mb-2">{service.provider}</p>
-              <div className="flex items-center mb-2">
-                <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-                <span className="text-sm">{service.location}</span>
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-2">
+                {professional.name}
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                {professional.profession} • {professional.experience} experience
+              </p>
+              <p className="text-sm font-medium text-green-600 mb-4">
+                Specialty: {professional.specialty}
+              </p>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                Rating: {professional.rating} / 5
               </div>
-              <div className="flex items-center">
-                <Star className="h-4 w-4 mr-1 text-yellow-400" />
-                <span className="text-sm">{service.rating.toFixed(1)}</span>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <MapPin className="h-4 w-4 mr-2" />
+                {professional.address}
               </div>
-            </CardContent>
-          </Card>
+              {showContactInfo === professional.id && (
+                <>
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <Phone className="h-4 w-4 mr-2" />
+                    {professional.phone}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500 mb-2">
+                    <Mail className="h-4 w-4 mr-2" />
+                    {professional.email}
+                  </div>
+                </>
+              )}
+              <div className="flex space-x-4 mb-4">
+                <a
+                  href={`https://facebook.com/${professional.facebook}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a
+                  href={`https://instagram.com/${professional.instagram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-pink-600 hover:text-pink-800"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => handleContactNow(professional.id)}
+              >
+                <Briefcase className="mr-2 h-4 w-4" /> Contact Now
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
-      {selectedService && (
-        <Dialog
-          open={!!selectedService}
-          onOpenChange={() => setSelectedService(null)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{selectedService.title}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-lg font-semibold">
-                {selectedService.provider}
-              </p>
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-gray-400" />
-                <span>{selectedService.location}</span>
-              </div>
-              <div className="flex items-center">
-                <Star className="h-5 w-5 mr-2 text-yellow-400" />
-                <span>{selectedService.rating.toFixed(1)}</span>
-              </div>
-              <div className="flex items-center">
-                <Phone className="h-5 w-5 mr-2 text-gray-400" />
-                <span>{selectedService.phone}</span>
-              </div>
-              {selectedService.instagram && (
-                <div className="flex items-center">
-                  <Instagram className="h-5 w-5 mr-2 text-gray-400" />
-                  <a
-                    href={`https://www.instagram.com/${selectedService.instagram.replace(
-                      "@",
-                      ""
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    {selectedService.instagram}
-                  </a>
-                </div>
-              )}
-              {selectedService.facebook && (
-                <div className="flex items-center">
-                  <Facebook className="h-5 w-5 mr-2 text-gray-400" />
-                  <a
-                    href={`https://www.facebook.com/${selectedService.facebook}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    {selectedService.facebook}
-                  </a>
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+      {filteredProfessionals.length === 0 && (
+        <p className="text-center text-gray-500 mt-8">
+          No professionals found. Try adjusting your search or filters.
+        </p>
       )}
     </div>
   );

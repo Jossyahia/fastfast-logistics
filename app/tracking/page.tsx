@@ -36,7 +36,7 @@ const TrackingPage = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-8 ">
+    <div className="max-w-md mx-auto mt-8  bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <h1 className="text-2xl font-bold mb-4">Track Your Shipment</h1>
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="flex">

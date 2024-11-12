@@ -331,7 +331,7 @@ const BookingPage: React.FC = () => {
     }
   };
   return (
-    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-lg shadow-lg ">
+    <Card className="max-w-2xl mx-auto mt-8  bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <CardHeader>
         <h1 className="text-3xl font-bold text-center">Create a Booking</h1>
       </CardHeader>

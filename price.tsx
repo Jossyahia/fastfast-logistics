@@ -8,15 +8,33 @@ interface PriceEntry {
   price: number;
 }
 
-export const DEFAULT_PRICE = 1000;
+export const DEFAULT_PRICE = 1200;
 export const HIGHER_PRICE = 2000;
 export const MEDIUM_PRICE = 1500;
+export const LOWER_PRICE = 1000;
 
-const higherPriceLocations = ["uton", "jese",];
-const mediumPriceLocations = ["mosugar", "ugberikoko", "Ghana", "Ogorode"];
+const higherPriceLocations = new Set(["uton", "jese"]);
+const mediumPriceLocations = new Set([
+  "mosugar",
+  "ugberikoko",
+  "Ghana",
+  "Ogorode",
+  "urakpa",
+  "orakpa"
+]);
+const lowerPriceLocations = new Set([
+  "amukpe",
+  "torpical",
+  "shell road",
+  "new road",
+  "okirigwe park",
+  "ugbeyin",
+  "mountain of fire",
+  "ajogodo",
+  ""
+]);
 
 export const priceList: PriceEntry[] = [
-  { locations: { from: "amukpe", to: "torpical" }, price: DEFAULT_PRICE },
   {
     locations: { from: "amukpe roundabout", to: "urakpa" },
     price: HIGHER_PRICE,
@@ -25,17 +43,31 @@ export const priceList: PriceEntry[] = [
     locations: { from: "amukpe roundabout", to: "ogorode" },
     price: HIGHER_PRICE,
   },
-
-  // Add more specific price entries if needed
+  {
+    locations: { from: "urakpa", to: "okirigwe" },
+    price: HIGHER_PRICE,
+  },
+  {
+    locations: { from: "orakpa", to: "ogorode" },
+    price: MEDIUM_PRICE,
+  },
+  {
+    locations: { from: "orakpa", to: "shell road" },
+    price: MEDIUM_PRICE,
+  },
+  {
+    locations: { from: "amukpe roundabout", to: "uton" },
+    price: HIGHER_PRICE,
+  },
 ];
 
 function normalizeLocation(location: string): string {
   return location.trim().toLowerCase();
 }
 
-function locationIncludes(location: string, keywordList: string[]): boolean {
+function locationIncludes(location: string, keywordSet: Set<string>): boolean {
   const normalizedLocation = normalizeLocation(location);
-  return keywordList.some((keyword) => normalizedLocation.includes(keyword));
+  return keywordSet.has(normalizedLocation);
 }
 
 export function getPrice(from: string, to: string): number {
@@ -71,6 +103,14 @@ export function getPrice(from: string, to: string): number {
     return MEDIUM_PRICE;
   }
 
+  // Check for lower price locations
+  if (
+    locationIncludes(normalizedFrom, lowerPriceLocations) ||
+    locationIncludes(normalizedTo, lowerPriceLocations)
+  ) {
+    return LOWER_PRICE;
+  }
+
   // Default price
   return DEFAULT_PRICE;
 }
@@ -83,5 +123,6 @@ export function getLocations(): string[] {
   });
   higherPriceLocations.forEach((loc) => locations.add(loc));
   mediumPriceLocations.forEach((loc) => locations.add(loc));
+  lowerPriceLocations.forEach((loc) => locations.add(loc));
   return Array.from(locations);
 }
