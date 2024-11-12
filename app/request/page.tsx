@@ -13,12 +13,16 @@ import { useTheme } from "next-themes";
 import { FaWhatsapp } from "react-icons/fa";
 
 const formSchema = z.object({
-  pickupNumber: z.string().min(1, "Pickup number is required"),
-  deliveryNumber: z.string().min(1, "Delivery number is required"),
+  pickupNumber: z
+    .string()
+    .min(1, "Pickup number is required")
+    .regex(/^\d+$/, "Please enter only numbers"),
+  deliveryNumber: z
+    .string()
+    .min(1, "Delivery number is required")
+    .regex(/^\d+$/, "Please enter only numbers"),
   fromLocation: z.string().min(1, "From location is required"),
   toLocation: z.string().min(1, "To location is required"),
-  packageType: z.string().min(1, "Package type is required"),
-  weight: z.number().min(1, "Weight is required"),
   comments: z.string().optional(),
 });
 
@@ -35,22 +39,18 @@ export default function Component() {
     resolver: zodResolver(formSchema),
   });
 
-  const [whatsAppLink, setWhatsAppLink] = useState("");
-
   const onSubmit = (data: FormData) => {
     const message = `
       Pickup Number: ${data.pickupNumber}
       Delivery Number: ${data.deliveryNumber}
       From Location: ${data.fromLocation}
       To Location: ${data.toLocation}
-      Package Type: ${data.packageType}
-      Weight: ${data.weight} kg
       Comments: ${data.comments || "None"}
     `;
     const url = `https://api.whatsapp.com/send?phone=2348097034355&text=${encodeURIComponent(
       message
     )}`;
-    setWhatsAppLink(url);
+    window.open(url, "_blank");
   };
 
   return (
@@ -71,6 +71,7 @@ export default function Component() {
                 {...register("pickupNumber")}
                 placeholder="Enter Number to Pickup From"
                 className="pl-10"
+                type="tel"
               />
             </div>
             {errors.pickupNumber && (
@@ -90,6 +91,7 @@ export default function Component() {
                 {...register("deliveryNumber")}
                 placeholder="Enter Number to deliver to"
                 className="pl-10"
+                type="tel"
               />
             </div>
             {errors.deliveryNumber && (
@@ -137,37 +139,6 @@ export default function Component() {
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="packageType" className="text-foreground">
-              Package Type
-            </Label>
-            <Input
-              id="packageType"
-              {...register("packageType")}
-              placeholder="Enter package type"
-            />
-            {errors.packageType && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.packageType.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="weight" className="text-foreground">
-              Weight (kg)
-            </Label>
-            <Input
-              id="weight"
-              {...register("weight", { valueAsNumber: true })}
-              type="number"
-              placeholder="Enter package weight in kg"
-            />
-            {errors.weight && (
-              <p className="text-destructive text-sm mt-1">
-                {errors.weight.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="comments" className="text-foreground">
               Comments (optional)
             </Label>
@@ -181,19 +152,6 @@ export default function Component() {
             Submit Request
           </Button>
         </form>
-        {whatsAppLink && (
-          <div className="mt-4">
-            <a
-              href={whatsAppLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-4"
-            >
-              <FaWhatsapp className="w-6 h-6" />
-              <span>WhatsApp: 08097034355</span>
-            </a>
-          </div>
-        )}
       </div>
     </div>
   );

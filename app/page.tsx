@@ -81,7 +81,7 @@ export default function EnhancedLandingPage() {
                 Book a rider Now
               </Button>
             </Link>
-            <Link href="/" passHref>
+            <Link href="/request" passHref>
               <Button
                 size="lg"
                 className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
