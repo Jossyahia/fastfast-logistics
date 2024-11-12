@@ -1,750 +1,220 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+
+import { useState } from "react";
 import {
+  Search,
+  Car,
+  Fuel,
+  Users,
+  DollarSign,
   Calendar,
-  Clock,
-  Package,
-  CreditCard,
-  Phone,
-  Truck,
-  CheckCircle,
-  AlertTriangle,
-  Tag,
+  ChevronDown,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import { getLocations } from "@/price";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { getPrice } from "@/price";
-import BankTransferDetails from "@/components/BankTransferDetails";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
-interface FormData {
-  pickupAddress: string;
-  deliveryAddress: string;
-  pickupDate: string;
-  deliveryDate: string;
-  pickupTime: string;
-  deliveryTime: string;
-  packageSize: "SMALL" | "MEDIUM" | "LARGE" | "EXTRA_LARGE";
-  packageDescription: string;
-  isUrgent: boolean;
-  paymentMethod: "CREDIT_CARD" | "DEBIT_CARD" | "CASH" | "BANK_TRANSFER";
-  pickupPhoneNumber: string;
-  deliveryPhoneNumber: string;
-  couponCode: string;
-  discountAmount: number;
-  discountType: "PERCENTAGE" | "FIXED" | null;
-  route: string;
-  price: {
-    originalPrice: number;
-    finalPrice: number;
-  };
-  transactionCode: string;
-}
+// Mock data for available cars
+const cars = [
+  {
+    id: 1,
+    make: "Toyota",
+    model: "Prius",
+    type: "Hybrid",
+    fuelType: "Hybrid",
+    seats: 5,
+    pricePerDay: 50,
+    availableFrom: "2023-06-01",
+  },
+  {
+    id: 2,
+    make: "Tesla",
+    model: "Model 3",
+    type: "Electric",
+    fuelType: "Electric",
+    seats: 5,
+    pricePerDay: 80,
+    availableFrom: "2023-06-03",
+  },
+  {
+    id: 3,
+    make: "Honda",
+    model: "Civic",
+    type: "Sedan",
+    fuelType: "Gasoline",
+    seats: 5,
+    pricePerDay: 45,
+    availableFrom: "2023-06-02",
+  },
+  {
+    id: 4,
+    make: "Ford",
+    model: "Focus Electric",
+    type: "Electric",
+    fuelType: "Electric",
+    seats: 5,
+    pricePerDay: 60,
+    availableFrom: "2023-06-05",
+  },
+  {
+    id: 5,
+    make: "Nissan",
+    model: "Leaf",
+    type: "Electric",
+    fuelType: "Electric",
+    seats: 5,
+    pricePerDay: 55,
+    availableFrom: "2023-06-04",
+  },
+  {
+    id: 6,
+    make: "Chevrolet",
+    model: "Bolt",
+    type: "Electric",
+    fuelType: "Electric",
+    seats: 5,
+    pricePerDay: 65,
+    availableFrom: "2023-06-01",
+  },
+];
 
-interface FormErrors {
-  [key: string]: string | undefined;
-}
-const STORAGE_KEY = "bookingFormData";
+type CarType = "Sedan" | "SUV" | "Electric" | "Hybrid";
+type FuelType = "Gasoline" | "Diesel" | "Electric" | "Hybrid";
 
-const BookingPage: React.FC = () => {
-  const router = useRouter();
-  const [formData, setFormData] = useState<FormData>({
-    pickupAddress: "",
-    deliveryAddress: "",
-    pickupDate: "",
-    deliveryDate: "",
-    pickupTime: "",
-    deliveryTime: "",
-    packageSize: "SMALL",
-    packageDescription: "",
-    isUrgent: false,
-    paymentMethod: "CREDIT_CARD",
-    pickupPhoneNumber: "",
-    deliveryPhoneNumber: "",
-    route: "",
-    transactionCode: "",
-    couponCode: "",
-    discountAmount: 0,
-    discountType: null,
-  });
+export default function Component() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTypes, setSelectedTypes] = useState<CarType[]>([]);
+  const [selectedFuelTypes, setSelectedFuelTypes] = useState<FuelType[]>([]);
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [couponApplied, setCouponApplied] = useState(false);
-
-   const isValidDate = (date: Date): boolean => {
-     const day = date.getDay();
-     return day >= 1 && day <= 6; // Monday to Saturday
-   };
-
-   const isValidTime = (time: string): boolean => {
-     const [hours, minutes] = time.split(":").map(Number);
-     return (hours >= 7 && hours < 18) || (hours === 18 && minutes === 0);
-   };
-
-  useEffect(() => {
-    const pickupDateInput = document.getElementById(
-      "pickupDate"
-    ) as HTMLInputElement;
-    const deliveryDateInput = document.getElementById(
-      "deliveryDate"
-    ) as HTMLInputElement;
-
-    const setMinDeliveryDate = () => {
-      if (pickupDateInput && deliveryDateInput) {
-        const pickupDate = new Date(pickupDateInput.value);
-        if (pickupDate) {
-          let minDeliveryDate = new Date(pickupDate);
-          while (!isValidDate(minDeliveryDate)) {
-            minDeliveryDate.setDate(minDeliveryDate.getDate() + 1);
-          }
-          deliveryDateInput.min = minDeliveryDate.toISOString().split("T")[0];
-        } else {
-          deliveryDateInput.min = new Date().toISOString().split("T")[0];
-        }
-      }
-    };
-
-    setMinDeliveryDate();
-    pickupDateInput?.addEventListener("change", setMinDeliveryDate);
-
-    return () => {
-      pickupDateInput?.removeEventListener("change", setMinDeliveryDate);
-    };
-  }, []);
-  const handleChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData((prev) => {
-      const updatedData = { ...prev, [field]: value };
-
-      if (field === "pickupDate" && updatedData.deliveryDate) {
-        const pickupDate = new Date(updatedData.pickupDate);
-        const deliveryDate = new Date(updatedData.deliveryDate);
-        if (deliveryDate < pickupDate) {
-          updatedData.deliveryDate = "";
-        }
-      }
-
-      if (
-        field === "pickupAddress" ||
-        field === "deliveryAddress" ||
-        field === "packageSize" ||
-        field === "isUrgent"
-      ) {
-        updatedData.price = calculatePrice(updatedData);
-      }
-      updatedData.route = `${updatedData.pickupAddress} to ${updatedData.deliveryAddress}`;
-
-      if (field === "paymentMethod" && value === "BANK_TRANSFER") {
-        updatedData.transactionCode = generateTransactionCode();
-      } else if (field === "paymentMethod" && value !== "BANK_TRANSFER") {
-        updatedData.transactionCode = "";
-      }
-
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData));
-
-      return updatedData;
-    });
-  };
-
-const calculatePrice = (data: FormData) => {
-  if (!data.pickupAddress || !data.deliveryAddress) {
-    return { originalPrice: 0, finalPrice: 0 };
-  }
-
-  const basePrice = getPrice(data.pickupAddress, data.deliveryAddress);
-  const urgentFee = data.isUrgent ? 500 : 0;
-
-  const sizeFees: { [key: string]: number } = {
-    SMALL: 0,
-    MEDIUM: 500,
-    LARGE: 1000,
-    EXTRA_LARGE: 1500,
-  };
-  const sizeFee = sizeFees[data.packageSize] || 0;
-
-  let totalBeforeDiscount = basePrice + urgentFee + sizeFee;
-
-  // Apply discount based on discountType
-  let finalPrice = totalBeforeDiscount;
-  if (data.discountType === "PERCENTAGE" && data.discountAmount) {
-    finalPrice = totalBeforeDiscount * (1 - data.discountAmount / 100);
-  } else if (data.discountType === "FIXED" && data.discountAmount) {
-    finalPrice = Math.max(totalBeforeDiscount - data.discountAmount, 0);
-  }
-
-  return {
-    originalPrice: totalBeforeDiscount,
-    finalPrice: finalPrice,
-  };
-};
-
-  const generateTransactionCode = (): string => {
-    return "TXN" + Math.random().toString(36).substr(2, 8).toUpperCase();
-  };
-
-  const validateCoupon = async (couponCode: string) => {
-    try {
-      const response = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: couponCode }),
-      });
-
-      if (response.status === 401) {
-        throw new Error("Authentication required");
-      }
-
-      if (!response.ok) {
-        throw new Error("Failed to validate coupon");
-      }
-
-      const data = await response.json();
-
-      if (data.valid) {
-        return {
-          discountAmount: data.discountAmount,
-          discountType: data.discountType,
-        };
-      } else {
-        return { discountAmount: 0, discountType: null };
-      }
-    } catch (error: unknown) {
-      console.error("Error validating coupon:", error);
-      if (
-        error instanceof Error &&
-        error.message === "Authentication required"
-      ) {
-        // Handle authentication error
-      }
-      return { discountAmount: 0, discountType: null };
-    }
-  };
-
-  const applyCoupon = async () => {
-    if (!formData.couponCode) {
-      setErrors({ ...errors, coupon: "Please enter a coupon code" });
-      return;
-    }
-
-    setLoading(true);
-    const result = await validateCoupon(formData.couponCode);
-    setLoading(false);
-
-    if (result.discountAmount !== undefined && result.discountType) {
-      setFormData((prev) => {
-        const updatedData = {
-          ...prev,
-          discountAmount: result.discountAmount,
-          discountType: result.discountType,
-        };
-        const newPrice = calculatePrice(updatedData);
-        return { ...updatedData, price: newPrice };
-      });
-      setCouponApplied(true);
-      setErrors((prevErrors) => {
-        const { coupon, ...restErrors } = prevErrors;
-        return restErrors;
-      });
-    } else {
-      setErrors({ ...errors, coupon: "Invalid coupon code" });
-    }
-  };
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-   if (!formData.pickupDate) {
-     newErrors.pickupDate = "Pickup date is required";
-   } else {
-     const pickupDate = new Date(formData.pickupDate);
-     pickupDate.setHours(0, 0, 0, 0);
-     const today = new Date();
-     today.setHours(0, 0, 0, 0);
-     if (pickupDate < today) {
-       newErrors.pickupDate = "Pickup date cannot be in the past";
-     } else if (!isValidDate(pickupDate)) {
-       newErrors.pickupDate = "Pickup date must be between Monday and Saturday";
-     }
-   }
-
-   if (!formData.deliveryDate) {
-     newErrors.deliveryDate = "Delivery date is required";
-   } else if (formData.pickupDate) {
-     const pickupDate = new Date(formData.pickupDate);
-     const deliveryDate = new Date(formData.deliveryDate);
-     if (deliveryDate < pickupDate) {
-       newErrors.deliveryDate = "Delivery date must be after pickup date";
-     } else if (!isValidDate(deliveryDate)) {
-       newErrors.deliveryDate =
-         "Delivery date must be between Monday and Saturday";
-     }
-   }
-
-   if (!formData.pickupTime) {
-     newErrors.pickupTime = "Pickup time is required";
-   } else if (!isValidTime(formData.pickupTime)) {
-     newErrors.pickupTime = "Pickup time must be between 7:00 AM and 6:00 PM";
-   }
-
-   if (!formData.deliveryTime) {
-     newErrors.deliveryTime = "Delivery time is required";
-   } else if (!isValidTime(formData.deliveryTime)) {
-     newErrors.deliveryTime =
-       "Delivery time must be between 7:00 AM and 6:00 PM";
-   }
-
-    if (!formData.packageDescription.trim()) {
-      newErrors.packageDescription = "Package description is required";
-    }
-
-    const phoneRegex = /^\d{1,11}$/;
-    if (!phoneRegex.test(formData.pickupPhoneNumber)) {
-      newErrors.pickupPhoneNumber = "Invalid phone number (max 11 digits)";
-    }
-
-    if (!phoneRegex.test(formData.deliveryPhoneNumber)) {
-      newErrors.deliveryPhoneNumber = "Invalid phone number (max 11 digits)";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validateForm()) return;
-
-  setLoading(true);
-  setSuccess(false);
-
-  try {
-    const priceInfo = calculatePrice(formData);
-    const response = await fetch("/api/bookings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        price: priceInfo.finalPrice, // Send only the finalPrice
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setSuccess(true);
-      sessionStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => {
-        router.push(`/booking/confirmation/${data.booking.id}`);
-      }, 1000);
-    } else {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error || "Failed to create booking. Please login"
-      );
-    }
-  } catch (error: any) {
-    console.error("Error creating booking:", error);
-    setErrors({
-      form: error.message || "An error occurred while creating the booking.",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
-  return (
-    <Card className="max-w-2xl mx-auto mt-8 bg-white dark:bg-gray-900 shadow-md rounded-lg transition-colors duration-200">
-      <CardHeader>
-        <h1 className="text-3xl font-bold text-center">Create a Booking</h1>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label
-              htmlFor="pickupAddress"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Truck className="w-4 h-4 mr-2" /> Pickup Address
-            </Label>
-            <AddressAutocomplete
-              id="pickupAddress"
-              value={formData.pickupAddress}
-              onChange={(value) => handleChange("pickupAddress", value)}
-              placeholder="Enter pickup address"
-              error={errors.pickupAddress}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="deliveryAddress"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Truck className="w-4 h-4 mr-2" /> Delivery Address
-            </Label>
-            <AddressAutocomplete
-              id="deliveryAddress"
-              value={formData.deliveryAddress}
-              onChange={(value) => handleChange("deliveryAddress", value)}
-              placeholder="Enter delivery address"
-              error={errors.deliveryAddress}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="pickupDate"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Calendar className="w-4 h-4 mr-2" /> Pickup Date (Mon-Sat)
-            </Label>
-            <Input
-              type="date"
-              id="pickupDate"
-              value={formData.pickupDate}
-              onChange={(e) => handleChange("pickupDate", e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.pickupDate ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.pickupDate && (
-              <p className="text-red-500 text-xs mt-1">{errors.pickupDate}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="deliveryDate"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Calendar className="w-4 h-4 mr-2" /> Delivery Date (Mon-Sat)
-            </Label>
-            <Input
-              type="date"
-              id="deliveryDate"
-              value={formData.deliveryDate}
-              onChange={(e) => handleChange("deliveryDate", e.target.value)}
-              min={
-                formData.pickupDate || new Date().toISOString().split("T")[0]
-              }
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.deliveryDate ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.deliveryDate && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryDate}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="pickupTime"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Clock className="w-4 h-4 mr-2" /> Pickup Time (7:00 AM - 6:00 PM)
-            </Label>
-            <Input
-              type="time"
-              id="pickupTime"
-              value={formData.pickupTime}
-              onChange={(e) => handleChange("pickupTime", e.target.value)}
-              min="07:00"
-              max="18:00"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.pickupTime ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:blue-500`}
-              required
-            />
-            {errors.pickupTime && (
-              <p className="text-red-500 text-xs mt-1">{errors.pickupTime}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="deliveryTime"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Clock className="w-4 h-4 mr-2" /> Delivery Time (7:00 AM - 6:00
-              PM)
-            </Label>
-            <Input
-              type="time"
-              id="deliveryTime"
-              value={formData.deliveryTime}
-              onChange={(e) => handleChange("deliveryTime", e.target.value)}
-              min="07:00"
-              max="18:00"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.deliveryTime ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.deliveryTime && (
-              <p className="text-red-500 text-xs mt-1">{errors.deliveryTime}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="packageSize"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Package className="w-4 h-4 mr-2" /> Package Size
-            </Label>
-            <Select
-              value={formData.packageSize}
-              onValueChange={(value) =>
-                handleChange("packageSize", value as FormData["packageSize"])
-              }
-            >
-              <SelectTrigger className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800">
-                <SelectValue placeholder="Select package size" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                <SelectItem value="SMALL">Small (Up to 1kg or less)</SelectItem>
-                <SelectItem value="MEDIUM">
-                  Medium (5kg - 15kg or less)
-                </SelectItem>
-                <SelectItem value="LARGE">
-                  Large (15kg - 30k or less)
-                </SelectItem>
-                <SelectItem value="EXTRA_LARGE">
-                  Extra Large (30kg+ or more)
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="packageDescription"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Package className="w-4 h-4 mr-2" /> Package Description
-            </Label>
-            <Input
-              id="packageDescription"
-              value={formData.packageDescription}
-              onChange={(e) =>
-                handleChange("packageDescription", e.target.value)
-              }
-              placeholder="Describe the package"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.packageDescription ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.packageDescription && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.packageDescription}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="pickupPhoneNumber"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Phone className="w-4 h-4 mr-2" /> Pickup Phone Number
-            </Label>
-            <Input
-              id="pickupPhoneNumber"
-              maxLength={11}
-              value={formData.pickupPhoneNumber}
-              onChange={(e) =>
-                handleChange("pickupPhoneNumber", e.target.value)
-              }
-              placeholder="Enter phone number"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.pickupPhoneNumber ? "border-red-500" : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.pickupPhoneNumber && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.pickupPhoneNumber}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="deliveryPhoneNumber"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Phone className="w-4 h-4 mr-2" /> Delivery Phone Number
-            </Label>
-            <Input
-              id="deliveryPhoneNumber"
-              maxLength={11}
-              value={formData.deliveryPhoneNumber}
-              onChange={(e) =>
-                handleChange("deliveryPhoneNumber", e.target.value)
-              }
-              placeholder="Enter phone number"
-              className={`w-full px-3 py-2 border rounded-md ${
-                errors.deliveryPhoneNumber
-                  ? "border-red-500"
-                  : "border-gray-300"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              required
-            />
-            {errors.deliveryPhoneNumber && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.deliveryPhoneNumber}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="paymentMethod"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-100"
-            >
-              <CreditCard className="w-4 h-4 mr-2" /> Payment Method
-            </Label>
-            <Select
-              onValueChange={(value) =>
-                handleChange(
-                  "paymentMethod",
-                  value as FormData["paymentMethod"]
-                )
-              }
-              value={formData.paymentMethod}
-              required
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select payment method" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
-                <SelectItem value="CASH">Cash</SelectItem>
-                <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {formData.paymentMethod === "BANK_TRANSFER" && (
-            <BankTransferDetails transactionCode={formData.transactionCode} />
-          )}
-          <div className="space-y-2">
-            <Label
-              htmlFor="isUrgent"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" /> Urgent Delivery
-            </Label>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isUrgent"
-                checked={formData.isUrgent}
-                onChange={(e) => handleChange("isUrgent", e.target.checked)}
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-300">
-                Mark as urgent (additional fee applies)
-              </span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="couponCode"
-              className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200"
-            >
-              <Tag className="w-4 h-4 mr-2" /> Coupon Code
-            </Label>
-            <div className="flex">
-              <Input
-                id="couponCode"
-                value={formData.couponCode}
-                onChange={(e) => handleChange("couponCode", e.target.value)}
-                placeholder="Enter coupon code"
-                className={`flex-grow mr-2 ${
-                  errors.coupon ? "border-red-500" : "border-gray-300"
-                }`}
-                disabled={couponApplied}
-              />
-              <Button
-                type="button"
-                onClick={applyCoupon}
-                disabled={loading || couponApplied}
-                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-green-700 focus:outline-none"
-              >
-                {loading ? "Applying..." : couponApplied ? "Applied" : "Apply"}
-              </Button>
-            </div>
-            {errors.coupon && (
-              <p className="text-red-500 text-xs mt-1">{errors.coupon}</p>
-            )}
-            {couponApplied && (
-              <p className="text-green-500 text-xs mt-1">
-                Coupon applied successfully!!!
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200">
-              <CreditCard className="w-4 h-4 mr-2" /> Estimated Price
-            </Label>
-            <p className="text-lg font-semibold">
-              ₦{(calculatePrice(formData)?.finalPrice || 0).toFixed(2)}
-            </p>
-            {couponApplied && formData.discountAmount > 0 && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Original price: ₦
-                {(calculatePrice(formData)?.originalPrice || 0).toFixed(2)}
-                <br />
-                Discount:{" "}
-                {formData.discountType === "PERCENTAGE"
-                  ? `${formData.discountAmount}%`
-                  : `₦${formData.discountAmount.toFixed(2)}`}
-              </p>
-            )}
-          </div>
-          {errors.form && (
-            <Alert
-              variant="destructive"
-              className="flex items-center space-x-2 mt-6"
-            >
-              <AlertDescription>{errors.form}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="flex items-center space-x-2 mt-6 bg-green-100 border-green-400 text-green-700">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <AlertDescription>
-                Your dispatch rider has been booked successfully. You will
-                receive a confirmation shortly.
-              </AlertDescription>
-            </Alert>
-          )}
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-end">
-        <Button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-green-700 focus:outline-none"
-        >
-          {loading ? "Creating Booking..." : "Create Booking"}
-        </Button>
-      </CardFooter>
-    </Card>
+  const filteredCars = cars.filter(
+    (car) =>
+      (car.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        car.model.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (selectedTypes.length === 0 ||
+        selectedTypes.includes(car.type as CarType)) &&
+      (selectedFuelTypes.length === 0 ||
+        selectedFuelTypes.includes(car.fuelType as FuelType))
   );
-};
 
-export default BookingPage;
+  const handleTypeToggle = (type: CarType) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const handleFuelTypeToggle = (fuelType: FuelType) => {
+    setSelectedFuelTypes((prev) =>
+      prev.includes(fuelType)
+        ? prev.filter((t) => t !== fuelType)
+        : [...prev, fuelType]
+    );
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8 text-center">
+        Sustainable Car Rental Directory
+      </h1>
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search by make or model..."
+            className="pl-10 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full md:w-auto">
+              Car Type <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            {["Sedan", "SUV", "Electric", "Hybrid"].map((type) => (
+              <DropdownMenuCheckboxItem
+                key={type}
+                checked={selectedTypes.includes(type as CarType)}
+                onCheckedChange={() => handleTypeToggle(type as CarType)}
+              >
+                {type}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full md:w-auto">
+              Fuel Type <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            {["Gasoline", "Diesel", "Electric", "Hybrid"].map((fuelType) => (
+              <DropdownMenuCheckboxItem
+                key={fuelType}
+                checked={selectedFuelTypes.includes(fuelType as FuelType)}
+                onCheckedChange={() =>
+                  handleFuelTypeToggle(fuelType as FuelType)
+                }
+              >
+                {fuelType}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCars.map((car) => (
+          <div
+            key={car.id}
+            className="bg-white rounded-lg shadow-md overflow-hidden"
+          >
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-2">
+                {car.make} {car.model}
+              </h2>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="secondary">{car.type}</Badge>
+                <Badge variant="secondary">{car.fuelType}</Badge>
+              </div>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <Car className="h-4 w-4 mr-2" />
+                {car.type}
+              </div>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <Fuel className="h-4 w-4 mr-2" />
+                {car.fuelType}
+              </div>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <Users className="h-4 w-4 mr-2" />
+                {car.seats} seats
+              </div>
+              <div className="flex items-center text-sm text-gray-500 mb-2">
+                <DollarSign className="h-4 w-4 mr-2" />${car.pricePerDay} per
+                day
+              </div>
+              <div className="flex items-center text-sm text-gray-500 mb-4">
+                <Calendar className="h-4 w-4 mr-2" />
+                Available from {car.availableFrom}
+              </div>
+              <Button className="w-full">Book Now</Button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {filteredCars.length === 0 && (
+        <p className="text-center text-gray-500 mt-8">
+          No cars found. Try adjusting your search or filters.
+        </p>
+      )}
+    </div>
+  );
+}
