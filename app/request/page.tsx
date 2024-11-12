@@ -7,15 +7,19 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Sun, Moon } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { FaWhatsapp } from "react-icons/fa";
 
 const formSchema = z.object({
   pickupNumber: z.string().min(1, "Pickup number is required"),
   deliveryNumber: z.string().min(1, "Delivery number is required"),
   fromLocation: z.string().min(1, "From location is required"),
   toLocation: z.string().min(1, "To location is required"),
+  packageType: z.string().min(1, "Package type is required"),
+  weight: z.number().min(1, "Weight is required"),
+  comments: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -31,8 +35,22 @@ export default function Component() {
     resolver: zodResolver(formSchema),
   });
 
+  const [whatsAppLink, setWhatsAppLink] = useState("");
+
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted", data);
+    const message = `
+      Pickup Number: ${data.pickupNumber}
+      Delivery Number: ${data.deliveryNumber}
+      From Location: ${data.fromLocation}
+      To Location: ${data.toLocation}
+      Package Type: ${data.packageType}
+      Weight: ${data.weight} kg
+      Comments: ${data.comments || "None"}
+    `;
+    const url = `https://api.whatsapp.com/send?phone=2348097034355&text=${encodeURIComponent(
+      message
+    )}`;
+    setWhatsAppLink(url);
   };
 
   return (
@@ -51,7 +69,7 @@ export default function Component() {
               <Input
                 id="pickupNumber"
                 {...register("pickupNumber")}
-                placeholder="Enter pickup number"
+                placeholder="Enter Number to Pickup From"
                 className="pl-10"
               />
             </div>
@@ -70,7 +88,7 @@ export default function Component() {
               <Input
                 id="deliveryNumber"
                 {...register("deliveryNumber")}
-                placeholder="Enter delivery number"
+                placeholder="Enter Number to deliver to"
                 className="pl-10"
               />
             </div>
@@ -82,14 +100,14 @@ export default function Component() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="fromLocation" className="text-foreground">
-              From Location
+              Pickup Location
             </Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="fromLocation"
                 {...register("fromLocation")}
-                placeholder="Enter pickup location"
+                placeholder="Enter location To Pickup From"
                 className="pl-10"
               />
             </div>
@@ -101,14 +119,14 @@ export default function Component() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="toLocation" className="text-foreground">
-              To Location
+              Delivery Location
             </Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="toLocation"
                 {...register("toLocation")}
-                placeholder="Enter delivery location"
+                placeholder="Enter location To Deliver To"
                 className="pl-10"
               />
             </div>
@@ -118,10 +136,64 @@ export default function Component() {
               </p>
             )}
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="packageType" className="text-foreground">
+              Package Type
+            </Label>
+            <Input
+              id="packageType"
+              {...register("packageType")}
+              placeholder="Enter package type"
+            />
+            {errors.packageType && (
+              <p className="text-destructive text-sm mt-1">
+                {errors.packageType.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="weight" className="text-foreground">
+              Weight (kg)
+            </Label>
+            <Input
+              id="weight"
+              {...register("weight", { valueAsNumber: true })}
+              type="number"
+              placeholder="Enter package weight in kg"
+            />
+            {errors.weight && (
+              <p className="text-destructive text-sm mt-1">
+                {errors.weight.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="comments" className="text-foreground">
+              Comments (optional)
+            </Label>
+            <Input
+              id="comments"
+              {...register("comments")}
+              placeholder="Enter any additional comments"
+            />
+          </div>
           <Button type="submit" className="w-full">
             Submit Request
           </Button>
         </form>
+        {whatsAppLink && (
+          <div className="mt-4">
+            <a
+              href={whatsAppLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-4"
+            >
+              <FaWhatsapp className="w-6 h-6" />
+              <span>WhatsApp: 08097034355</span>
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );
