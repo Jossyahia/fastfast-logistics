@@ -73,20 +73,20 @@ export default function EnhancedLandingPage() {
             peace of mind for your business.
           </p>
           <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
-            <Link href="/booking" passHref>
-              <Button
-                size="lg"
-                className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-              >
-                Book a rider Now
-              </Button>
-            </Link>
             <Link href="/request" passHref>
               <Button
                 size="lg"
                 className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
                 Instant Pickup
+              </Button>
+            </Link>
+            <Link href="/booking" passHref>
+              <Button
+                size="lg"
+                className="text-lg px-8 py-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              >
+                Book a rider Now
               </Button>
             </Link>
           </div>
