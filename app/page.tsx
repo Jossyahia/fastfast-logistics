@@ -185,6 +185,14 @@ export default function EnhancedLandingPage() {
         </section>
 
         <TestimonialSection />
+        <section className="mb-16 rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-800 dark:bg-neutral-800 md:p-10">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.16em] text-indigo-600">FastFast delivery journal</p>
+            <h2 className="text-3xl font-extrabold">Practical delivery advice for online vendors</h2>
+            <p className="mt-4 leading-7 text-neutral-600 dark:text-neutral-300">Explore useful guides on Pay on Delivery, order preparation, local coverage and reducing failed deliveries across our Delta State service areas.</p>
+            <Link href="/blog" className="mt-6 inline-flex items-center justify-center rounded-full bg-indigo-600 px-6 py-3 font-bold text-white transition hover:bg-indigo-700">Explore delivery guides</Link>
+          </div>
+        </section>
         <section
           id="contact-us"
           className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-lg shadow-lg p-8"
