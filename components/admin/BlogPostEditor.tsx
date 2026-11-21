@@ -91,21 +91,21 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
   const labelClass = "block text-sm font-semibold text-neutral-800 dark:text-neutral-100";
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto max-w-5xl pb-4">
+      <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:mb-6 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
           <p className="text-sm font-semibold text-indigo-600">FASTFAST CONTENT STUDIO</p>
           <h1 className="mt-1 text-2xl font-bold">{values.id ? "Edit article" : "Create an article"}</h1>
-          <p className="mt-1 text-sm text-neutral-500">Write once. Publish to your website and reuse the local update on Google Business Profile.</p>
+          <p className="mt-1 text-sm text-neutral-500">Write once. Publish to your website, then reuse a shorter local update on Google Business Profile.</p>
         </div>
-        <Link href="/admin/blog" className="rounded-lg border px-4 py-2 text-sm font-semibold">Back to articles</Link>
+        <Link href="/admin/blog" className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800">Back to articles</Link>
       </div>
 
       {error && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
       {success && <div role="status" className="mb-4 rounded-xl border border-green-300 bg-green-50 p-3 text-sm text-green-800">{success}</div>}
 
-      <div className="space-y-6">
-        <section className="rounded-2xl border bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-7">
+      <div className="space-y-4 sm:space-y-6">
+        <section className="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-7">
           <h2 className="mb-5 text-lg font-bold">Article details</h2>
           <div className="space-y-5">
             <label className={labelClass}>Article title
@@ -138,7 +138,7 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
               <button type="button" onClick={() => setShowPreview((value) => !value)} className="rounded-lg border px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300">{showPreview ? "Hide preview" : "Preview article"}</button>
             </div>
             <label className={labelClass}>
-              <textarea className={inputClass + " min-h-[320px] leading-7"} rows={14} maxLength={60000} value={values.content} onChange={(e) => update("content", e.target.value)} placeholder={"Write your article here. Separate paragraphs with a blank line.\n\nUse ## before a section heading.\n\nUse - at the start of a line for a bullet point.\n\nKeep advice accurate to FastFast's actual service areas and services."} />
+              <textarea className={inputClass + " min-h-[260px] leading-7 sm:min-h-[320px]"} rows={14} maxLength={60000} value={values.content} onChange={(e) => update("content", e.target.value)} placeholder={"Write your article here. Separate paragraphs with a blank line.\n\nUse ## before a section heading.\n\nUse - at the start of a line for a bullet point.\n\nFastFast local coverage: Sapele, Warri, Asaba, Oghara and Koko. Pay on Delivery is confirmed in Sapele, Warri and Asaba only; confirm Oghara and Koko first."} />
               <span className="mt-1 flex justify-between text-xs font-normal text-neutral-500"><span>{wordCount} words · about {readingTime} min read</span><span>{values.content.length}/60,000</span></span>
             </label>
             {showPreview && (
@@ -184,9 +184,9 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
           }} className="mt-3 rounded-lg border border-indigo-500 px-4 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-40 dark:text-indigo-300">{copiedUpdate ? "Copied to clipboard" : "Copy Google Business Profile update"}</button>
         </section>
 
-        <div className="sticky bottom-2 flex flex-col gap-3 rounded-2xl border bg-white/95 p-3 shadow-xl backdrop-blur dark:border-neutral-700 dark:bg-neutral-950/95 sm:flex-row sm:justify-end">
-          <button type="button" disabled={saving} onClick={() => save("DRAFT")} className="rounded-xl border px-5 py-3 text-sm font-bold disabled:opacity-50">{saving ? "Saving..." : "Save as draft"}</button>
-          <button type="button" disabled={saving} onClick={() => save("PUBLISHED")} className="rounded-xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? "Publishing..." : values.status === "PUBLISHED" ? "Save & keep published" : "Publish article"}</button>
+        <div className="sticky bottom-[calc(88px+env(safe-area-inset-bottom))] z-20 grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white/95 p-2 shadow-xl backdrop-blur dark:border-neutral-700 dark:bg-neutral-950/95 sm:bottom-2 sm:flex sm:justify-end sm:p-3">
+          <button type="button" disabled={saving} onClick={() => save("DRAFT")} className="min-h-12 rounded-xl border px-3 py-3 text-xs font-extrabold disabled:opacity-50 sm:px-5 sm:text-sm">{saving ? "Saving..." : "Save as draft"}</button>
+          <button type="button" disabled={saving} onClick={() => save("PUBLISHED")} className="min-h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-3 py-3 text-xs font-extrabold text-white shadow-md shadow-indigo-900/15 hover:brightness-110 disabled:opacity-50 sm:px-6 sm:text-sm">{saving ? "Publishing..." : values.status === "PUBLISHED" ? "Save & keep published" : "Publish article"}</button>
         </div>
       </div>
     </div>
