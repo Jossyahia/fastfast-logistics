@@ -40,11 +40,12 @@ function toBlogPost(record: {
 export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
   try {
     const records = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
       orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
     });
-    const databasePosts = records.map(toBlogPost);
-    const databaseSlugs = new Set(databasePosts.map((post) => post.slug));
+    const databasePosts = records
+      .filter((record) => record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date())
+      .map(toBlogPost);
+    const databaseSlugs = new Set(records.map((post) => post.slug));
     return [...databasePosts, ...blogPosts.filter((post) => !databaseSlugs.has(post.slug))]
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (error) {
@@ -55,10 +56,11 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
 
 export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
   try {
-    const record = await prisma.blogPost.findFirst({
-      where: { slug, status: "PUBLISHED", publishedAt: { lte: new Date() } },
-    });
-    if (record) return toBlogPost(record);
+    const record = await prisma.blogPost.findUnique({ where: { slug } });
+    if (record) {
+      if (record.status !== "PUBLISHED" || !record.publishedAt || record.publishedAt > new Date()) return undefined;
+      return toBlogPost(record);
+    }
   } catch (error) {
     console.error("Could not load CMS article; checking built-in articles:", error);
   }
