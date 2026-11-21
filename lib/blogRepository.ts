@@ -43,9 +43,6 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
     const records = await prisma.blogPost.findMany({
       orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
     });
-    const databasePosts = records
-      .filter((record) => record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date())
-      .map(toBlogPost);
 
     // Built-in articles keep the journal populated when the CMS has no matching
     // record. Once an editor creates a CMS record, its status is authoritative:
@@ -59,7 +56,9 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
         postsBySlug.delete(record.slug);
       }
     }
-    return [...postsBySlug.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+
+    // Array.from avoids requiring downlevelIteration for Map iterators.
+    return Array.from(postsBySlug.values()).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (error) {
     console.error("Could not load CMS articles; showing built-in articles:", error);
     return builtInPosts;
