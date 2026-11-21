@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Logistics Tips and Delivery Guides",
   description:
-    "Helpful delivery guides, Pay on Delivery advice and logistics tips for individuals and online vendors in Sapele, Warri and Asaba.",
+    "Helpful local delivery guides and logistics tips for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko.",
   alternates: { canonical: "/blog" },
   openGraph: {
     title: "FastFast Logistics Blog",
@@ -26,7 +26,7 @@ export default async function BlogPage() {
         <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-indigo-600">FastFast Logistics Journal</p>
         <h1 className="mb-4 text-4xl font-extrabold md:text-5xl">Delivery advice for people and growing businesses</h1>
         <p className="text-lg text-neutral-600 dark:text-neutral-300">
-          Practical guides on local delivery, Pay on Delivery and order fulfilment for customers and online vendors in Sapele, Warri and Asaba.
+          Practical guides on local delivery, Pay on Delivery and order fulfilment for customers and online vendors in Sapele, Warri, Asaba, Oghara and Koko.
         </p>
       </header>
 
