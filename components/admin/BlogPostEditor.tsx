@@ -87,7 +87,7 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
     }
   }
 
-  const inputClass = "mt-2 w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:focus:ring-indigo-950";
+  const inputClass = "mt-2 min-h-12 w-full min-w-0 rounded-xl border border-neutral-300 bg-white px-4 py-3 text-base leading-6 text-neutral-900 outline-none transition placeholder:text-neutral-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:ring-indigo-950 sm:text-sm";
   const labelClass = "block text-sm font-semibold text-neutral-800 dark:text-neutral-100";
 
   return (
@@ -96,7 +96,7 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
         <div>
           <p className="text-sm font-semibold text-indigo-600">FASTFAST CONTENT STUDIO</p>
           <h1 className="mt-1 text-2xl font-bold">{values.id ? "Edit article" : "Create an article"}</h1>
-          <p className="mt-1 text-sm text-neutral-500">Write once. Publish to your website, then reuse a shorter local update on Google Business Profile.</p>
+          <p className="mt-1 text-sm text-neutral-500">Draft and publish from your phone. Then copy a ready-to-use local update for Google Business Profile.</p>
         </div>
         <Link href="/admin/blog" className="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-bold transition hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800">Back to articles</Link>
       </div>
@@ -104,7 +104,7 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
       {error && <div role="alert" className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>}
       {success && <div role="status" className="mb-4 rounded-xl border border-green-300 bg-green-50 p-3 text-sm text-green-800">{success}</div>}
 
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4 pb-3 sm:space-y-6">
         <section className="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 sm:p-7">
           <h2 className="mb-5 text-lg font-bold">Article details</h2>
           <div className="space-y-5">
@@ -135,10 +135,10 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
             </label>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className={labelClass}>Article body</span>
-              <button type="button" onClick={() => setShowPreview((value) => !value)} className="rounded-lg border px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300">{showPreview ? "Hide preview" : "Preview article"}</button>
+              <button type="button" onClick={() => setShowPreview((value) => !value)} className="min-h-11 rounded-xl border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-950/50" aria-expanded={showPreview}>{showPreview ? "Hide preview" : "Preview article"}</button>
             </div>
             <label className={labelClass}>
-              <textarea className={inputClass + " min-h-[260px] leading-7 sm:min-h-[320px]"} rows={14} maxLength={60000} value={values.content} onChange={(e) => update("content", e.target.value)} placeholder={"Write your article here. Separate paragraphs with a blank line.\n\nUse ## before a section heading.\n\nUse - at the start of a line for a bullet point.\n\nFastFast local coverage: Sapele, Warri, Asaba, Oghara and Koko. Pay on Delivery is confirmed in Sapele, Warri and Asaba only; confirm Oghara and Koko first."} />
+              <textarea className={inputClass + " min-h-[260px] leading-7 sm:min-h-[320px]"} rows={14} maxLength={60000} value={values.content} onChange={(e) => update("content", e.target.value)} placeholder={"Write your article here. Separate paragraphs with a blank line.\n\nUse ## before a section heading.\n\nUse - at the start of a line for a bullet point.\n\nFastFast main service hubs: Sapele, Warri, Asaba, Oghara and Koko, plus surrounding communities where pickup and drop-off can be confirmed. Pay on Delivery is available across all five main service areas. Deliveries are local within each service area; intercity delivery between hubs is not currently offered."} />
               <span className="mt-1 flex justify-between text-xs font-normal text-neutral-500"><span>{wordCount} words · about {readingTime} min read</span><span>{values.content.length}/60,000</span></span>
             </label>
             {showPreview && (
@@ -152,9 +152,9 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
           </div>
         </section>
 
-        <section className="rounded-2xl border bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-7">
-          <h2 className="mb-1 text-lg font-bold">Search appearance</h2>
-          <p className="mb-5 text-sm text-neutral-500">These fields help search engines understand and display the article.</p>
+        <details className="group rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:rounded-3xl">
+          <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-left sm:px-7 [&::-webkit-details-marker]:hidden"><span><span className="block text-base font-bold">Search appearance</span><span className="mt-1 block text-xs font-normal text-neutral-500">SEO title and description · Optional</span></span><span className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-bold text-neutral-600 group-open:bg-indigo-50 group-open:text-indigo-700 dark:bg-neutral-800 dark:text-neutral-300 dark:group-open:bg-indigo-950 dark:group-open:text-indigo-200">Edit</span></summary>
+          <div className="border-t border-neutral-100 p-4 dark:border-neutral-800 sm:p-7"><p className="mb-5 text-sm text-neutral-500">These fields help search engines understand and display the article.</p>
           <div className="space-y-5">
             <label className={labelClass}>SEO title
               <input className={inputClass} maxLength={70} value={values.seoTitle} onChange={(e) => update("seoTitle", e.target.value)} />
@@ -165,11 +165,12 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
               <span className="mt-1 block text-xs font-normal text-neutral-500">{values.seoDescription.length}/170 characters</span>
             </label>
           </div>
-        </section>
+          </div>
+        </details>
 
-        <section className="rounded-2xl border bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:p-7">
-          <h2 className="mb-1 text-lg font-bold">Google Business Profile update</h2>
-          <p className="mb-5 text-sm text-neutral-500">A shorter post to accompany this article. Copy and publish it to your Google Business Profile after the article is live.</p>
+        <details className="group rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-700 dark:bg-neutral-900 sm:rounded-3xl">
+          <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 text-left sm:px-7 [&::-webkit-details-marker]:hidden"><span><span className="block text-base font-bold">Google Business Profile update</span><span className="mt-1 block text-xs font-normal text-neutral-500">Prepare a separate post to share with customers</span></span><span className="rounded-xl bg-neutral-100 px-3 py-2 text-xs font-bold text-neutral-600 group-open:bg-indigo-50 group-open:text-indigo-700 dark:bg-neutral-800 dark:text-neutral-300 dark:group-open:bg-indigo-950 dark:group-open:text-indigo-200">Open</span></summary>
+          <div className="border-t border-neutral-100 p-4 dark:border-neutral-800 sm:p-7"><p className="mb-5 text-sm text-neutral-500">A shorter post to accompany this article. Copy and publish it to your Google Business Profile after the article is live.</p>
           <label className={labelClass}>Ready-to-use local update
             <textarea className={inputClass} rows={4} maxLength={1500} value={values.googleBusinessUpdate} onChange={(e) => update("googleBusinessUpdate", e.target.value)} placeholder="Write a helpful local update and invite customers to read the full article." />
           </label>
@@ -181,8 +182,9 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
             } catch {
               setError("Your browser could not copy the update. You can select the text and copy it manually.");
             }
-          }} className="mt-3 rounded-lg border border-indigo-500 px-4 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-40 dark:text-indigo-300">{copiedUpdate ? "Copied to clipboard" : "Copy Google Business Profile update"}</button>
-        </section>
+          }} className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-indigo-300 px-4 py-3 text-sm font-bold text-indigo-700 transition hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/50 sm:w-auto">{copiedUpdate ? "Copied to clipboard" : "Copy Google Business Profile update"}</button>
+          </div>
+        </details>
 
         <div className="sticky bottom-[calc(88px+env(safe-area-inset-bottom))] z-20 grid grid-cols-2 gap-2 rounded-2xl border border-neutral-200 bg-white/95 p-2 shadow-xl backdrop-blur dark:border-neutral-700 dark:bg-neutral-950/95 sm:bottom-2 sm:flex sm:justify-end sm:p-3">
           <button type="button" disabled={saving} onClick={() => save("DRAFT")} className="min-h-12 rounded-xl border px-3 py-3 text-xs font-extrabold disabled:opacity-50 sm:px-5 sm:text-sm">{saving ? "Saving..." : "Save as draft"}</button>
