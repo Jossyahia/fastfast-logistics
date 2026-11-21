@@ -47,11 +47,18 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
       .filter((record) => record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date())
       .map(toBlogPost);
 
-    // Keep the public journal populated if the CMS table is empty, and use
-    // database versions when an editor has published an article with the same slug.
+    // Built-in articles keep the journal populated when the CMS has no matching
+    // record. Once an editor creates a CMS record, its status is authoritative:
+    // drafts and scheduled posts must not leak through the static fallback.
     const postsBySlug = new Map<string, BlogPost>();
     for (const post of builtInPosts) postsBySlug.set(post.slug, post);
-    for (const post of databasePosts) postsBySlug.set(post.slug, post);
+    for (const record of records) {
+      if (record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date()) {
+        postsBySlug.set(record.slug, toBlogPost(record));
+      } else {
+        postsBySlug.delete(record.slug);
+      }
+    }
     return [...postsBySlug.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (error) {
     console.error("Could not load CMS articles; showing built-in articles:", error);
@@ -62,8 +69,11 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
 export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
   try {
     const record = await prisma.blogPost.findUnique({ where: { slug } });
-    if (record && record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date()) {
-      return toBlogPost(record);
+    if (record) {
+      if (record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date()) {
+        return toBlogPost(record);
+      }
+      return undefined;
     }
   } catch (error) {
     console.error("Could not load CMS article; checking built-in articles:", error);
