@@ -14,6 +14,10 @@ export type BlogPost = {
   seoTitle: string;
   seoDescription: string;
   googleBusinessUpdate: string;
+  content?: string;
+  id?: string;
+  status?: "DRAFT" | "PUBLISHED";
+  updatedAt?: string;
   sections: BlogSection[];
 };
 

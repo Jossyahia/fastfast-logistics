@@ -1,5 +1,6 @@
 // app/admin/dashboard/page.tsx
 import React from "react";
+import Link from "next/link";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { Status } from "@prisma/client";
@@ -42,7 +43,10 @@ const DashboardPage = async () => {
 
     return (
       <div className="p-4 md:p-8">
-        <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          <Link href="/admin/blog" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Open Blog Studio</Link>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard title="Total Users" value={stats.totalUsers} />
           <StatCard title="Total Bookings" value={stats.totalBookings} />
