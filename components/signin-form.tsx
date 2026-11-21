@@ -11,7 +11,7 @@ export default function SignInForm() {
     await signIn("credentials", {
       email: formData.get("email") as string,
       password: formData.get("password") as string,
-      callbackUrl: "/",
+      callbackUrl: "/admin/blog",
     });
   };
 
