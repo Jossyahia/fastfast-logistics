@@ -63,6 +63,7 @@ const businessSchema = {
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#11172b",
 };
 
 export default function RootLayout({
