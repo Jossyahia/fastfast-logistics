@@ -20,7 +20,7 @@ export default function ContactInfo() {
       </div>
       <div className="mt-7 rounded-2xl bg-indigo-50 p-4 dark:bg-indigo-950/40">
         <h3 className="font-bold">Before you book</h3>
-        <p className="mt-2 text-sm leading-6 text-neutral-700 dark:text-neutral-200">Deliveries are local within each listed area. Pay on Delivery is confirmed in Sapele, Warri and Asaba. Contact us to confirm Pay on Delivery for Oghara or Koko. Same-day delivery depends on availability.</p>
+        <p className="mt-2 text-sm leading-6 text-neutral-700 dark:text-neutral-200">Our main service hubs are Sapele, Warri, Asaba, Oghara and Koko, plus surrounding communities where pickup and drop-off can be confirmed. Pay on Delivery is available across all five main areas. Deliveries are local within each service area; same-day delivery depends on availability.</p>
       </div>
     </div>
   );
