@@ -25,9 +25,7 @@ export default function ServicesPage() {
             </h1>
 
             <p className="text-lg text-neutral-600 dark:text-neutral-300 mb-8 max-w-2xl mx-auto">
-              Discover our comprehensive range of logistics and delivery
-              services designed to meet your every need with precision and
-              reliability.
+              Explore local package delivery, rider pickup and order support for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko. Pay on Delivery is confirmed in Sapele, Warri and Asaba.
             </p>
           </div>
         </div>
