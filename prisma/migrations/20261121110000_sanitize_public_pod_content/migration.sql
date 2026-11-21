@@ -52,6 +52,16 @@ WHERE "status" = 'PUBLISHED';
 
 UPDATE "BlogPost"
 SET
+  "content" = REPLACE(
+    "content",
+    'FastFast Logistics serves individuals and online vendors in Sapele, Warri and Asaba.',
+    'FastFast Logistics serves individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko.'
+  ),
+  "updatedAt" = CURRENT_TIMESTAMP
+WHERE "status" = 'PUBLISHED';
+
+UPDATE "BlogPost"
+SET
   "content" = "content" || CASE
     WHEN POSITION('## How FastFast Pay on Delivery works' IN "content") = 0
     THEN E'\n\n## How FastFast Pay on Delivery works\n\nFor a vendor-arranged FastFast Pay on Delivery order, the vendor includes delivery in the order total shared with the customer. The recipient pays that agreed total when the order arrives. This arrangement is separate from the standard local pickup-and-delivery booking form.\n'
