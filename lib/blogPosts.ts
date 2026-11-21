@@ -55,7 +55,7 @@ export const blogPosts: BlogPost[] = [
         ],
         bullets: [
           "Confirm the customer's full delivery address and active phone number.",
-          "Agree the order amount and any delivery fee in advance.",
+          "Confirm the agreed order total with the customer before dispatch.",
           "Keep the customer reachable during the delivery process.",
           "Contact FastFast if any delivery detail changes."
         ]
@@ -94,7 +94,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Set clear payment expectations",
         paragraphs: [
-          "If the order is Pay on Delivery, tell the customer exactly how much is due and what payment methods are accepted. Make sure the vendor and delivery partner agree on the collection and remittance process before dispatch."
+          "If the order is vendor-arranged Pay on Delivery, the vendor includes delivery in the order total shared with the customer. The recipient pays that agreed total when the order arrives."
         ]
       },
       {
@@ -131,7 +131,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Understand the payment options",
         paragraphs: [
-          "If you need Pay on Delivery, confirm that the provider supports it in the destination city and agree how the amount will be collected and reconciled."
+          "If you need Pay on Delivery, confirm that the service is available for the destination and share the agreed order total with the customer before dispatch."
         ]
       },
       {
@@ -143,7 +143,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Compare service details, not just price",
         paragraphs: [
-          "Check what is included in the quoted fee, whether pickup is available, how special handling is arranged and whether same-day service is available for your particular request. Ask for confirmation instead of assuming every service is available for every order."
+          "Check whether pickup is available, how special handling is arranged and whether same-day service is available for your particular request. Ask for confirmation instead of assuming every service is available for every order."
         ]
       },
       {
@@ -182,7 +182,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "What to share when booking",
         paragraphs: [
-          "Provide the pickup address, recipient's full delivery address, a nearby landmark, an active phone number and a clear description of the package. Confirm the delivery fee and any amount to be collected before the rider is dispatched."
+          "Provide the pickup address, recipient's full delivery address, a nearby landmark, an active phone number and a clear description of the package. Confirm the agreed order total with the customer before dispatch."
         ],
         bullets: ["Pickup town and address", "Recipient name and phone number", "Drop-off address and landmark", "Whether you need Pay on Delivery", "Any timing or package-handling requirements"]
       },
