@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BlogContent from "@/components/BlogContent";
 
 export type BlogEditorValues = {
   id?: string;
@@ -41,6 +42,8 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
+  const [copiedUpdate, setCopiedUpdate] = useState(false);
 
   const wordCount = useMemo(() => values.content.trim().split(/\s+/).filter(Boolean).length, [values.content]);
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
@@ -130,10 +133,22 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
               <textarea className={inputClass} rows={3} maxLength={300} value={values.excerpt} onChange={(e) => update("excerpt", e.target.value)} placeholder="Explain what readers will learn. This appears on the blog listing and search results." />
               <span className="mt-1 block text-xs font-normal text-neutral-500">{values.excerpt.length}/300 characters</span>
             </label>
-            <label className={labelClass}>Article body
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className={labelClass}>Article body</span>
+              <button type="button" onClick={() => setShowPreview((value) => !value)} className="rounded-lg border px-3 py-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300">{showPreview ? "Hide preview" : "Preview article"}</button>
+            </div>
+            <label className={labelClass}>
               <textarea className={inputClass + " min-h-[320px] leading-7"} rows={14} maxLength={60000} value={values.content} onChange={(e) => update("content", e.target.value)} placeholder={"Write your article here. Separate paragraphs with a blank line.\n\nUse ## before a section heading.\n\nUse - at the start of a line for a bullet point.\n\nKeep advice accurate to FastFast's actual service areas and services."} />
               <span className="mt-1 flex justify-between text-xs font-normal text-neutral-500"><span>{wordCount} words · about {readingTime} min read</span><span>{values.content.length}/60,000</span></span>
             </label>
+            {showPreview && (
+              <div className="rounded-2xl border bg-neutral-50 p-5 dark:border-neutral-700 dark:bg-neutral-950">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-indigo-600">Reader preview</p>
+                <h3 className="mb-2 text-2xl font-extrabold">{values.title || "Your article title"}</h3>
+                <p className="mb-5 text-sm text-neutral-500">{values.excerpt || "Your introduction will appear here."}</p>
+                <BlogContent content={values.content || "Your article body preview will appear here."} />
+              </div>
+            )}
           </div>
         </section>
 
@@ -158,6 +173,15 @@ export default function BlogPostEditor({ initial }: { initial?: BlogEditorValues
           <label className={labelClass}>Ready-to-use local update
             <textarea className={inputClass} rows={4} maxLength={1500} value={values.googleBusinessUpdate} onChange={(e) => update("googleBusinessUpdate", e.target.value)} placeholder="Write a helpful local update and invite customers to read the full article." />
           </label>
+          <button type="button" disabled={!values.googleBusinessUpdate.trim()} onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(values.googleBusinessUpdate);
+              setCopiedUpdate(true);
+              window.setTimeout(() => setCopiedUpdate(false), 2000);
+            } catch {
+              setError("Your browser could not copy the update. You can select the text and copy it manually.");
+            }
+          }} className="mt-3 rounded-lg border border-indigo-500 px-4 py-2 text-sm font-semibold text-indigo-700 disabled:opacity-40 dark:text-indigo-300">{copiedUpdate ? "Copied to clipboard" : "Copy Google Business Profile update"}</button>
         </section>
 
         <div className="sticky bottom-2 flex flex-col gap-3 rounded-2xl border bg-white/95 p-3 shadow-xl backdrop-blur dark:border-neutral-700 dark:bg-neutral-950/95 sm:flex-row sm:justify-end">
