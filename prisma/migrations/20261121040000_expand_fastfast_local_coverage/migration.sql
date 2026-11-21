@@ -43,3 +43,23 @@ INSERT INTO "BlogPost" (
   'PUBLISHED', '2026-11-21T12:00:00.000Z', CURRENT_TIMESTAMP
 )
 ON CONFLICT ("slug") DO NOTHING;
+
+-- Bring the original Pay on Delivery article in line with the confirmed five-area service coverage.
+UPDATE "BlogPost"
+SET
+  "title" = 'Pay on Delivery in FastFast Service Areas: What Customers and Vendors Should Know',
+  "excerpt" = 'A practical guide to using Pay on Delivery for local orders across FastFast''s five main service areas in Delta State.',
+  "content" = REPLACE(
+    REPLACE(
+      "content",
+      'FastFast Logistics offers Pay on Delivery for local deliveries in Sapele, Warri and Asaba, Delta State.',
+      'FastFast Logistics offers Pay on Delivery across its five main local service areas: Sapele, Warri, Asaba, Oghara and Koko, Delta State. Surrounding communities may also be served when pickup and drop-off can be confirmed.'
+    ),
+    E'- Sapele\\n- Warri\\n- Asaba',
+    E'- Sapele\\n- Warri\\n- Asaba\\n- Oghara\\n- Koko'
+  ),
+  "seoTitle" = 'Pay on Delivery Across FastFast Service Areas | FastFast Logistics',
+  "seoDescription" = 'Learn how Pay on Delivery works for local deliveries in Sapele, Warri, Asaba, Oghara and Koko, Delta State.',
+  "googleBusinessUpdate" = 'Do you sell online in Sapele, Warri, Asaba, Oghara or Koko? FastFast Logistics offers Pay on Delivery across our five main service areas. Contact us to confirm your exact pickup and drop-off community.',
+  "updatedAt" = CURRENT_TIMESTAMP
+WHERE "slug" = 'pay-on-delivery-in-sapele-warri-and-asaba';
