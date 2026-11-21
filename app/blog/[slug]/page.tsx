@@ -63,6 +63,11 @@ export default async function BlogArticlePage({ params }: Props) {
           <BlogShareActions updateText={post.googleBusinessUpdate} articleUrl={articleUrl} />
           <p className="mt-2 text-xs text-neutral-500">Copy this local update and article link to publish manually on your Google Business Profile.</p>
         </div>
+        <div className="mb-10 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900 dark:bg-indigo-950/60">
+          <h2 className="text-lg font-bold">Need help fulfilling your next order?</h2>
+          <p className="mt-2 text-sm leading-6 text-neutral-700 dark:text-neutral-200">Share your pickup and delivery details with FastFast and confirm availability for your location.</p>
+          <Link href="/booking" className="mt-4 inline-flex rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Book a local delivery</Link>
+        </div>
         {post.content ? (
           <BlogContent content={post.content} />
         ) : (
@@ -81,7 +86,7 @@ export default async function BlogArticlePage({ params }: Props) {
       </article>
       <div className="mt-12 rounded-2xl bg-indigo-50 p-6 dark:bg-indigo-950">
         <h2 className="mb-2 text-xl font-bold">Need a local delivery?</h2>
-        <p className="mb-4 text-sm leading-6">FastFast Logistics serves Sapele, Warri and Asaba. Pay on Delivery is available in all three cities.</p>
+        <p className="mb-4 text-sm leading-6">FastFast Logistics handles local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Confirm your exact pickup and drop-off points and any Pay on Delivery requirements before dispatch.</p>
         <a href="https://wa.me/2348156067874" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Chat with FastFast on WhatsApp</a>
       </div>
     </main>
