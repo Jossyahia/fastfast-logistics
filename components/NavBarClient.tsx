@@ -137,6 +137,7 @@ const NavBarClient: React.FC = () => {
         { href: "/tracking", label: "Tracking", icon: MapPin },
         { href: "/contact-us", label: "Contact", icon: Mail },
         { href: "/about", label: "About", icon: Info },
+        { href: "/blog", label: "Blog", icon: BookOpen },
       ];
     }
   }, [isAdmin, isRider]);
