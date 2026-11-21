@@ -57,7 +57,35 @@ const businessSchema = {
     { "@type": "Place", name: "Oghara", containedInPlace: { "@type": "AdministrativeArea", name: "Delta State" } },
     { "@type": "Place", name: "Koko", containedInPlace: { "@type": "AdministrativeArea", name: "Delta State" } },
   ],
-  serviceType: ["Local package delivery", "Pay on Delivery", "Order fulfilment support"],
+  serviceType: ["Local package delivery", "Order fulfilment support"],
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Local package delivery",
+        areaServed: [
+          { "@type": "City", name: "Sapele" },
+          { "@type": "City", name: "Warri" },
+          { "@type": "City", name: "Asaba" },
+          { "@type": "Place", name: "Oghara" },
+          { "@type": "Place", name: "Koko" },
+        ],
+      },
+    },
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "Service",
+        name: "Pay on Delivery",
+        areaServed: [
+          { "@type": "City", name: "Sapele" },
+          { "@type": "City", name: "Warri" },
+          { "@type": "City", name: "Asaba" },
+        ],
+      },
+    },
+  ],
 };
 
 export const viewport = {
