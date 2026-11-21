@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     default: "FastFast Logistics Services | Local Delivery in Delta State",
     template: "%s | FastFast Logistics",
   },
-  description: "Local package delivery and Pay on Delivery for individuals and online vendors in Sapele, Warri and Asaba, Delta State.",
+  description: "Local package delivery for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko, Delta State.",
   applicationName: "FastFast Logistics Services",
   robots: { index: true, follow: true },
   openGraph: {
@@ -25,12 +25,12 @@ export const metadata: Metadata = {
     url: "https://fastfast.ng",
     siteName: "FastFast Logistics Services",
     title: "FastFast Logistics Services | Your Express Lane to Seamless Shipping",
-    description: "Local delivery and Pay on Delivery for individuals and online vendors in Sapele, Warri and Asaba.",
+    description: "Local delivery for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko.",
   },
   twitter: {
     card: "summary",
     title: "FastFast Logistics Services",
-    description: "Local delivery and Pay on Delivery in Sapele, Warri and Asaba, Delta State.",
+    description: "Local delivery in Sapele, Warri, Asaba, Oghara and Koko, Delta State.",
   },
   icons: {
     icon: [
@@ -49,11 +49,13 @@ const businessSchema = {
   url: "https://fastfast.ng",
   telephone: "+2348156067874",
   email: "fastfastlogisticsservices@gmail.com",
-  description: "Local package delivery and logistics support for individuals and online vendors in Sapele, Warri and Asaba, Delta State.",
+  description: "Local package delivery and logistics support for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko, Delta State.",
   areaServed: [
     { "@type": "City", name: "Sapele" },
     { "@type": "City", name: "Warri" },
     { "@type": "City", name: "Asaba" },
+    { "@type": "Place", name: "Oghara", containedInPlace: { "@type": "AdministrativeArea", name: "Delta State" } },
+    { "@type": "Place", name: "Koko", containedInPlace: { "@type": "AdministrativeArea", name: "Delta State" } },
   ],
   serviceType: ["Local package delivery", "Pay on Delivery", "Order fulfilment support"],
 };
