@@ -187,7 +187,7 @@ const NavBarClient: React.FC = () => {
             <div className="flex items-center justify-center rounded-xl border px-4 py-2 dark:border-neutral-700 sm:hidden"><ModeToggle /></div>
             {userData && <button type="button" onClick={handleAuth} className="rounded-xl border px-4 py-3 text-sm font-bold text-red-600 dark:border-neutral-700">Sign out</button>}
           </div>
-          <p className="mt-4 text-center text-xs text-neutral-500">Local deliveries in Sapele, Warri, Asaba, Oghara and Koko.</p>
+          <p className="mt-4 text-center text-xs text-neutral-500">Local delivery in five main hubs and surrounding communities.</p>
         </div>
       </>}
     </nav>
