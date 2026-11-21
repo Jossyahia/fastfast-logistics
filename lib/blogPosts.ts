@@ -55,7 +55,7 @@ export const blogPosts: BlogPost[] = [
         ],
         bullets: [
           "Confirm the customer's full delivery address and active phone number.",
-          "Agree the order amount and any delivery fee in advance.",
+          "Confirm the agreed order total with the customer before dispatch.",
           "Keep the customer reachable during the delivery process.",
           "Contact FastFast if any delivery detail changes."
         ]
