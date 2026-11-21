@@ -12,9 +12,9 @@
 
 ## FastFast facts to preserve in every article
 
-- Current local delivery cities: Sapele, Warri and Asaba, Delta State.
+- Current local delivery areas: Sapele, Warri, Asaba, Oghara and Koko, Delta State.
 - Deliveries operate within each individual city; do not promise intercity delivery between the cities.
-- Pay on Delivery is available in all three cities.
+- Vendor-arranged Pay on Delivery is available across all five main service areas. The vendor includes delivery in the order total shared with the customer, who pays that agreed total on delivery.
 - Same-day delivery is only available where operating conditions allow; confirm availability before promising a time.
 - WhatsApp: +234 815 606 7874.
 - Website: https://fastfast.ng.
