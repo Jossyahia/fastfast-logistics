@@ -38,6 +38,7 @@ function toBlogPost(record: {
 }
 
 export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
+  const builtInPosts = blogPosts.filter((post) => post.status !== "DRAFT");
   try {
     const records = await prisma.blogPost.findMany({
       orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
@@ -45,20 +46,27 @@ export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
     const databasePosts = records
       .filter((record) => record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date())
       .map(toBlogPost);
-    return databasePosts.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+
+    // Keep the public journal populated if the CMS table is empty, and use
+    // database versions when an editor has published an article with the same slug.
+    const postsBySlug = new Map<string, BlogPost>();
+    for (const post of builtInPosts) postsBySlug.set(post.slug, post);
+    for (const post of databasePosts) postsBySlug.set(post.slug, post);
+    return [...postsBySlug.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
   } catch (error) {
     console.error("Could not load CMS articles; showing built-in articles:", error);
-    return blogPosts;
+    return builtInPosts;
   }
 }
 
 export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
   try {
     const record = await prisma.blogPost.findUnique({ where: { slug } });
-    if (!record || record.status !== "PUBLISHED" || !record.publishedAt || record.publishedAt > new Date()) return undefined;
-    return toBlogPost(record);
+    if (record && record.status === "PUBLISHED" && record.publishedAt && record.publishedAt <= new Date()) {
+      return toBlogPost(record);
+    }
   } catch (error) {
     console.error("Could not load CMS article; checking built-in articles:", error);
   }
-  return blogPosts.find((post) => post.slug === slug);
+  return blogPosts.find((post) => post.slug === slug && post.status !== "DRAFT");
 }
