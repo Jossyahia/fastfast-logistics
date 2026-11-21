@@ -110,6 +110,11 @@ const NavBarClient: React.FC = () => {
           icon: BookOpen,
         },
         {
+          href: "/admin/coupons",
+          label: "Coupons",
+          icon: BookOpen,
+        },
+        {
           href: "/admin/update-status",
           label: "Update Status",
           icon: RefreshCw,

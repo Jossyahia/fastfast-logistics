@@ -23,6 +23,7 @@ const steps: Step[] = [
   { text: "Opt for urgent delivery if needed", icon: "CheckSquare" },
   { text: "Review the estimated price", icon: "CreditCard" },
   { text: "Double-check all information", icon: "CheckSquare" },
+  { text: "Make Payment To the Company Account only", icon: "CreditCard" },
   { text: "Click 'Create Booking'", icon: "Send" },
   { text: "Wait for success message or fix errors", icon: "CheckSquare" },
 ];
