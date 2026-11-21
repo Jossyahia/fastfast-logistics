@@ -103,6 +103,7 @@ const NavBarClient: React.FC = () => {
     if (isAdmin) {
       return [
         { href: "/admin/dashboard", label: "Admin Dashboard", icon: Settings },
+        { href: "/admin/blog", label: "Blog Studio", icon: FileText },
         { href: "/admin/ViewAllUsers", label: "View All Users", icon: Users },
         {
           href: "/admin/ViewAllBookings",
