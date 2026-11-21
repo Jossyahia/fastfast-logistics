@@ -1,0 +1,66 @@
+import prisma from "@/lib/prisma";
+import { blogPosts, type BlogPost } from "@/lib/blogPosts";
+
+function readingTime(content: string) {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.ceil(words / 200))} min read`;
+}
+
+function toBlogPost(record: {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  content: string;
+  seoTitle: string;
+  seoDescription: string;
+  googleBusinessUpdate: string;
+  publishedAt: Date | null;
+  updatedAt: Date;
+}): BlogPost {
+  return {
+    id: record.id,
+    slug: record.slug,
+    title: record.title,
+    excerpt: record.excerpt,
+    category: record.category,
+    content: record.content,
+    publishedAt: (record.publishedAt ?? record.updatedAt).toISOString().slice(0, 10),
+    readTime: readingTime(record.content),
+    seoTitle: record.seoTitle,
+    seoDescription: record.seoDescription,
+    googleBusinessUpdate: record.googleBusinessUpdate,
+    status: "PUBLISHED",
+    updatedAt: record.updatedAt.toISOString(),
+    sections: [],
+  };
+}
+
+export async function getPublishedBlogPosts(): Promise<BlogPost[]> {
+  try {
+    const records = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED", publishedAt: { lte: new Date() } },
+      orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+    });
+    const databasePosts = records.map(toBlogPost);
+    const databaseSlugs = new Set(databasePosts.map((post) => post.slug));
+    return [...databasePosts, ...blogPosts.filter((post) => !databaseSlugs.has(post.slug))]
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  } catch (error) {
+    console.error("Could not load CMS articles; showing built-in articles:", error);
+    return blogPosts;
+  }
+}
+
+export async function getPublishedBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+  try {
+    const record = await prisma.blogPost.findFirst({
+      where: { slug, status: "PUBLISHED", publishedAt: { lte: new Date() } },
+    });
+    if (record) return toBlogPost(record);
+  } catch (error) {
+    console.error("Could not load CMS article; checking built-in articles:", error);
+  }
+  return blogPosts.find((post) => post.slug === slug);
+}
