@@ -19,9 +19,8 @@ import {
   HeadphonesIcon,
   LucideProps,
 } from "lucide-react";
-import { FaWhatsapp, FaFacebook, FaInstagram } from "react-icons/fa";
+import { FaWhatsapp } from "react-icons/fa";
 import BookingInstructionsModal from "@/components/BookingInstructionsModal";
-import { FaSquareThreads } from "react-icons/fa6";
 import TestimonialSection from "@/components/TestimonialSection";
 
 interface FeatureCardProps {
@@ -63,14 +62,13 @@ export default function EnhancedLandingPage() {
             Fastfast Logistics Services
           </h1>
           <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto">
-            Your Express Lane to Seamless Shipping with Secure Pay on Delivery
-            Service and a full range of warehousing services.
+            Your Express Lane to Seamless Shipping with local delivery and Pay on Delivery
+            for individuals and online vendors in Delta State.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
-            Ship Fast with fastfast, Pay Securely with fastfast, Track Instantly
-            With FastFast. Leverage our efficient logistics, trusted Pay on
-            Delivery, and robust tracking to ensure seamless deliveries and
-            peace of mind for your business.
+            FastFast supports local deliveries within Sapele, Warri and Asaba. Book a
+            rider, arrange package pickup and use Pay on Delivery in all three
+            cities. Same-day delivery is available where service conditions allow.
           </p>
           <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
             <Link href="/request" passHref>
@@ -134,9 +132,9 @@ export default function EnhancedLandingPage() {
                 <BadgeCheckIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h3 className="font-semibold">100% Reliable</h3>
+                <h3 className="font-semibold">Local City Coverage</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Proven track record of successful deliveries
+                  Deliveries within Sapele, Warri and Asaba
                 </p>
               </div>
             </div>
@@ -145,9 +143,9 @@ export default function EnhancedLandingPage() {
                 <HeadphonesIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h3 className="font-semibold">24/7 Support</h3>
+                <h3 className="font-semibold">Pay on Delivery</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Round-the-clock customer service
+                  Available for local deliveries in all three cities
                 </p>
               </div>
             </div>
@@ -169,9 +167,9 @@ export default function EnhancedLandingPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Lightning Fast</h3>
+                <h3 className="font-semibold">Same-Day Options</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Same-day delivery available
+                  Same-day delivery where available
                 </p>
               </div>
             </div>
@@ -193,49 +191,23 @@ export default function EnhancedLandingPage() {
               <span>08156067874</span>
             </Link>
             <Link
-              href="mailto:support@fastfast.com.ng"
+              href="mailto:fastfastlogisticsservices@gmail.com"
               className="flex items-center space-x-4"
             >
               <MailIcon className="w-6 h-6" />
-              <span>support@fastfast.com.ng</span>
+              <span>fastfastlogisticsservices@gmail.com</span>
             </Link>
             <Link
-              href="https://api.whatsapp.com/send?phone=2348097034355" // Use the correct international format here
+              href="https://wa.me/2348156067874"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-4"
             >
               <FaWhatsapp className="w-6 h-6" />
-              <span>WhatsApp: 08097034355</span>
+              <span>WhatsApp: 08156067874</span>
             </Link>
 
-            <Link
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-4"
-            >
-              <FaFacebook className="w-6 h-6" />
-              <span>Facebook: FastFast Logistics</span>
-            </Link>
-            <Link
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-4"
-            >
-              <FaInstagram className="w-6 h-6" />
-              <span>Instagram: @fastfastlogistics</span>
-            </Link>
-            <Link
-              href="https://threads.net"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-4"
-            >
-              <FaSquareThreads className="w-6 h-6" />
-              <span>Threads: @fastfastlogistics</span>
-            </Link>
+
           </div>
         </section>
       </main>
