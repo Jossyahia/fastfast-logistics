@@ -37,7 +37,8 @@ export const blogPosts: BlogPost[] = [
         heading: "What is Pay on Delivery?",
         paragraphs: [
           "Pay on Delivery (POD) allows a customer to pay for an order when it is delivered, rather than paying the seller in advance. It can give customers more confidence when ordering from online and social-commerce vendors.",
-          "For vendors, a clear delivery process matters. Confirm the order, the recipient's phone number, the delivery address and the amount to be collected before dispatch."
+          "For vendors, a clear delivery process matters. Confirm the order, the recipient's phone number, the delivery address and the agreed order total before dispatch.",
+          "For a vendor-arranged FastFast Pay on Delivery order, the vendor includes delivery in the order total shared with the customer. The recipient pays that agreed total when the order arrives. This arrangement is handled directly with FastFast and is separate from the standard local pickup-and-delivery booking form."
         ]
       },
       {
