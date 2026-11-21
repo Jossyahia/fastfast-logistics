@@ -64,8 +64,7 @@ INSERT INTO "BlogPost" (
   'Use these practical checks to choose a local delivery partner for packages and online orders in Delta State.',
   'Choosing a delivery partner for your business? Check service coverage, communication, payment handling and delivery updates before you dispatch. Here is a helpful guide from FastFast Logistics.',
   'PUBLISHED', '2026-11-21T12:00:00.000Z', CURRENT_TIMESTAMP
-);
-,
+),
 (
   'fastfast_blog_sapele_vendor_20261121',
   'sapele-online-vendors-local-delivery-checklist',
