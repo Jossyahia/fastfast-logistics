@@ -158,7 +158,7 @@ const NavBarClient: React.FC = () => {
           ) : (
             <Button onClick={handleAuth} disabled={isLoading} size="sm" className="hidden rounded-xl px-5 sm:inline-flex">{isLoading ? "Please wait..." : "Sign in"}</Button>
           )}
-          {!isAdmin && !isRider && <Link href="/booking" className="inline-flex rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-3 py-2 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition hover:brightness-110 sm:px-4 sm:py-2.5 sm:text-sm">Book a delivery</Link>}
+          {!isAdmin && !isRider && <Link href="/booking" aria-label="Book a delivery" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-3 py-2 text-xs font-bold text-white shadow-md shadow-indigo-600/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:px-4 sm:py-2.5 sm:text-sm"><span className="sm:hidden">Book</span><span className="hidden sm:inline">Book a delivery</span></Link>}
           <button type="button" onClick={() => setIsMobileMenuOpen(v => !v)} aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={isMobileMenuOpen}
             className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-800 transition hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800 lg:hidden">
             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
