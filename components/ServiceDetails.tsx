@@ -1,88 +1,36 @@
 import React from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
-import { Truck, Package, Globe, Clock, Shield, Warehouse } from "lucide-react";
+import { Truck, Package, Wallet, Clock, MapPin, Warehouse } from "lucide-react";
 
 const serviceDetails = [
-  {
-    title: "Express Delivery",
-    icon: Truck,
-    content:
-      "Our Express Delivery service ensures your packages reach their destination in record time. Choose from same-day delivery for local shipments or next-day delivery for longer distances. Perfect for urgent documents, time-sensitive materials, or last-minute gifts.",
-    highlight: "Same-day & next-day options available",
-  },
-  {
-    title: "Affordable Delivery",
-    icon: Package,
-    content:
-      "Our Express Delivery service ensures your packages reach their destination in record time. Choose from same-day delivery for local shipments or next-day delivery for longer distances. Perfect for urgent documents, time-sensitive materials, or last-minute gifts.",
-    highlight: "Cost-effective shipping solutions",
-  },
-  {
-    title: "International Shipping",
-    icon: Globe,
-    content:
-      "With our International Shipping service, we handle all aspects of global logistics. From customs documentation to tracking, we ensure your shipments cross borders smoothly. We offer air freight for speed and sea freight for cost-effective bulk shipping.",
-    highlight: "Global reach, local expertise",
-  },
-  {
-    title: "Time-Critical Logistics",
-    icon: Clock,
-    content:
-      "When every minute counts, our Time-Critical Logistics service delivers. We offer tailored solutions for industries like healthcare, manufacturing, and event management. Our dedicated team works around the clock to meet your most demanding deadlines.",
-    highlight: "24/7 dedicated support",
-  },
-  {
-    title: "Secure Transport",
-    icon: Shield,
-    content:
-      "For high-value or sensitive items, our Secure Transport service provides peace of mind. We use advanced tracking technology, secure vehicles, and trained personnel to ensure your valuable shipments are protected throughout their journey.",
-    highlight: "Advanced security measures",
-  },
-  {
-    title: "Warehousing and Distribution",
-    icon: Warehouse,
-    content:
-      "Our Warehousing and Distribution service offers flexible storage solutions and efficient distribution networks. We help optimize your supply chain with strategic inventory management, pick and pack services, and timely order fulfillment.",
-    highlight: "Comprehensive logistics solutions",
-  },
+  { title: "Local Package Delivery", icon: Truck, highlight: "Five local service areas", content: "FastFast handles local package deliveries within Sapele, Warri, Asaba, Oghara and Koko in Delta State. Confirm that both pickup and delivery addresses are within the same service area before booking. Intercity delivery between these locations is not currently advertised." },
+  { title: "Rider Pickup", icon: Package, highlight: "Collection from your pickup point", content: "Request a rider to collect a package from your home, shop or business. Share a clear pickup address, recipient details and package information so availability and arrangements can be confirmed before dispatch." },
+  { title: "Pay on Delivery", icon: Wallet, highlight: "Available across all five main service areas", content: "Pay on Delivery is available for local deliveries within Sapele, Warri, Asaba, Oghara and Koko." },
+  { title: "Same-Day Delivery Options", icon: Clock, highlight: "Subject to availability", content: "Same-day delivery may be available depending on the pickup location, destination, time of booking and operating capacity. Ask FastFast to confirm availability before promising a delivery time to a customer." },
+  { title: "Local Service Coverage", icon: MapPin, highlight: "Sapele · Warri · Asaba · Oghara · Koko", content: "FastFast's local service areas are Sapele, Warri, Asaba, Oghara and Koko, Delta State. Delivery is local within each listed area; do not assume a parcel can be sent from one of these towns to another as an intercity delivery." },
+  { title: "Order Fulfilment Support", icon: Warehouse, highlight: "For online and social-commerce vendors", content: "FastFast supports individuals and online vendors with delivery coordination and package handover. Discuss your order volume, pickup needs and fulfilment requirements with the team to confirm the arrangements available for your business." },
 ];
 
 export default function ServiceDetails() {
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {serviceDetails.map((service, index) => (
-          <Card
-            key={index}
-            className="overflow-hidden bg-white dark:bg-neutral-800 hover:shadow-lg transition-all duration-300 border border-neutral-200 dark:border-neutral-700"
-          >
+    <div className="container mx-auto px-4 py-8 sm:py-12">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {serviceDetails.map((service) => (
+          <Card key={service.title} className="overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-shadow hover:shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
             <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value={`item-${index}`} className="border-none">
-                <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors duration-200">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                      <service.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
-                        {service.title}
-                      </h3>
-                      <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                        {service.highlight}
-                      </p>
-                    </div>
+              <AccordionItem value={service.title} className="border-none">
+                <AccordionTrigger className="px-5 py-5 text-left hover:bg-neutral-50 hover:no-underline dark:hover:bg-neutral-700">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-xl bg-indigo-50 p-3 dark:bg-indigo-950/50"><service.icon className="h-5 w-5 text-indigo-600 dark:text-indigo-300" /></span>
+                    <span className="min-w-0 text-left">
+                      <span className="block font-semibold text-neutral-900 dark:text-neutral-100">{service.title}</span>
+                      <span className="mt-1 block text-xs font-medium text-indigo-600 dark:text-indigo-300">{service.highlight}</span>
+                    </span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4">
-                  <div className="pt-2 text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                    {service.content}
-                  </div>
+                <AccordionContent className="px-5 pb-5">
+                  <p className="leading-7 text-neutral-600 dark:text-neutral-300">{service.content}</p>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
