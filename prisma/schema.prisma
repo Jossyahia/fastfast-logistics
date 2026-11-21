@@ -239,3 +239,27 @@ enum MaritalStatus {
   DIVORCED
   WIDOWED
 }
+
+enum BlogPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model BlogPost {
+  id                  String         @id @default(cuid())
+  slug                String         @unique
+  title               String
+  excerpt             String         @db.Text
+  category            String
+  content             String         @db.Text
+  seoTitle            String
+  seoDescription      String         @db.Text
+  googleBusinessUpdate String         @db.Text
+  status              BlogPostStatus @default(DRAFT)
+  publishedAt         DateTime?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([updatedAt])
+}
