@@ -14,7 +14,7 @@
 
 - Current local delivery locations: Sapele, Warri, Asaba, Oghara and Koko, Delta State.
 - Deliveries operate locally within each listed town/location. Do not promise intercity delivery between these locations.
-- Pay on Delivery is confirmed in Sapele, Warri and Asaba. Do not advertise it in Oghara or Koko until the business confirms availability there.
+- Vendor-arranged Pay on Delivery is available across all five main service areas: Sapele, Warri, Asaba, Oghara and Koko.
 - Same-day delivery is only available where operating conditions allow; confirm availability before promising a time.
 - WhatsApp: +234 815 606 7874.
 - Website: https://fastfast.ng.
