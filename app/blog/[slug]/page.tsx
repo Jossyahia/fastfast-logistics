@@ -81,7 +81,7 @@ export default async function BlogArticlePage({ params }: Props) {
       </article>
       <div className="mt-12 rounded-2xl bg-indigo-50 p-6 dark:bg-indigo-950">
         <h2 className="mb-2 text-xl font-bold">Need a local delivery?</h2>
-        <p className="mb-4 text-sm leading-6">FastFast Logistics serves Sapele, Warri and Asaba. Pay on Delivery is available in all three cities.</p>
+        <p className="mb-4 text-sm leading-6">FastFast Logistics handles local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Vendor-arranged Pay on Delivery is available across all five main service areas.</p>
         <a href="https://wa.me/2348156067874" target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Chat with FastFast on WhatsApp</a>
       </div>
     </main>
