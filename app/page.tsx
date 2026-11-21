@@ -70,8 +70,7 @@ export default function EnhancedLandingPage() {
           </h1>
           <p className="text-xl md:text-2xl mb-4 max-w-3xl mx-auto">
             Your Express Lane to Seamless Shipping. Local delivery for individuals and
-            online vendors in five Delta State areas, with Pay on Delivery in
-            Sapele, Warri and Asaba.
+            online vendors across five main Delta State service areas, with Pay on Delivery available in all five.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
             FastFast supports local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Book a
