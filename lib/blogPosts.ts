@@ -45,7 +45,7 @@ export const blogPosts: BlogPost[] = [
         paragraphs: [
           "FastFast Logistics offers Pay on Delivery across its five main local service areas: Sapele, Warri, Asaba, Oghara and Koko, Delta State. Surrounding communities may also be served when pickup and drop-off can be confirmed. Deliveries are local within each service area; intercity delivery between hubs is not currently offered."
         ],
-        bullets: ["Sapele", "Warri", "Asaba"]
+        bullets: ["Sapele", "Warri", "Asaba", "Oghara", "Koko"]
       },
       {
         heading: "Tips for a smoother delivery",
