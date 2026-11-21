@@ -9,7 +9,8 @@ export const Footer = () => {
             © {new Date().getFullYear()} FastFast Logistics Services. All rights
             reserved.
           </span>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            <Link href="/blog"><span className="text-sm underline cursor-pointer">Blog</span></Link>
             <Link href="/privacy">
               <span className="text-sm underline cursor-pointer">
                 Privacy Policy
