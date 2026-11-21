@@ -9,6 +9,7 @@ import {
   Bike,
   Package,
   RefreshCw,
+  FileText,
 } from "lucide-react";
 
 const AdminLayoutClient = ({ children }: { children: React.ReactNode }) => {
@@ -20,6 +21,7 @@ const AdminLayoutClient = ({ children }: { children: React.ReactNode }) => {
     { href: "/admin/riders", label: "Riders", icon: Bike },
     { href: "/admin/shipments", label: "Shipments", icon: Package },
     { href: "/admin/update-status", label: "Update Status", icon: RefreshCw },
+    { href: "/admin/blog", label: "Blog Studio", icon: FileText },
   ];
 
   return (
