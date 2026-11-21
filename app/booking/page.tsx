@@ -707,11 +707,15 @@ const BookingPage: React.FC = () => {
           {loading ? "Creating Booking..." : "Create Booking"}
         </Button>
       </CardFooter>
-      <p className="text-sm sm:text-base md:text-lg p-4 mt-4 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-md shadow-md transition-colors duration-200 ease-in-out">
-        <strong className="font-bold">NOTICE!!!:</strong> Your Booking is only
-        valid after Payment. Send proof of payment to our WhatsApp Number!
-        08097034355 or call 08156067874
-      </p>
+      <div className="mt-4 space-y-3">
+        <p className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm leading-6 text-indigo-950 shadow-sm dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-100">
+          <strong className="font-bold">Service area:</strong> FastFast's main local delivery hubs are Sapele, Warri, Asaba, Oghara and Koko, including surrounding communities where pickup and drop-off can be confirmed. Deliveries are local within each service area; intercity delivery between the hubs is not currently offered.
+          <span className="mt-2 block">Pay on Delivery is available across all five main service areas. If you are in a surrounding community, contact us to confirm pickup and drop-off availability.</span>
+        </p>
+        <p className="rounded-2xl bg-neutral-100 p-4 text-sm leading-6 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+          The amount shown is a preliminary estimate; confirm the final delivery fee and exact community coverage with FastFast before dispatch. For assistance, WhatsApp <a className="font-bold underline" href="https://wa.me/2348156067874">08156067874</a>.
+        </p>
+      </div>
     </Card>
   );
 };
