@@ -82,6 +82,8 @@ const businessSchema = {
           { "@type": "City", name: "Sapele" },
           { "@type": "City", name: "Warri" },
           { "@type": "City", name: "Asaba" },
+          { "@type": "Place", name: "Oghara" },
+          { "@type": "Place", name: "Koko" },
         ],
       },
     },
