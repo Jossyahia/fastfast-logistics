@@ -28,7 +28,7 @@ export const Footer = () => {
         <div>
           <h2 className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.16em] text-neutral-400"><MapPin className="h-3.5 w-3.5" /> Local coverage</h2>
           <div className="mt-4 flex flex-wrap gap-2">{serviceAreas.map(area => <span key={area} className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-bold text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">{area}</span>)}</div>
-          <p className="mt-3 text-xs leading-5 text-neutral-500 dark:text-neutral-400">Deliveries are local within each listed area. Pay on Delivery is confirmed in Sapele, Warri and Asaba; contact us to confirm Oghara and Koko.</p>
+          <p className="mt-3 text-xs leading-5 text-neutral-500 dark:text-neutral-400">Local deliveries are available within each listed area. Pay on Delivery is available in all five: Sapele, Warri, Asaba, Oghara and Koko. Intercity delivery between these areas is not currently offered.</p>
         </div>
       </div>
       <div className="border-t border-neutral-100 px-5 py-4 dark:border-neutral-900">
