@@ -5,7 +5,7 @@ import { TruckIcon, PackageCheck, MapPin, Wallet, Clock, ArrowRight } from "luci
 const services = [
   { title: "Local Package Delivery", description: "Arrange delivery within Sapele, Warri, Asaba, Oghara and Koko, Delta State.", icon: TruckIcon, stats: "Five local service areas", accent: "from-blue-500 to-indigo-500" },
   { title: "Rider Pickup", description: "Request a rider to collect a package from your home, shop or business, subject to availability.", icon: PackageCheck, stats: "Pickup requests", accent: "from-indigo-500 to-purple-500" },
-  { title: "Pay on Delivery", description: "Offer customers Pay on Delivery for local orders across all five main service areas.", icon: Wallet, stats: "Five confirmed POD areas", accent: "from-purple-500 to-pink-500" },
+  { title: "Pay on Delivery", description: "Vendor-arranged Pay on Delivery for local orders in Sapele, Warri, Asaba, Oghara and Koko.", icon: Wallet, stats: "Five confirmed POD areas", accent: "from-purple-500 to-pink-500" },
   { title: "Same-Day Options", description: "Ask about same-day delivery for your specific route and order; availability depends on operating conditions.", icon: Clock, stats: "Confirm when booking", accent: "from-pink-500 to-rose-500" },
 ];
 
