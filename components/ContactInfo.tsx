@@ -12,7 +12,7 @@ export default function ContactInfo() {
       <div className="space-y-4">
         <div className="flex items-center">
           <MapPinIcon className="h-6 w-6 mr-2 text-blue-600" />
-          <p>123 Logistics Ave, Shipment City, SC 12345</p>
+          <p>2 Okoligbe Street, Sapele, Delta State Nigeria</p>
         </div>
         <div className="flex items-center">
           <PhoneIcon className="h-6 w-6 mr-2 text-blue-600" />

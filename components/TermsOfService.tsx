@@ -2,11 +2,7 @@ import React from "react";
 
 const TermsOfService = () => {
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">
-        FastFast Logistics Services - Terms of Service
-      </h1>
-
+    <div className="max-w-3xl mx-auto p-6 bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white transition-colors duration-200">
       <section className="mb-6">
         <h2 className="text-2xl font-semibold mb-3">1. Acceptance of Terms</h2>
         <p>

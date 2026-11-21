@@ -1,63 +1,88 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/coupons/route.ts
+
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { Prisma } from "@prisma/client";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: Request) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { code, discountType, discountValue, expiryDate, usageLimit } =
+    await req.json();
+
   try {
-    const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const coupons = await prisma.coupon.findMany();
-    return NextResponse.json(coupons);
+    const coupon = await prisma.coupon.create({
+      data: {
+        code,
+        discountType,
+        discountValue,
+        expiryDate: new Date(expiryDate),
+        usageLimit,
+      },
+    });
+    return NextResponse.json(coupon);
   } catch (error) {
-    console.error("Failed to fetch coupons:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Error creating coupon" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: Request) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const {
+    id,
+    code,
+    discountType,
+    discountValue,
+    expiryDate,
+    usageLimit,
+    isActive,
+  } = await req.json();
+
   try {
-    const session = await auth();
-    if (!session || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { code, discount, type } = await req.json();
-
-    if (!code || discount === undefined || !type) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    const newCoupon = await prisma.coupon.create({
+    const coupon = await prisma.coupon.update({
+      where: { id },
       data: {
-        code: code.toUpperCase(),
-        discount: parseFloat(discount),
-        type,
+        code,
+        discountType,
+        discountValue,
+        expiryDate: new Date(expiryDate),
+        usageLimit,
+        isActive,
       },
     });
-
-    return NextResponse.json(newCoupon, { status: 201 });
+    return NextResponse.json(coupon);
   } catch (error) {
-    console.error("Failed to create coupon:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return NextResponse.json(
-          { error: "Coupon code already exists" },
-          { status: 409 }
-        );
-      }
-    }
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Error updating coupon" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: Request) {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await req.json();
+
+  try {
+    await prisma.coupon.delete({ where: { id } });
+    return NextResponse.json({ message: "Coupon deleted successfully" });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Error deleting coupon" },
       { status: 500 }
     );
   }

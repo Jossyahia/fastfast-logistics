@@ -1,5 +1,6 @@
 import CouponForm from "@/components/CreateCouponForm";
-import AllCoupon from "./../../../components/AllCoupon";
+import AllCoupon from "@/components/AllCoupon";
+
 
 export default function CouponsPage() {
   return (
