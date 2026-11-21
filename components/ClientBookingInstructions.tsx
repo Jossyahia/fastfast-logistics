@@ -32,7 +32,7 @@ export default function ClientBookingInstructions() {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
-        How to Book
+        How to Book Standard Local Pickup & Delivery
       </h1>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -59,6 +59,11 @@ export default function ClientBookingInstructions() {
             );
           })}
         </ol>
+      </div>
+      <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <p className="text-sm leading-6 text-blue-900">
+          <strong>Important:</strong> These steps and payment instructions apply only to standard local pickup-and-delivery bookings. Vendor-arranged Pay on Delivery is a separate service arranged directly with FastFast and is not processed through this booking form.
+        </p>
       </div>
       <div className="mt-8 p-4 bg-white-100 rounded-lg">
         <p className="text-red-800">
