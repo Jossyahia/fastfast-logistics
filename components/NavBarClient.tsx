@@ -139,7 +139,7 @@ const NavBarClient: React.FC = () => {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden sm:block"><ModeToggle /></div>
+          <ModeToggle className="h-10 w-10 rounded-xl sm:h-11 sm:w-11" />
           {userData ? (
             <div className="relative" ref={profileRef}>
               <button type="button" onClick={() => setIsProfileMenuOpen(v => !v)} aria-expanded={isProfileMenuOpen}
@@ -184,7 +184,7 @@ const NavBarClient: React.FC = () => {
           <div className="mt-3 grid grid-cols-2 gap-2">
             {!userData && <button type="button" onClick={handleAuth} disabled={isLoading} className="rounded-xl border px-4 py-3 text-sm font-bold dark:border-neutral-700">{isLoading ? "Please wait..." : "Sign in"}</button>}
             {!isAdmin && !isRider && <Link href="/booking" onClick={() => setIsMobileMenuOpen(false)} className="rounded-xl bg-indigo-600 px-4 py-3 text-center text-sm font-bold text-white">Book a delivery</Link>}
-            <div className="flex items-center justify-center rounded-xl border px-4 py-2 dark:border-neutral-700 sm:hidden"><ModeToggle /></div>
+            
             {userData && <button type="button" onClick={handleAuth} className="rounded-xl border px-4 py-3 text-sm font-bold text-red-600 dark:border-neutral-700">Sign out</button>}
           </div>
           <p className="mt-4 text-center text-xs text-neutral-500">Local delivery in five main hubs and surrounding communities.</p>
