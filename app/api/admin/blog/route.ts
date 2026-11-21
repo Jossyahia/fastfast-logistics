@@ -14,7 +14,7 @@ const articleSchema = z.object({
   category: z.string().trim().min(2).max(60),
   content: z.string().trim().min(120).max(60000),
   seoTitle: z.string().trim().min(8).max(70),
-  seoDescription: z.string().trim().min(50).max(170),
+  seoDescription: z.string().trim().min(30).max(170),
   googleBusinessUpdate: z.string().trim().max(1500).default(""),
   status: z.nativeEnum(BlogPostStatus),
 });
