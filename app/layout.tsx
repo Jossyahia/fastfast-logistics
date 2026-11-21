@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   },
   description: "Local package delivery and Pay on Delivery for individuals and online vendors in Sapele, Warri and Asaba, Delta State.",
   applicationName: "FastFast Logistics Services",
-  alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
