@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,12 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import BookingInstructionsModal from "@/components/BookingInstructionsModal";
 import TestimonialSection from "@/components/TestimonialSection";
+
+export const metadata: Metadata = {
+  title: "Local Delivery and Pay on Delivery in Sapele, Warri and Asaba",
+  description: "FastFast Logistics provides local package delivery and Pay on Delivery for individuals and online vendors in Sapele, Warri and Asaba, Delta State.",
+  alternates: { canonical: "/" },
+};
 
 interface FeatureCardProps {
   title: string;
@@ -98,8 +105,8 @@ export default function EnhancedLandingPage() {
             href="/booking"
           />
           <FeatureCard
-            title="Real-time Tracking"
-            description="Stay informed with up-to-the-minute updates on your shipment's location."
+            title="Shipment Tracking"
+            description="Check the progress of your shipment using your tracking details."
             icon={MapPinIcon}
             href="/tracking"
           />
@@ -123,7 +130,7 @@ export default function EnhancedLandingPage() {
               <div>
                 <h3 className="font-semibold">Secure POD</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Trusted Pay on Delivery with secure cash handling
+                  Pay on Delivery for eligible local orders
                 </p>
               </div>
             </div>
