@@ -124,5 +124,7 @@ export function getLocations(): string[] {
   higherPriceLocations.forEach((loc) => locations.add(loc));
   mediumPriceLocations.forEach((loc) => locations.add(loc));
   lowerPriceLocations.forEach((loc) => locations.add(loc));
+  // Include the five confirmed service areas in booking address suggestions.
+  ["Sapele", "Warri", "Asaba", "Oghara", "Koko"].forEach((loc) => locations.add(loc));
   return Array.from(locations);
 }
