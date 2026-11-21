@@ -24,14 +24,14 @@ export type BlogPost = {
 export const blogPosts: BlogPost[] = [
   {
     slug: "pay-on-delivery-in-sapele-warri-and-asaba",
-    title: "Pay on Delivery in Sapele, Warri and Asaba: What Customers and Vendors Should Know",
-    excerpt: "A practical guide to using Pay on Delivery for local orders in Sapele, Warri and Asaba, Delta State.",
+    title: "Pay on Delivery in FastFast Service Areas: What Customers and Vendors Should Know",
+    excerpt: "A practical guide to using Pay on Delivery for local orders across FastFast's five main service areas in Delta State.",
     category: "Delivery Guides",
     publishedAt: "2026-11-21",
     readTime: "4 min read",
-    seoTitle: "Pay on Delivery in Sapele, Warri and Asaba | FastFast Logistics",
-    seoDescription: "Learn how Pay on Delivery works with FastFast Logistics for local deliveries in Sapele, Warri and Asaba, Delta State.",
-    googleBusinessUpdate: "Do you sell online in Sapele, Warri or Asaba? FastFast Logistics offers Pay on Delivery for local deliveries in all three cities. Learn how it works and how to arrange a delivery.",
+    seoTitle: "Pay on Delivery Across FastFast Service Areas | FastFast Logistics",
+    seoDescription: "Learn how Pay on Delivery works for local deliveries in Sapele, Warri, Asaba, Oghara and Koko, Delta State.",
+    googleBusinessUpdate: "Do you sell online in Sapele, Warri, Asaba, Oghara or Koko? FastFast Logistics offers Pay on Delivery across our five main service areas. Contact us to confirm your exact pickup and drop-off community.",
     sections: [
       {
         heading: "What is Pay on Delivery?",
@@ -43,7 +43,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Where FastFast offers Pay on Delivery",
         paragraphs: [
-          "FastFast Logistics offers Pay on Delivery for local deliveries in Sapele, Warri and Asaba, Delta State. Deliveries are handled within each individual city; intercity delivery between these locations is not currently offered."
+          "FastFast Logistics offers Pay on Delivery across its five main local service areas: Sapele, Warri, Asaba, Oghara and Koko, Delta State. Surrounding communities may also be served when pickup and drop-off can be confirmed. Deliveries are local within each service area; intercity delivery between hubs is not currently offered."
         ],
         bullets: ["Sapele", "Warri", "Asaba"]
       },
@@ -105,7 +105,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Work with a delivery partner that understands your city",
         paragraphs: [
-          "Local knowledge and clear coordination help online businesses serve customers more consistently. FastFast Logistics supports local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Pay on Delivery is confirmed in Sapele, Warri and Asaba; confirm availability in Oghara and Koko before promising it."
+          "Local knowledge and clear coordination help online businesses serve customers more consistently. FastFast Logistics supports local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Pay on Delivery is available across all five main service areas: Sapele, Warri, Asaba, Oghara and Koko. For surrounding communities, confirm exact pickup and drop-off availability before booking."
         ]
       }
     ]
@@ -160,9 +160,9 @@ export const blogPosts: BlogPost[] = [
     category: "Delivery Guides",
     publishedAt: "2026-11-21",
     readTime: "3 min read",
-    seoTitle: "FastFast Delivery Coverage in Sapele, Warri, Asaba, Oghara and Koko",
-    seoDescription: "FastFast provides local delivery within Sapele, Warri, Asaba, Oghara and Koko. Check service boundaries and Pay on Delivery availability before booking.",
-    googleBusinessUpdate: "FastFast Logistics now serves local delivery requests within Sapele, Warri, Asaba, Oghara and Koko, Delta State. Pay on Delivery is confirmed in Sapele, Warri and Asaba. Contact us to confirm the details for your location.",
+    seoTitle: "FastFast Delivery Coverage in Five Delta State Service Hubs",
+    seoDescription: "FastFast provides local delivery within Sapele, Warri, Asaba, Oghara and Koko, plus surrounding communities where service can be confirmed. Pay on Delivery is available across all five main areas.",
+    googleBusinessUpdate: "FastFast Logistics serves local delivery requests in Sapele, Warri, Asaba, Oghara and Koko, Delta State, plus surrounding communities where pickup and drop-off can be confirmed. Pay on Delivery is available across all five main service areas. Message us with your exact community to confirm coverage.",
     sections: [
       {
         heading: "Five local delivery areas in Delta State",
@@ -175,7 +175,7 @@ export const blogPosts: BlogPost[] = [
       {
         heading: "Pay on Delivery availability",
         paragraphs: [
-          "Pay on Delivery is confirmed for local orders in Sapele, Warri and Asaba. If your delivery is in Oghara or Koko, contact FastFast before dispatch to confirm whether Pay on Delivery can be arranged for your particular order."
+          "Pay on Delivery is available for local orders across Sapele, Warri, Asaba, Oghara and Koko. Customers in surrounding communities should contact FastFast to confirm their exact pickup and drop-off points before dispatch."
         ]
       },
       {
