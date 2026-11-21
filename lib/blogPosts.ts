@@ -152,7 +152,7 @@ export const blogPosts: BlogPost[] = [
         ]
       }
     ]
-  }
+  },
   {
     slug: "fastfast-local-delivery-coverage-delta-state",
     title: "Where FastFast Delivers: Local Coverage in Sapele, Warri, Asaba, Oghara and Koko",
