@@ -5,7 +5,14 @@ import { FilePlus2, FileText, Eye, Pencil, ExternalLink } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function AdminBlogPage() {
-  const posts = await prisma.blogPost.findMany({ orderBy: [{ updatedAt: "desc" }] });
+  let posts: Awaited<ReturnType<typeof prisma.blogPost.findMany>> = [];
+  let cmsReady = true;
+  try {
+    posts = await prisma.blogPost.findMany({ orderBy: [{ updatedAt: "desc" }] });
+  } catch (error) {
+    cmsReady = false;
+    console.error("Blog CMS is not available in this deploy context yet:", error);
+  }
   const published = posts.filter((post) => post.status === "PUBLISHED").length;
   const drafts = posts.length - published;
 
@@ -23,6 +30,12 @@ export default async function AdminBlogPage() {
           <FilePlus2 size={18} /> Write an article
         </Link>
       </header>
+
+      {!cmsReady && (
+        <div role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          The publishing database is enabled on the production deployment. This preview environment has not run the production database migration, so saving and managing articles is available after the production update.
+        </div>
+      )}
 
       <section className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border bg-white p-5 dark:border-neutral-700 dark:bg-neutral-900">
