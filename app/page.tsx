@@ -25,8 +25,8 @@ import BookingInstructionsModal from "@/components/BookingInstructionsModal";
 import TestimonialSection from "@/components/TestimonialSection";
 
 export const metadata: Metadata = {
-  title: "Local Delivery and Pay on Delivery in Sapele, Warri and Asaba",
-  description: "FastFast Logistics provides local package delivery and Pay on Delivery for individuals and online vendors in Sapele, Warri and Asaba, Delta State.",
+  title: "Local Delivery in Sapele, Warri, Asaba, Oghara and Koko",
+  description: "FastFast Logistics provides local package delivery for individuals and online vendors in Sapele, Warri, Asaba, Oghara and Koko, Delta State.",
   alternates: { canonical: "/" },
 };
 
@@ -73,9 +73,10 @@ export default function EnhancedLandingPage() {
             for individuals and online vendors in Delta State.
           </p>
           <p className="text-lg md:text-xl mb-8 max-w-3xl mx-auto text-neutral-600 dark:text-neutral-300">
-            FastFast supports local deliveries within Sapele, Warri and Asaba. Book a
-            rider, arrange package pickup and use Pay on Delivery in all three
-            cities. Same-day delivery is available where service conditions allow.
+            FastFast supports local deliveries within Sapele, Warri, Asaba, Oghara and Koko. Book a
+            rider and arrange package pickup within your town. Pay on Delivery is
+            available in Sapele, Warri and Asaba. Ask us to confirm payment options
+            for Oghara and Koko. Same-day delivery is available where service conditions allow.
           </p>
           <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4">
             <Link href="/request" passHref>
@@ -141,7 +142,7 @@ export default function EnhancedLandingPage() {
               <div>
                 <h3 className="font-semibold">Local City Coverage</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Deliveries within Sapele, Warri and Asaba
+                  Deliveries within Sapele, Warri, Asaba, Oghara and Koko
                 </p>
               </div>
             </div>
@@ -152,7 +153,7 @@ export default function EnhancedLandingPage() {
               <div>
                 <h3 className="font-semibold">Pay on Delivery</h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300">
-                  Available for local deliveries in all three cities
+                  Available for local deliveries in Sapele, Warri and Asaba
                 </p>
               </div>
             </div>
